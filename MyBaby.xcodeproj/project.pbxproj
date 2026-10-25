@@ -1,0 +1,810 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B1A000000000000000057A02 /* MyBabyWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B1A000000000000000057A01 /* MyBabyWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B1A00000000000000007C002 /* MyBabyWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B1A00000000000000007C001 /* MyBabyWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B1A00000000000000007C012 /* MyBabyWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B1A00000000000000007C011 /* MyBabyWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B1A000000000000000057A04 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1A000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1A000000000000000057A09;
+			remoteInfo = MyBabyWidgets;
+		};
+		B1A00000000000000007C004 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1A000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1A00000000000000007C009;
+			remoteInfo = MyBabyWatch;
+		};
+		B1A00000000000000007C014 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B1A000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B1A00000000000000007C019;
+			remoteInfo = MyBabyWatchWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B1A000000000000000057A03 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B1A000000000000000057A02 /* MyBabyWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C003 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B1A00000000000000007C002 /* MyBabyWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C010 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B1A00000000000000007C012 /* MyBabyWatchWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B1A0000000000000000000A1 /* MyBaby.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyBaby.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A000000000000000057A01 /* MyBabyWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MyBabyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A00000000000000007C001 /* MyBabyWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MyBabyWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B1A00000000000000007C011 /* MyBabyWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MyBabyWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B1A000000000000000057A07 /* Exceptions for "MyBabyWidgets" folder in "MyBabyWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B1A000000000000000057A09 /* MyBabyWidgets */;
+		};
+		B1A00000000000000007C007 /* Exceptions for "MyBabyWatch" folder in "MyBabyWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B1A00000000000000007C009 /* MyBabyWatch */;
+		};
+		B1A00000000000000007C008 /* Exceptions for "Shared" folder in "MyBabyWatch" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BabyEntity.swift,
+				ButtonIntents.swift,
+				LiveActivityAttributes.swift,
+			);
+			target = B1A00000000000000007C009 /* MyBabyWatch */;
+		};
+		B1A00000000000000007C017 /* Exceptions for "MyBabyWatchWidgets" folder in "MyBabyWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = B1A00000000000000007C019 /* MyBabyWatchWidgets */;
+		};
+		B1A00000000000000007C018 /* Exceptions for "Shared" folder in "MyBabyWatchWidgets" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BabyEntity.swift,
+				ButtonIntents.swift,
+				LiveActivityAttributes.swift,
+			);
+			target = B1A00000000000000007C019 /* MyBabyWatchWidgets */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		B1A0000000000000000000B1 /* MyBaby */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MyBaby;
+			sourceTree = "<group>";
+		};
+		B1A000000000000000057A06 /* MyBabyWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1A000000000000000057A07 /* Exceptions for "MyBabyWidgets" folder in "MyBabyWidgets" target */,
+			);
+			path = MyBabyWidgets;
+			sourceTree = "<group>";
+		};
+		B1A000000000000000057A08 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1A00000000000000007C008 /* Exceptions for "Shared" folder in "MyBabyWatch" target */,
+				B1A00000000000000007C018 /* Exceptions for "Shared" folder in "MyBabyWatchWidgets" target */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		B1A00000000000000007C006 /* MyBabyWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1A00000000000000007C007 /* Exceptions for "MyBabyWatch" folder in "MyBabyWatch" target */,
+			);
+			path = MyBabyWatch;
+			sourceTree = "<group>";
+		};
+		B1A00000000000000007C016 /* MyBabyWatchWidgets */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				B1A00000000000000007C017 /* Exceptions for "MyBabyWatchWidgets" folder in "MyBabyWatchWidgets" target */,
+			);
+			path = MyBabyWatchWidgets;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B1A0000000000000000000C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A000000000000000057A0B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C00B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C01B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B1A0000000000000000000D1 = {
+			isa = PBXGroup;
+			children = (
+				B1A0000000000000000000B1 /* MyBaby */,
+				B1A000000000000000057A08 /* Shared */,
+				B1A000000000000000057A06 /* MyBabyWidgets */,
+				B1A00000000000000007C006 /* MyBabyWatch */,
+				B1A00000000000000007C016 /* MyBabyWatchWidgets */,
+				B1A0000000000000000000D2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B1A0000000000000000000D2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B1A0000000000000000000A1 /* MyBaby.app */,
+				B1A000000000000000057A01 /* MyBabyWidgets.appex */,
+				B1A00000000000000007C001 /* MyBabyWatch.app */,
+				B1A00000000000000007C011 /* MyBabyWatchWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B1A0000000000000000000E1 /* MyBaby */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1A0000000000000000000F2 /* Build configuration list for PBXNativeTarget "MyBaby" */;
+			buildPhases = (
+				B1A0000000000000000000C2 /* Sources */,
+				B1A0000000000000000000C1 /* Frameworks */,
+				B1A0000000000000000000C3 /* Resources */,
+				B1A000000000000000057A03 /* Embed Foundation Extensions */,
+				B1A00000000000000007C003 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1A000000000000000057A05 /* PBXTargetDependency */,
+				B1A00000000000000007C005 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B1A0000000000000000000B1 /* MyBaby */,
+				B1A000000000000000057A08 /* Shared */,
+			);
+			name = MyBaby;
+			packageProductDependencies = (
+			);
+			productName = MyBaby;
+			productReference = B1A0000000000000000000A1 /* MyBaby.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B1A000000000000000057A09 /* MyBabyWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1A000000000000000057A0F /* Build configuration list for PBXNativeTarget "MyBabyWidgets" */;
+			buildPhases = (
+				B1A000000000000000057A0A /* Sources */,
+				B1A000000000000000057A0B /* Frameworks */,
+				B1A000000000000000057A0C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B1A000000000000000057A06 /* MyBabyWidgets */,
+				B1A000000000000000057A08 /* Shared */,
+			);
+			name = MyBabyWidgets;
+			packageProductDependencies = (
+			);
+			productName = MyBabyWidgets;
+			productReference = B1A000000000000000057A01 /* MyBabyWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		B1A00000000000000007C009 /* MyBabyWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1A00000000000000007C00F /* Build configuration list for PBXNativeTarget "MyBabyWatch" */;
+			buildPhases = (
+				B1A00000000000000007C00A /* Sources */,
+				B1A00000000000000007C00B /* Frameworks */,
+				B1A00000000000000007C00C /* Resources */,
+				B1A00000000000000007C010 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B1A00000000000000007C015 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B1A00000000000000007C006 /* MyBabyWatch */,
+				B1A000000000000000057A08 /* Shared */,
+			);
+			name = MyBabyWatch;
+			packageProductDependencies = (
+			);
+			productName = MyBabyWatch;
+			productReference = B1A00000000000000007C001 /* MyBabyWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B1A00000000000000007C019 /* MyBabyWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B1A00000000000000007C01F /* Build configuration list for PBXNativeTarget "MyBabyWatchWidgets" */;
+			buildPhases = (
+				B1A00000000000000007C01A /* Sources */,
+				B1A00000000000000007C01B /* Frameworks */,
+				B1A00000000000000007C01C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				B1A00000000000000007C016 /* MyBabyWatchWidgets */,
+				B1A000000000000000057A08 /* Shared */,
+			);
+			name = MyBabyWatchWidgets;
+			packageProductDependencies = (
+			);
+			productName = MyBabyWatchWidgets;
+			productReference = B1A00000000000000007C011 /* MyBabyWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B1A000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					B1A0000000000000000000E1 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					B1A000000000000000057A09 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					B1A00000000000000007C009 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					B1A00000000000000007C019 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = B1A0000000000000000000F1 /* Build configuration list for PBXProject "MyBaby" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B1A0000000000000000000D1;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B1A0000000000000000000D2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B1A0000000000000000000E1 /* MyBaby */,
+				B1A000000000000000057A09 /* MyBabyWidgets */,
+				B1A00000000000000007C009 /* MyBabyWatch */,
+				B1A00000000000000007C019 /* MyBabyWatchWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B1A0000000000000000000C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A000000000000000057A0C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C00C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C01C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B1A0000000000000000000C2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A000000000000000057A0A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C00A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B1A00000000000000007C01A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B1A000000000000000057A05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1A000000000000000057A09 /* MyBabyWidgets */;
+			targetProxy = B1A000000000000000057A04 /* PBXContainerItemProxy */;
+		};
+		B1A00000000000000007C005 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1A00000000000000007C009 /* MyBabyWatch */;
+			targetProxy = B1A00000000000000007C004 /* PBXContainerItemProxy */;
+		};
+		B1A00000000000000007C015 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B1A00000000000000007C019 /* MyBabyWatchWidgets */;
+			targetProxy = B1A00000000000000007C014 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		B1A000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B1A000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B1A000000000000000000021 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MyBaby.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MyBaby-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "MyBaby uses the camera only when you tap Take photo, to add a picture to a milestone, a diary entry or an allergic reaction. Photos stay in your log on this iPhone, or in your own iCloud, end-to-end encrypted.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "MyBaby uses Face ID to keep your private care page locked.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MyBaby listens for your baby crying so it can buzz the parent who's on duty. Audio is analyzed on this iPhone and never recorded or saved.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B1A000000000000000000022 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MyBaby.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "MyBaby-Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "MyBaby uses the camera only when you tap Take photo, to add a picture to a milestone, a diary entry or an allergic reaction. Photos stay in your log on this iPhone, or in your own iCloud, end-to-end encrypted.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "MyBaby uses Face ID to keep your private care page locked.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MyBaby listens for your baby crying so it can buzz the parent who's on duty. Audio is analyzed on this iPhone and never recorded or saved.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B1A000000000000000057A0D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MyBabyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyBabyWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MYBABY_APP_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MYBABY_APP_BUNDLE_IDENTIFIER).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B1A000000000000000057A0E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MyBabyWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyBabyWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MYBABY_APP_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MYBABY_APP_BUNDLE_IDENTIFIER).widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "WIDGET_EXTENSION $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		B1A00000000000000007C00D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MyBabyWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyBabyWatch/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(MYBABY_APP_BUNDLE_IDENTIFIER)";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MYBABY_APP_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MYBABY_APP_BUNDLE_IDENTIFIER).watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		B1A00000000000000007C00E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MyBabyWatch.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyBabyWatch/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "$(MYBABY_APP_BUNDLE_IDENTIFIER)";
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MYBABY_APP_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MYBABY_APP_BUNDLE_IDENTIFIER).watchkitapp";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		B1A00000000000000007C01D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MyBabyWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyBabyWatchWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MYBABY_APP_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MYBABY_APP_BUNDLE_IDENTIFIER).watchkitapp.widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		B1A00000000000000007C01E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MyBabyWatchWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
+				CURRENT_PROJECT_VERSION = 2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MyBabyWatchWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyBaby;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MYBABY_APP_BUNDLE_IDENTIFIER = com.mybaby.ios;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(MYBABY_APP_BUNDLE_IDENTIFIER).watchkitapp.widgets";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B1A0000000000000000000F1 /* Build configuration list for PBXProject "MyBaby" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A000000000000000000011 /* Debug */,
+				B1A000000000000000000012 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1A0000000000000000000F2 /* Build configuration list for PBXNativeTarget "MyBaby" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A000000000000000000021 /* Debug */,
+				B1A000000000000000000022 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1A000000000000000057A0F /* Build configuration list for PBXNativeTarget "MyBabyWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A000000000000000057A0D /* Debug */,
+				B1A000000000000000057A0E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1A00000000000000007C00F /* Build configuration list for PBXNativeTarget "MyBabyWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A00000000000000007C00D /* Debug */,
+				B1A00000000000000007C00E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B1A00000000000000007C01F /* Build configuration list for PBXNativeTarget "MyBabyWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B1A00000000000000007C01D /* Debug */,
+				B1A00000000000000007C01E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B1A000000000000000000001 /* Project object */;
+}

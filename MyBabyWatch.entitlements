@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The watch app saves the last context from the iPhone here, for its complications to read.
+	     WatchConnectivity itself needs no entitlement. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.$(MYBABY_APP_BUNDLE_IDENTIFIER)</string>
+	</array>
+</dict>
+</plist>

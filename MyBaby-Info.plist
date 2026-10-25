@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged with the Info.plist Xcode generates from the build settings. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<!-- Keeps cry alerts listening while the phone is locked. -->
+		<string>audio</string>
+		<!-- Receives iCloud changes from the other parent. -->
+		<string>remote-notification</string>
+	</array>
+	<!-- The breastfeeding timer and sleep on the Lock Screen and in the Dynamic Island. -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<!-- Lets an iCloud invitation link open the app. -->
+	<key>CKSharingSupported</key>
+	<true/>
+	<!-- Read by PersistenceController; follows the bundle identifier. -->
+	<key>MyBabyCloudKitContainer</key>
+	<string>iCloud.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<!-- Read by AppGroup; must match the App Group in MyBaby.entitlements. -->
+	<key>MyBabyAppGroup</key>
+	<string>group.$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<!-- Asked only when "Keep appointments in my calendar" is turned on (CalendarSync). "Add to Calendar"
+	     needs no permission. Here rather than an INFOPLIST_KEY_ build setting, which Xcode may not generate. -->
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>MyBaby adds your baby's appointments to the calendar you choose, and keeps them up to date when they change.</string>
+	<!-- Other names Siri accepts for the app in App Shortcut phrases ("Log a wet diaper in My Baby").
+	     An array of dictionaries, so it can't be an INFOPLIST_KEY_ build setting. -->
+	<key>INAlternativeAppNames</key>
+	<array>
+		<dict>
+			<key>INAlternativeAppName</key>
+			<string>My Baby</string>
+			<key>INAlternativeAppNamePronunciationHint</key>
+			<string>my baby</string>
+		</dict>
+	</array>
+	<!-- Export compliance: the app only uses Apple's standard encryption (HTTPS, iCloud/CloudKit, Keychain). -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+</dict>
+</plist>

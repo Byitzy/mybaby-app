@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security or privacy problem
+    url: mailto:mybaby@manhattin.com
+    about: Please report these privately by email, not as a public issue.
+  - name: Help using MyBaby
+    url: mailto:mybaby@manhattin.com
+    about: Questions about using the app.

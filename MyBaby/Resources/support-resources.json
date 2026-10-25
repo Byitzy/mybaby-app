@@ -1,0 +1,765 @@
+{
+  "schemaVersion": 1,
+  "lastVerified": "2026-10-25",
+  "reverifyBy": "2027-04-25",
+  "note": "Every number here was checked against the organization's own website or a government health site on lastVerified. Each resource lists the pages it was checked on (sources), and each region lists all of them. A wrong crisis number is worse than none: if a number can't be confirmed when re-verifying, remove it.",
+  "regions": [
+    {
+      "code": "US",
+      "name": "United States",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "911" }
+      ],
+      "resources": [
+        {
+          "name": "988 Suicide & Crisis Lifeline",
+          "description": "For anyone in emotional distress or thinking about suicide, or worried about someone. Also by chat at 988lifeline.org.",
+          "phone": "988",
+          "sms": { "number": "988" },
+          "url": "https://988lifeline.org",
+          "hours": "24/7",
+          "languages": ["English", "Spanish"],
+          "kind": "crisis",
+          "sources": ["https://988lifeline.org/", "https://postpartum.net/get-help/in-an-emergency/"]
+        },
+        {
+          "name": "National Maternal Mental Health Hotline",
+          "featured": true,
+          "description": "Free, confidential support from trained counselors, before, during and after pregnancy. Call or text 1-833-TLC-MAMA. Interpreters in 60 languages.",
+          "phone": "1-833-852-6262",
+          "sms": { "number": "1-833-852-6262" },
+          "url": "https://mchb.hrsa.gov/national-maternal-mental-health-hotline",
+          "hours": "24/7",
+          "languages": ["English", "Spanish"],
+          "kind": "perinatal",
+          "sources": ["https://postpartum.net/get-help/", "https://dcf.vermont.gov/node/2119"]
+        },
+        {
+          "name": "Postpartum Support International HelpLine",
+          "description": "Not a crisis line. Leave a message and a trained volunteer calls or texts you back with support and local resources. For any parent or family member, during pregnancy and after. En español: text 971-203-7773.",
+          "phone": "1-800-944-4773",
+          "sms": { "number": "1-800-944-4773", "body": "HELP" },
+          "url": "https://www.postpartum.net",
+          "languages": ["English", "Spanish"],
+          "kind": "perinatal",
+          "sources": ["https://postpartum.net/get-help/", "https://postpartum.net/get-help/help-for-moms/", "https://www.postpartum.net/wp-content/uploads/2024/04/SpanishEnglish-MothersFathers-Awareness-Posters-3-1-1.pdf"]
+        }
+      ],
+      "sources": [
+        "https://www.fcc.gov/sites/default/files/911_wireless_services.pdf",
+        "https://988lifeline.org/",
+        "https://postpartum.net/get-help/in-an-emergency/",
+        "https://postpartum.net/get-help/",
+        "https://postpartum.net/get-help/help-for-moms/",
+        "https://www.postpartum.net/wp-content/uploads/2024/04/SpanishEnglish-MothersFathers-Awareness-Posters-3-1-1.pdf",
+        "https://dcf.vermont.gov/node/2119"
+      ]
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "911" }
+      ],
+      "resources": [
+        {
+          "name": "9-8-8 Suicide Crisis Helpline",
+          "description": "For anyone thinking about suicide, or worried about someone. In Quebec, calls and texts go to Quebec's own suicide prevention line.",
+          "phone": "988",
+          "sms": { "number": "988" },
+          "url": "https://988.ca",
+          "hours": "24/7",
+          "languages": ["English", "French"],
+          "kind": "crisis",
+          "sources": ["https://988.ca/", "https://www.canada.ca/en/public-health/services/mental-health-services/mental-health-get-help.html", "https://suicide.ca/en/lets-talk-about-suicide/news-and-suicide/canada-implements-988-as-new-federal-suicide-prevention-phone-line"]
+        },
+        {
+          "name": "Hope for Wellness Help Line",
+          "description": "Counselling and crisis support for First Nations, Inuit and Métis people anywhere in Canada. Also by online chat.",
+          "phone": "1-855-242-3310",
+          "url": "https://www.hopeforwellness.ca",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www.hopeforwellness.ca/", "https://www.canada.ca/en/public-health/services/mental-health-services/mental-health-get-help.html"]
+        }
+      ],
+      "subregions": [
+        {
+          "code": "QC",
+          "name": "Quebec",
+          "resources": [
+            {
+              "name": "1 866 APPELLE (Quebec suicide prevention)",
+              "description": "For anyone in Quebec thinking about suicide, worried about someone, or grieving a suicide. Text 535353, or chat at suicide.ca.",
+              "phone": "1-866-277-3553",
+              "sms": { "number": "535353" },
+              "url": "https://suicide.ca",
+              "hours": "24/7",
+              "kind": "crisis",
+              "sources": ["https://suicide.ca/en/lets-talk-about-suicide/learn-about-suicide/24-7-help-line", "https://suicide.ca/fr"]
+            },
+            {
+              "name": "Info-Social 811 (option 2)",
+              "featured": true,
+              "description": "Talk to a psychosocial worker about stress, how you're feeling or a mental health worry, for yourself or someone close. Dial 811, then option 2.",
+              "phone": "811",
+              "url": "https://www.quebec.ca/en/health/finding-a-resource/info-social-811",
+              "hours": "24/7",
+              "languages": ["French", "English"],
+              "kind": "healthLine",
+              "sources": ["https://www.quebec.ca/en/health/finding-a-resource/info-social-811", "https://www.quebec.ca/sante/trouver-une-ressource/info-sante-811"]
+            },
+            {
+              "name": "Info-Santé 811 (option 1)",
+              "description": "Talk to a nurse about a health question for you or your baby. Dial 811, then option 1; there's a priority line for parents of children 0 to 17. Not available in Nunavik or the Cree Territory of James Bay.",
+              "phone": "811",
+              "url": "https://www.quebec.ca/en/health/finding-a-resource/info-sante-811",
+              "hours": "24/7",
+              "languages": ["French", "English"],
+              "kind": "healthLine",
+              "sources": ["https://www.quebec.ca/en/health/finding-a-resource/info-sante-811", "https://www.quebec.ca/sante/trouver-une-ressource/info-sante-811"]
+            }
+          ]
+        },
+        {
+          "code": "ON",
+          "name": "Ontario",
+          "resources": [
+            {
+              "name": "Health811",
+              "description": "Free health advice from a registered nurse, and help finding local services, including mental health support. TTY: 711. Translation support in other languages.",
+              "phone": "811",
+              "url": "https://health811.ontario.ca",
+              "hours": "24/7",
+              "languages": ["English", "French"],
+              "kind": "healthLine",
+              "sources": ["https://www.ontario.ca/page/breastfeeding"]
+            }
+          ]
+        },
+        {
+          "code": "BC",
+          "name": "British Columbia",
+          "resources": [
+            {
+              "name": "HealthLink BC 8-1-1",
+              "description": "Health service navigators and registered nurses around the clock, pharmacists overnight. Translation in over 130 languages.",
+              "phone": "811",
+              "url": "https://www.healthlinkbc.ca",
+              "hours": "24/7",
+              "kind": "healthLine",
+              "sources": ["https://www.healthlinkbc.ca/"]
+            },
+            {
+              "name": "Pacific Post Partum Support Society",
+              "featured": true,
+              "description": "Not a crisis line. Phone and text support for parents having a hard time after a baby. If you reach voicemail, leave a message with how to reach you.",
+              "phone": "1-855-255-7999",
+              "sms": { "number": "604-255-7999" },
+              "url": "https://postpartum.org",
+              "hours": "Phone weekdays 10 am–3 pm, text 10:30 am–2:30 pm (Pacific Time)",
+              "kind": "perinatal",
+              "sources": ["https://postpartum.org/"]
+            }
+          ]
+        },
+        {
+          "code": "AB",
+          "name": "Alberta",
+          "resources": [
+            {
+              "name": "Health Link 811",
+              "description": "Health advice from a registered nurse. Support in more than 240 languages.",
+              "phone": "811",
+              "url": "https://www.albertahealthservices.ca/assets/healthinfo/link/index.html",
+              "hours": "24/7",
+              "kind": "healthLine",
+              "sources": ["https://albertahealthservices.ca/assets/healthinfo/link/phone/index.html"]
+            }
+          ]
+        },
+        {
+          "code": "SK",
+          "name": "Saskatchewan",
+          "resources": [
+            {
+              "name": "HealthLine 811",
+              "description": "Health, mental health and addictions advice from registered nurses, psychiatric nurses and social workers. Translation in over 100 languages.",
+              "phone": "811",
+              "url": "https://www.saskatchewan.ca/residents/health/accessing-health-care-services/healthline",
+              "hours": "24/7",
+              "languages": ["English"],
+              "kind": "healthLine",
+              "sources": ["https://www.saskatchewan.ca/residents/health/accessing-health-care-services/healthline"]
+            }
+          ]
+        },
+        {
+          "code": "MB",
+          "name": "Manitoba",
+          "resources": [
+            {
+              "name": "Health Links – Info Santé",
+              "description": "Manitoba's health information line, toll-free anywhere in the province.",
+              "phone": "1-888-315-9257",
+              "hours": "24 hours",
+              "kind": "healthLine",
+              "sources": ["https://www.gov.mb.ca/contact/urgent_toll_free.html"]
+            }
+          ]
+        },
+        {
+          "code": "NB",
+          "name": "New Brunswick",
+          "resources": [
+            {
+              "name": "Tele-Care 811",
+              "description": "Free, bilingual, confidential health line. Every caller can speak to a registered nurse.",
+              "phone": "811",
+              "url": "https://www.gnb.ca/en/topic/health-wellness/access-health-care/tele-care-811.html",
+              "hours": "24/7",
+              "languages": ["English", "French"],
+              "kind": "healthLine",
+              "sources": ["https://www.gnb.ca/en/topic/health-wellness/access-health-care/tele-care-811.html"]
+            }
+          ]
+        },
+        {
+          "code": "NS",
+          "name": "Nova Scotia",
+          "resources": [
+            {
+              "name": "811 Nova Scotia",
+              "description": "Talk to a registered nurse. Service in over 120 languages. If 811 doesn't connect, call 1-866-770-7763.",
+              "phone": "811",
+              "url": "https://811.novascotia.ca",
+              "hours": "24/7",
+              "kind": "healthLine",
+              "sources": ["https://811.novascotia.ca/"]
+            }
+          ]
+        },
+        {
+          "code": "PE",
+          "name": "Prince Edward Island",
+          "resources": [
+            {
+              "name": "811 PEI",
+              "description": "Talk to a registered nurse about a health concern or question. A bilingual nurse is available in French, and interpretation in over 100 languages.",
+              "phone": "811",
+              "hours": "24/7",
+              "languages": ["English", "French"],
+              "kind": "healthLine",
+              "sources": ["https://www.princeedwardisland.ca/sites/default/files/publications/811_brochure.pdf"]
+            }
+          ]
+        },
+        {
+          "code": "NL",
+          "name": "Newfoundland and Labrador",
+          "resources": [
+            {
+              "name": "HealthLine 811",
+              "description": "Nurses who listen, support you and connect you to local health services, including in a mental health or addictions crisis. If 811 doesn't connect, call 1-888-709-2929.",
+              "phone": "811",
+              "url": "https://www.gov.nl.ca/hcs/findhealthservices/helplines/",
+              "hours": "24/7",
+              "kind": "healthLine",
+              "sources": ["https://www.gov.nl.ca/hcs/findhealthservices/helplines/"]
+            }
+          ]
+        },
+        {
+          "code": "NT",
+          "name": "Northwest Territories",
+          "resources": [
+            {
+              "name": "NWT 811 Health Advice Line",
+              "description": "Confidential advice and support from registered nurses. Interpretation for French, NWT Indigenous languages and over 200 others. Toll-free: 1-844-259-1793.",
+              "phone": "811",
+              "url": "https://www.hss.gov.nt.ca/en/services/811",
+              "hours": "24/7",
+              "languages": ["English"],
+              "kind": "healthLine",
+              "sources": ["https://www.hss.gov.nt.ca/en/services/811"]
+            }
+          ]
+        }
+      ],
+      "sources": [
+        "https://www.canada.ca/en/public-health/services/mental-health-services/mental-health-get-help.html",
+        "https://988.ca/",
+        "https://suicide.ca/en/lets-talk-about-suicide/news-and-suicide/canada-implements-988-as-new-federal-suicide-prevention-phone-line",
+        "https://www.hopeforwellness.ca/",
+        "https://suicide.ca/en/lets-talk-about-suicide/learn-about-suicide/24-7-help-line",
+        "https://suicide.ca/fr",
+        "https://www.quebec.ca/en/health/finding-a-resource/info-social-811",
+        "https://www.quebec.ca/en/health/finding-a-resource/info-sante-811",
+        "https://www.quebec.ca/sante/trouver-une-ressource/info-sante-811",
+        "https://www.ontario.ca/page/breastfeeding",
+        "https://www.healthlinkbc.ca/",
+        "https://postpartum.org/",
+        "https://albertahealthservices.ca/assets/healthinfo/link/phone/index.html",
+        "https://www.saskatchewan.ca/residents/health/accessing-health-care-services/healthline",
+        "https://www.gov.mb.ca/contact/urgent_toll_free.html",
+        "https://www.gnb.ca/en/topic/health-wellness/access-health-care/tele-care-811.html",
+        "https://811.novascotia.ca/",
+        "https://www.princeedwardisland.ca/sites/default/files/publications/811_brochure.pdf",
+        "https://www.gov.nl.ca/hcs/findhealthservices/helplines/",
+        "https://www.hss.gov.nt.ca/en/services/811"
+      ]
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "999" }
+      ],
+      "resources": [
+        {
+          "name": "Samaritans",
+          "featured": true,
+          "description": "Someone to talk to, whatever you're going through. Free from any phone. Welsh language line: 0808 164 0123.",
+          "phone": "116 123",
+          "url": "https://www.samaritans.org",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www.samaritans.org/how-we-can-help/contact-samaritan/", "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/behaviours/help-for-suicidal-thoughts/"]
+        },
+        {
+          "name": "Shout",
+          "description": "Free, confidential text support with a trained volunteer.",
+          "sms": { "number": "85258", "body": "SHOUT" },
+          "url": "https://giveusashout.org",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://giveusashout.org/get-help/", "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/behaviours/help-for-suicidal-thoughts/"]
+        },
+        {
+          "name": "PANDAS Foundation",
+          "description": "Not a crisis line. Support for parents and families with mental health difficulties in pregnancy and after. Book a free support call on their website.",
+          "url": "https://pandasfoundation.org.uk",
+          "hours": "WhatsApp support weekdays 9 am–5 pm",
+          "kind": "perinatal",
+          "sources": ["https://pandasfoundation.org.uk/"]
+        },
+        {
+          "name": "NHS 111",
+          "description": "Urgent health advice when it's not an emergency. In England, choose the mental health option for urgent mental health help.",
+          "phone": "111",
+          "url": "https://www.nhs.uk/nhs-services/mental-health-services/where-to-get-urgent-help-for-mental-health/",
+          "hours": "24/7",
+          "kind": "healthLine",
+          "sources": ["https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/behaviours/help-for-suicidal-thoughts/", "https://www.nhs.uk/nhs-services/mental-health-services/where-to-get-urgent-help-for-mental-health/", "https://111.wales.nhs.uk/OutOfHours.aspx"]
+        }
+      ],
+      "sources": [
+        "https://www.nhs.uk/mental-health/feelings-symptoms-behaviours/behaviours/help-for-suicidal-thoughts/",
+        "https://www.nhs.uk/nhs-services/mental-health-services/where-to-get-urgent-help-for-mental-health/",
+        "https://www.samaritans.org/how-we-can-help/contact-samaritan/",
+        "https://giveusashout.org/get-help/",
+        "https://pandasfoundation.org.uk/",
+        "https://111.wales.nhs.uk/OutOfHours.aspx"
+      ]
+    },
+    {
+      "code": "IE",
+      "name": "Ireland",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" },
+        { "number": "999" }
+      ],
+      "resources": [
+        {
+          "name": "Samaritans",
+          "featured": true,
+          "description": "Someone to talk to, whatever you're going through. Freephone.",
+          "phone": "116 123",
+          "url": "https://www.samaritans.org",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www2.hse.ie/mental-health/services-support/get-urgent-help/", "https://www2.hse.ie/mental-health/services-support/supports-services/"]
+        },
+        {
+          "name": "Text About It",
+          "description": "Free, anonymous text chat with a trained volunteer.",
+          "sms": { "number": "50808", "body": "HELLO" },
+          "hours": "Any time",
+          "kind": "crisis",
+          "sources": ["https://www2.hse.ie/mental-health/services-support/get-urgent-help/", "https://www2.hse.ie/mental-health/services-support/supports-services/"]
+        },
+        {
+          "name": "Pieta",
+          "description": "Support for anyone thinking about suicide or self-harm. Freephone; standard text rates apply.",
+          "phone": "1800 247 247",
+          "sms": { "number": "51444", "body": "HELP" },
+          "hours": "Any time",
+          "kind": "crisis",
+          "sources": ["https://www2.hse.ie/mental-health/services-support/supports-services/"]
+        },
+        {
+          "name": "HSE Your Mental Health information line",
+          "description": "Not a counselling line: tells you what mental health supports are available to you and how to get them. Freephone.",
+          "phone": "1800 111 888",
+          "url": "https://www2.hse.ie/mental-health/services-support/your-mental-health-information-line/",
+          "hours": "Any time",
+          "kind": "healthLine",
+          "sources": ["https://www2.hse.ie/mental-health/services-support/your-mental-health-information-line/"]
+        },
+        {
+          "name": "Parentline",
+          "description": "Confidential support for parents, on any parenting worry.",
+          "phone": "01 873 3500",
+          "url": "https://www.parentline.ie",
+          "hours": "Mon–Thu 10 am–9 pm, Fri 10 am–7 pm",
+          "kind": "general",
+          "sources": ["https://www.parentline.ie/", "https://www2.hse.ie/conditions/postnatal-depression/getting-help/"]
+        }
+      ],
+      "sources": [
+        "https://www2.hse.ie/mental-health/services-support/get-urgent-help/",
+        "https://www2.hse.ie/mental-health/services-support/supports-services/",
+        "https://www2.hse.ie/mental-health/services-support/your-mental-health-information-line/",
+        "https://www.parentline.ie/",
+        "https://www2.hse.ie/conditions/postnatal-depression/getting-help/"
+      ]
+    },
+    {
+      "code": "AU",
+      "name": "Australia",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "000", "label": "Triple Zero" }
+      ],
+      "resources": [
+        {
+          "name": "Lifeline",
+          "description": "Crisis support for anyone having a hard time or thinking about suicide. Also by chat at lifeline.org.au.",
+          "phone": "13 11 14",
+          "sms": { "number": "0477 13 11 14" },
+          "url": "https://www.lifeline.org.au",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www.lifeline.org.au/", "https://www.lifeline.org.au/crisis-text/"]
+        },
+        {
+          "name": "PANDA National Perinatal Mental Health Helpline",
+          "featured": true,
+          "description": "Not a crisis line. Support for expecting and new parents, through pregnancy and the first year with a baby. Open public holidays except Christmas Day.",
+          "phone": "1300 726 306",
+          "url": "https://panda.org.au",
+          "hours": "Mon–Fri 9 am–7:30 pm, Sat 9 am–4 pm (AEST/AEDT)",
+          "kind": "perinatal",
+          "sources": ["https://panda.org.au/", "https://panda.org.au/contact-us"]
+        },
+        {
+          "name": "Pregnancy, Birth and Baby",
+          "description": "Talk to a maternal child health nurse. A free Australian Government service.",
+          "phone": "1800 882 436",
+          "url": "https://www.pregnancybirthbaby.org.au",
+          "hours": "7 am–midnight (AET), 7 days",
+          "kind": "healthLine",
+          "sources": ["https://www.pregnancybirthbaby.org.au/"]
+        },
+        {
+          "name": "healthdirect",
+          "description": "Health advice from a nurse or doctor, to help you know what to do. In Queensland, call 13 HEALTH instead.",
+          "phone": "1800 022 222",
+          "url": "https://www.healthdirect.gov.au",
+          "hours": "24/7",
+          "kind": "healthLine",
+          "sources": ["https://www.healthdirect.gov.au/", "https://www.healthdirect.gov.au/13-health"]
+        },
+        {
+          "name": "13 HEALTH (Queensland)",
+          "description": "Health advice from a registered nurse in Queensland, for the cost of a local call. Child health nurses 6:30 am–11 pm.",
+          "phone": "13 43 25 84",
+          "url": "https://www.healthdirect.gov.au/13-health",
+          "hours": "24/7",
+          "kind": "healthLine",
+          "sources": ["https://www.healthdirect.gov.au/13-health"]
+        }
+      ],
+      "sources": [
+        "https://www.lifeline.org.au/",
+        "https://www.lifeline.org.au/crisis-text/",
+        "https://panda.org.au/",
+        "https://panda.org.au/contact-us",
+        "https://www.pregnancybirthbaby.org.au/",
+        "https://www.healthdirect.gov.au/",
+        "https://www.healthdirect.gov.au/13-health"
+      ]
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "111" }
+      ],
+      "resources": [
+        {
+          "name": "1737, Need to talk?",
+          "featured": true,
+          "description": "Free, confidential support from trained counsellors and peer support workers, for anyone in New Zealand.",
+          "phone": "1737",
+          "sms": { "number": "1737" },
+          "url": "https://1737.org.nz",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://1737.org.nz/"]
+        },
+        {
+          "name": "PlunketLine",
+          "description": "Parenting and child health advice from a registered Plunket nurse, free for every family. Ask for an interpreter if you need one.",
+          "phone": "0800 933 922",
+          "url": "https://www.plunket.org.nz/plunket/what-we-offer/plunketline/",
+          "hours": "24/7",
+          "kind": "healthLine",
+          "sources": ["https://www.plunket.org.nz/plunket/what-we-offer/plunketline/"]
+        },
+        {
+          "name": "Healthline",
+          "description": "Free health advice any time of the day or night. Interpreters for up to 150 languages.",
+          "phone": "0800 611 116",
+          "url": "https://www.healthnz.govt.nz/services-support/health-and-disability-providers/healthline",
+          "hours": "24/7",
+          "kind": "healthLine",
+          "sources": ["https://www.healthnz.govt.nz/services-support/health-and-disability-providers/healthline"]
+        }
+      ],
+      "sources": [
+        "https://1737.org.nz/",
+        "https://www.plunket.org.nz/plunket/what-we-offer/plunketline/",
+        "https://www.healthnz.govt.nz/services-support/health-and-disability-providers/healthline"
+      ]
+    },
+    {
+      "code": "IL",
+      "name": "Israel",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "101", "label": "Magen David Adom" }
+      ],
+      "resources": [
+        {
+          "name": "ERAN, emotional first aid",
+          "featured": true,
+          "description": "Someone to talk to, for anyone in distress. Help for new immigrants in English, Russian, French, Spanish and Amharic, Sunday to Thursday, 4–9 pm. Chat and WhatsApp on their website.",
+          "phone": "1201",
+          "url": "https://en.eran.org.il",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://en.eran.org.il/", "https://www.eran.org.il/"]
+        }
+      ],
+      "sources": [
+        "https://www.mdais.org/en/101",
+        "https://en.eran.org.il/",
+        "https://www.eran.org.il/"
+      ]
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "15", "label": "SAMU" },
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "3114, suicide prevention",
+          "description": "Free national line answered by health professionals trained in suicide prevention, for anyone in distress or worried about someone.",
+          "phone": "3114",
+          "url": "https://3114.fr",
+          "hours": "24/7",
+          "languages": ["French"],
+          "kind": "crisis",
+          "sources": ["https://3114.fr/"]
+        },
+        {
+          "name": "Allô Parents Bébé",
+          "featured": true,
+          "description": "Free, anonymous listening and support for parents, from pregnancy until a child is 3. Run by Enfance & Partage.",
+          "phone": "0800 00 34 56",
+          "hours": "Mon–Fri 10 am–1 pm and 2–6 pm",
+          "languages": ["French"],
+          "kind": "perinatal",
+          "sources": ["https://www.paris.fr/pages/accompagnement-des-parents-211/"]
+        }
+      ],
+      "sources": [
+        "https://www.service-public.gouv.fr/particuliers/vosdroits/F33954",
+        "https://3114.fr/",
+        "https://www.paris.fr/pages/accompagnement-des-parents-211/"
+      ]
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "TelefonSeelsorge",
+          "featured": true,
+          "description": "Free, anonymous support day and night, by phone, chat or email. Also on 0800 111 0 222 and 116 123.",
+          "phone": "0800 111 0 111",
+          "url": "https://www.telefonseelsorge.de",
+          "hours": "24/7",
+          "languages": ["German"],
+          "kind": "crisis",
+          "sources": ["https://www.telefonseelsorge.de/"]
+        },
+        {
+          "name": "Ärztlicher Bereitschaftsdienst 116117",
+          "description": "Out-of-hours medical help when your doctor's office is closed. Free with a German phone contract.",
+          "phone": "116 117",
+          "url": "https://www.116117.de",
+          "hours": "24/7",
+          "languages": ["German"],
+          "kind": "healthLine",
+          "sources": ["https://www.116117.de/de/index.php"]
+        },
+        {
+          "name": "Elterntelefon (Nummer gegen Kummer)",
+          "description": "Free, anonymous advice for parents and other caregivers.",
+          "phone": "0800 111 0 550",
+          "url": "https://www.nummergegenkummer.de/elternberatung/elterntelefon/",
+          "hours": "Mon, Wed, Fri 9 am–5 pm; Tue, Thu 9 am–7 pm",
+          "languages": ["German"],
+          "kind": "general",
+          "sources": ["https://www.nummergegenkummer.de/elternberatung/elterntelefon/"]
+        }
+      ],
+      "sources": [
+        "https://www.116117.de/de/index.php",
+        "https://www.telefonseelsorge.de/",
+        "https://www.nummergegenkummer.de/elternberatung/elterntelefon/"
+      ]
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "113 Zelfmoordpreventie",
+          "description": "Anonymous support if you're thinking about suicide. 0800-0113 is free; you can also call 113 at your usual call cost, or chat on 113.nl.",
+          "phone": "0800-0113",
+          "url": "https://www.113.nl",
+          "hours": "24/7",
+          "languages": ["Dutch"],
+          "kind": "crisis",
+          "sources": ["https://www.113.nl/i/telefonische-hulplijn", "https://www.113.nl/"]
+        },
+        {
+          "name": "De Luisterlijn",
+          "featured": true,
+          "description": "Someone to talk to, day and night.",
+          "phone": "088 0767 000",
+          "url": "https://www.deluisterlijn.nl",
+          "hours": "24/7",
+          "languages": ["Dutch"],
+          "kind": "general",
+          "sources": ["https://www.deluisterlijn.nl/"]
+        }
+      ],
+      "sources": [
+        "https://www.rijksoverheid.nl/onderwerpen/alarmnummer-112/vraag-en-antwoord/wanneer-112-bellen",
+        "https://www.113.nl/i/telefonische-hulplijn",
+        "https://www.113.nl/",
+        "https://www.deluisterlijn.nl/"
+      ]
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "Tele-MANAS",
+          "featured": true,
+          "description": "Free government mental health helpline: counselling, and referral to care, including urgent care. Choose your language when you call.",
+          "phone": "14416",
+          "url": "https://telemanas.mohfw.gov.in",
+          "hours": "24/7",
+          "languages": ["20 Indian languages"],
+          "kind": "crisis",
+          "sources": ["https://static.pib.gov.in/WriteReadData/specificdocs/documents/2024/oct/doc20241013415701.pdf"]
+        }
+      ],
+      "sources": [
+        "https://www.mha.gov.in/en/commoncontent/emergency-response-support-system-erss",
+        "https://wayanad.keralapolice.gov.in/home/page/award/10",
+        "https://static.pib.gov.in/WriteReadData/specificdocs/documents/2024/oct/doc20241013415701.pdf"
+      ]
+    },
+    {
+      "code": "ZA",
+      "name": "South Africa",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "10177", "label": "ambulance" },
+        { "number": "10111", "label": "police" },
+        { "number": "112", "label": "from a mobile" }
+      ],
+      "resources": [
+        {
+          "name": "SADAG Suicide Crisis Helpline",
+          "description": "Toll-free crisis support from the South African Depression and Anxiety Group.",
+          "phone": "0800 567 567",
+          "url": "https://www.sadag.org",
+          "hours": "24 hours",
+          "kind": "crisis",
+          "sources": ["https://www.sadag.org/", "https://www.sadag.org/index.php?option=com_content&view=article&id=1904&Itemid=151"]
+        },
+        {
+          "name": "Cipla Mental Health Helpline (SADAG)",
+          "featured": true,
+          "description": "Toll-free mental health support from SADAG. You can also send an SMS to 31393.",
+          "phone": "0800 456 789",
+          "sms": { "number": "31393" },
+          "url": "https://www.sadag.org",
+          "hours": "24 hours",
+          "kind": "general",
+          "sources": ["https://www.sadag.org/", "https://www.sadag.org/index.php?option=com_content&view=article&id=1904&Itemid=151"]
+        }
+      ],
+      "sources": [
+        "https://www.westerncape.gov.za/know-who-you-can-call-emergency",
+        "https://www.sadag.org/",
+        "https://www.sadag.org/index.php?option=com_content&view=article&id=1904&Itemid=151"
+      ]
+    }
+  ],
+  "other": {
+    "code": "other",
+    "name": "Other regions",
+    "lastVerified": "2026-10-25",
+    "emergency": [],
+    "resources": [
+      {
+        "name": "Find A Helpline",
+        "description": "A free directory of helplines in over 175 countries, kept up to date daily. Find phone, text or chat support near you.",
+        "url": "https://findahelpline.com",
+        "kind": "general",
+        "sources": ["https://findahelpline.com/"]
+      }
+    ],
+    "sources": ["https://findahelpline.com/"]
+  }
+}

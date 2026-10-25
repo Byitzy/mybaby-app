@@ -1,0 +1,170 @@
+# Optional: regenerate MyBaby.xcodeproj with XcodeGen (`brew install xcodegen && xcodegen`).
+# The checked-in project already works in Xcode 16+, so you only need this if you prefer XcodeGen.
+name: MyBaby
+options:
+  bundleIdPrefix: com.mybaby
+  deploymentTarget:
+    iOS: "17.0"
+    watchOS: "10.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""
+targets:
+  MyBaby:
+    type: application
+    platform: iOS
+    # Shared/ is compiled into the app, the widget extension and the watch targets (see Shared/AppGroup.swift).
+    sources: [MyBaby, Shared]
+    dependencies:
+      # Builds the widgets and embeds them in the app (Embed Foundation Extensions).
+      - target: MyBabyWidgets
+      # Builds the Apple Watch app and embeds it in the app (Embed Watch Content).
+      - target: MyBabyWatch
+    info:
+      path: MyBaby-Info.plist
+      properties:
+        UIBackgroundModes: [audio, remote-notification]
+        NSSupportsLiveActivities: true
+        CKSharingSupported: true
+        MyBabyCloudKitContainer: iCloud.$(PRODUCT_BUNDLE_IDENTIFIER)
+        MyBabyAppGroup: group.$(PRODUCT_BUNDLE_IDENTIFIER)
+        # Asked only when "Keep appointments in my calendar" is turned on; "Add to Calendar" needs no permission.
+        NSCalendarsFullAccessUsageDescription: "MyBaby adds your baby's appointments to the calendar you choose, and keeps them up to date when they change."
+        # Other names Siri accepts for the app in App Shortcut phrases ("Log a wet diaper in My Baby").
+        INAlternativeAppNames:
+          - INAlternativeAppName: My Baby
+            INAlternativeAppNamePronunciationHint: my baby
+        # Export compliance: only Apple's standard encryption (HTTPS, iCloud/CloudKit, Keychain).
+        ITSAppUsesNonExemptEncryption: false
+    entitlements:
+      path: MyBaby.entitlements
+      properties:
+        com.apple.developer.icloud-container-identifiers: [iCloud.$(PRODUCT_BUNDLE_IDENTIFIER)]
+        com.apple.developer.icloud-services: [CloudKit]
+        aps-environment: development
+        com.apple.developer.usernotifications.time-sensitive: true
+        com.apple.security.application-groups: [group.$(PRODUCT_BUNDLE_IDENTIFIER)]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mybaby.ios
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 2
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MyBaby
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.lifestyle
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        ENABLE_PREVIEWS: YES
+        INFOPLIST_KEY_NSCameraUsageDescription: "MyBaby uses the camera only when you tap Take photo, to add a picture to a milestone, a diary entry or an allergic reaction. Photos stay in your log on this iPhone, or in your own iCloud, end-to-end encrypted."
+        INFOPLIST_KEY_NSFaceIDUsageDescription: "MyBaby uses Face ID to keep your private care page locked."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "MyBaby listens for your baby crying so it can buzz the parent who's on duty. Audio is analyzed on this iPhone and never recorded or saved."
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  # Home Screen and Lock Screen widgets and the Live Activities.
+  MyBabyWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: MyBabyWidgets
+        excludes: [Info.plist]
+      - Shared
+    info:
+      path: MyBabyWidgets/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        MyBabyAppGroup: group.$(MYBABY_APP_BUNDLE_IDENTIFIER)
+    entitlements:
+      path: MyBabyWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(MYBABY_APP_BUNDLE_IDENTIFIER)]
+    settings:
+      base:
+        # Must be the app's bundle identifier: the extension's identifier and App Group follow from it.
+        MYBABY_APP_BUNDLE_IDENTIFIER: com.mybaby.ios
+        PRODUCT_BUNDLE_IDENTIFIER: $(MYBABY_APP_BUNDLE_IDENTIFIER).widgets
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 2
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: 1
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MyBaby
+        # Shared/ code that only the app can run is wrapped in `#if !WIDGET_EXTENSION`.
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: "WIDGET_EXTENSION $(inherited)"
+  # The Apple Watch app. It has no database: it talks to the iPhone app over WatchConnectivity
+  # (see MyBaby/Services/WatchBridge.swift and MyBabyWatch/WatchStore.swift).
+  MyBabyWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: MyBabyWatch
+        excludes: [Info.plist]
+      # ActivityKit and the iPhone's widget button intents aren't on watchOS, and the widgets' baby
+      # picker (BabyEntity) is only for the iPhone's widgets.
+      - path: Shared
+        excludes: [BabyEntity.swift, ButtonIntents.swift, LiveActivityAttributes.swift]
+    dependencies:
+      # The complications, embedded in the watch app.
+      - target: MyBabyWatchWidgets
+    info:
+      path: MyBabyWatch/Info.plist
+      properties:
+        WKApplication: true
+        MyBabyAppGroup: group.$(MYBABY_APP_BUNDLE_IDENTIFIER)
+    entitlements:
+      path: MyBabyWatch.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(MYBABY_APP_BUNDLE_IDENTIFIER)]
+    settings:
+      base:
+        # Must be the iPhone app's bundle identifier, like MyBabyWidgets'.
+        MYBABY_APP_BUNDLE_IDENTIFIER: com.mybaby.ios
+        PRODUCT_BUNDLE_IDENTIFIER: $(MYBABY_APP_BUNDLE_IDENTIFIER).watchkitapp
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 2
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: 4
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MyBaby
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown"
+        INFOPLIST_KEY_WKCompanionAppBundleIdentifier: $(MYBABY_APP_BUNDLE_IDENTIFIER)
+        INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp: NO
+        ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+  # Watch face complications: time since the last feed, and the last feed and diaper.
+  MyBabyWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: MyBabyWatchWidgets
+        excludes: [Info.plist]
+      - path: Shared
+        excludes: [BabyEntity.swift, ButtonIntents.swift, LiveActivityAttributes.swift]
+    info:
+      path: MyBabyWatchWidgets/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        MyBabyAppGroup: group.$(MYBABY_APP_BUNDLE_IDENTIFIER)
+    entitlements:
+      path: MyBabyWatchWidgets.entitlements
+      properties:
+        com.apple.security.application-groups: [group.$(MYBABY_APP_BUNDLE_IDENTIFIER)]
+    settings:
+      base:
+        MYBABY_APP_BUNDLE_IDENTIFIER: com.mybaby.ios
+        PRODUCT_BUNDLE_IDENTIFIER: $(MYBABY_APP_BUNDLE_IDENTIFIER).watchkitapp.widgets
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 2
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: 4
+        SKIP_INSTALL: YES
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MyBaby

@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in MyBaby isn't working as it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Please don't include your baby's details, photos or
+        anything else private. For a security or privacy problem, email mybaby@manhattin.com instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Today
+        2. Tap …
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: MyBaby version
+      description: More › Settings, at the bottom.
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and iOS version
+      placeholder: iPhone 16 Pro, iOS 26.0
+    validations:
+      required: true
+  - type: dropdown
+    id: sharing
+    attributes:
+      label: iCloud and sharing
+      options:
+        - On this iPhone only
+        - iCloud sync on
+        - Shared with a partner
+    validations:
+      required: false

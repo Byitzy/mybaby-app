@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged with the Info.plist Xcode generates from the build settings. Not copied as a resource:
+	     the project excludes it from the MyBabyWidgets folder's build files. -->
+	<key>NSExtension</key>
+	<dict>
+		<key>NSExtensionPointIdentifier</key>
+		<string>com.apple.widgetkit-extension</string>
+	</dict>
+	<!-- Read by AppGroup; must match the App Group in MyBabyWidgets.entitlements and the app's. -->
+	<key>MyBabyAppGroup</key>
+	<string>group.$(MYBABY_APP_BUNDLE_IDENTIFIER)</string>
+</dict>
+</plist>

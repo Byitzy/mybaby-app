@@ -1,0 +1,17 @@
+name: Feature request
+description: An idea that would make MyBaby more helpful.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would help?
+      description: What's hard or missing today, and when it comes up (at 3 a.m., at a checkup…).
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could MyBaby do it?
+    validations:
+      required: false

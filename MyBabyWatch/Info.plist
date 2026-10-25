@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged with the Info.plist Xcode generates from the build settings. Not copied as a resource:
+	     the project excludes it from the MyBabyWatch folder's build files. -->
+	<key>WKApplication</key>
+	<true/>
+	<!-- Read by AppGroup; must match the App Group in MyBabyWatch.entitlements. On the watch it's a folder
+	     the watch app shares with its complications; the iPhone's data never goes there except through
+	     WatchConnectivity. -->
+	<key>MyBabyAppGroup</key>
+	<string>group.$(MYBABY_APP_BUNDLE_IDENTIFIER)</string>
+</dict>
+</plist>

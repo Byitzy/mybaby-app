@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23231" systemVersion="24A335" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="Baby" representedClassName="Baby" syncable="YES">
+        <attribute name="birthDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="nightPlanData" optional="YES" attributeType="Binary" allowsCloudEncryption="YES"/>
+        <attribute name="pendingQuestions" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="sexRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="activities" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Activity" inverseName="baby" inverseEntity="Activity"/>
+        <relationship name="alertInboxes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="AlertInbox" inverseName="baby" inverseEntity="AlertInbox"/>
+        <relationship name="allergies" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Allergy" inverseName="baby" inverseEntity="Allergy"/>
+        <relationship name="allergyReactions" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="AllergyReaction" inverseName="baby" inverseEntity="AllergyReaction"/>
+        <relationship name="appointments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Appointment" inverseName="baby" inverseEntity="Appointment"/>
+        <relationship name="diaryEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DiaryEntry" inverseName="baby" inverseEntity="DiaryEntry"/>
+        <relationship name="growthEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="GrowthEntry" inverseName="baby" inverseEntity="GrowthEntry"/>
+        <relationship name="medicineSchedules" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MedicineSchedule" inverseName="baby" inverseEntity="MedicineSchedule"/>
+        <relationship name="milkBags" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MilkBag" inverseName="baby" inverseEntity="MilkBag"/>
+        <relationship name="milestones" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Milestone" inverseName="baby" inverseEntity="Milestone"/>
+        <relationship name="monitorDevices" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MonitorDevice" inverseName="baby" inverseEntity="MonitorDevice"/>
+        <relationship name="trackingPeriods" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="TrackingPeriod" inverseName="baby" inverseEntity="TrackingPeriod"/>
+        <relationship name="vaccines" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Vaccine" inverseName="baby" inverseEntity="Vaccine"/>
+    </entity>
+    <entity name="Activity" representedClassName="Activity" syncable="YES">
+        <attribute name="amountMLNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="caregiverRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="diaperTypeRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="dosage" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="endDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="feedingTypeRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="foodDescription" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="kindRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="feeding"/>
+        <attribute name="leftMinutesNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="medicationName" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="poopColorRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="poopConsistencyRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="rightMinutesNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="startDate" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="pumpLeftMLNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="pumpRightMLNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="durationMinutesNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="temperatureCNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="temperatureMethodRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="symptomsRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="isApproximate" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="allergensRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="activities" inverseEntity="Baby"/>
+    </entity>
+    <entity name="Vaccine" representedClassName="Vaccine" syncable="YES">
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="doseLabel" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="isGiven" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="lotNumber" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="name" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="provider" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="vaccines" inverseEntity="Baby"/>
+    </entity>
+    <entity name="Appointment" representedClassName="Appointment" syncable="YES">
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="headCircumferenceCmNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="location" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="provider" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="questionAnswers" optional="YES" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="questions" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="recapDoneAt" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="reminderMinutesNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="visitNotes" optional="YES" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="appointments" inverseEntity="Baby"/>
+    </entity>
+    <entity name="GrowthEntry" representedClassName="GrowthEntry" syncable="YES">
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="lengthCmNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="weightKgNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="growthEntries" inverseEntity="Baby"/>
+    </entity>
+    <entity name="MilkBag" representedClassName="MilkBag" syncable="YES">
+        <attribute name="amountMLNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="discarded" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="frozenDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="pumpedDate" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="storageRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="fridge"/>
+        <attribute name="thawedDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="usedDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="milkBags" inverseEntity="Baby"/>
+    </entity>
+    <entity name="MedicineSchedule" representedClassName="MedicineSchedule" syncable="YES">
+        <attribute name="maxDosesPer24hNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="minHoursBetweenNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="medicineSchedules" inverseEntity="Baby"/>
+    </entity>
+    <entity name="Milestone" representedClassName="Milestone" syncable="YES">
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="emoji" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="title" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="milestones" inverseEntity="Baby"/>
+        <relationship name="photos" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="MilestonePhoto" inverseName="milestone" inverseEntity="MilestonePhoto"/>
+    </entity>
+    <entity name="MilestonePhoto" representedClassName="MilestonePhoto" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsCloudEncryption="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="milestone" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Milestone" inverseName="photos" inverseEntity="Milestone"/>
+    </entity>
+    <entity name="CareEntry" representedClassName="CareEntry" syncable="YES">
+        <attribute name="bleedingRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="dosage" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="kindRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="mood"/>
+        <attribute name="medicationName" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="moodScore" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="painLevelNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="sleepHoursNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="TrackingPeriod" representedClassName="TrackingPeriod" syncable="YES">
+        <attribute name="end" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="kindRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="notTracked"/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="reasonRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="start" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="trackingPeriods" inverseEntity="Baby"/>
+    </entity>
+    <entity name="AlertInbox" representedClassName="AlertInbox" syncable="YES">
+        <attribute name="deviceName" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="ownerUserRecordName" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="parentRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="both"/>
+        <attribute name="shareURL" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="updatedAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="alertInboxes" inverseEntity="Baby"/>
+    </entity>
+    <entity name="MonitorDevice" representedClassName="MonitorDevice" syncable="YES">
+        <attribute name="deviceName" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="isListening" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="lastSeen" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="noiseRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="off"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="monitorDevices" inverseEntity="Baby"/>
+    </entity>
+    <entity name="DiaryEntry" representedClassName="DiaryEntry" syncable="YES">
+        <attribute name="authorName" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="kindRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="moment"/>
+        <attribute name="openAtAgeNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="openOnDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="periodIndexNumber" optional="YES" attributeType="Integer 64" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="periodKindRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="text" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="title" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="diaryEntries" inverseEntity="Baby"/>
+        <relationship name="photos" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="DiaryPhoto" inverseName="entry" inverseEntity="DiaryPhoto"/>
+    </entity>
+    <entity name="DiaryPhoto" representedClassName="DiaryPhoto" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsCloudEncryption="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="entry" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="DiaryEntry" inverseName="photos" inverseEntity="DiaryEntry"/>
+    </entity>
+    <entity name="Allergy" representedClassName="Allergy" syncable="YES">
+        <attribute name="allergenRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="autoInjectorLocation" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="categoryRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="food"/>
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="diagnosedBy" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="diagnosedDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="hasAutoInjector" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="reactionsSeen" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="severityRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="mild"/>
+        <attribute name="statusRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="suspected"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="allergies" inverseEntity="Baby"/>
+        <relationship name="reactions" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="AllergyReaction" inverseName="allergy" inverseEntity="AllergyReaction"/>
+    </entity>
+    <entity name="AllergyReaction" representedClassName="AllergyReaction" syncable="YES">
+        <attribute name="actionsRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="food" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="severityRaw" attributeType="String" allowsCloudEncryption="YES" defaultValueString="mild"/>
+        <attribute name="symptomsRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="allergy" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Allergy" inverseName="reactions" inverseEntity="Allergy"/>
+        <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="allergyReactions" inverseEntity="Baby"/>
+        <relationship name="photos" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="AllergyReactionPhoto" inverseName="reaction" inverseEntity="AllergyReactionPhoto"/>
+    </entity>
+    <entity name="AllergyReactionPhoto" representedClassName="AllergyReactionPhoto" syncable="YES">
+        <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="imageData" optional="YES" attributeType="Binary" allowsCloudEncryption="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <relationship name="reaction" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="AllergyReaction" inverseName="photos" inverseEntity="AllergyReaction"/>
+    </entity>
+</model>
