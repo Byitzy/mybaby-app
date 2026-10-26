@@ -98,13 +98,13 @@ struct ActivityEditorView: View {
 
                 if activity != nil && canEditLog {
                     Section {
-                        Button("Delete \(kind.title.lowercased())", role: .destructive) {
+                        Button(kind.deleteTitle, role: .destructive) {
                             confirmingDelete = true
                         }
                     }
                 }
             }
-            .navigationTitle(activity == nil ? "Log \(kind.title.lowercased())" : "Edit \(kind.title.lowercased())")
+            .navigationTitle(activity == nil ? kind.logTitle : kind.editTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -148,10 +148,10 @@ struct ActivityEditorView: View {
         case .breast:
             Section {
                 Stepper(value: $leftMinutes, in: 0...120) {
-                    LabeledContent("Left side", value: "\(leftMinutes) min")
+                    LabeledContent("Left side", value: String(localized: "\(leftMinutes) min", comment: "Minutes, abbreviated"))
                 }
                 Stepper(value: $rightMinutes, in: 0...120) {
-                    LabeledContent("Right side", value: "\(rightMinutes) min")
+                    LabeledContent("Right side", value: String(localized: "\(rightMinutes) min", comment: "Minutes, abbreviated"))
                 }
             } header: {
                 Text("How long on each side")
@@ -478,6 +478,46 @@ struct ActivityEditorView: View {
         case .medication: CareReminders.refreshMedicine(context: context)
         case .pumping: CareReminders.refreshMilkStash(context: context)
         default: break
+        }
+    }
+}
+
+private extension ActivityKind {
+    /// The editor's titles, each a whole phrase, since the article and the word order change with the
+    /// kind in other languages.
+    var logTitle: String {
+        switch self {
+        case .feeding: return String(localized: "Log feeding", comment: "Title of the editor for a new feed")
+        case .diaper: return String(localized: "Log diaper", comment: "Title of the editor for a new diaper change")
+        case .sleep: return String(localized: "Log sleep", comment: "Title of the editor for a new sleep")
+        case .bath: return String(localized: "Log bath", comment: "Title of the editor for a new bath")
+        case .medication: return String(localized: "Log medicine", comment: "Title of the editor for a new medicine dose")
+        case .pumping: return String(localized: "Log pumping", comment: "Title of the editor for a new pumping session")
+        case .temperature: return String(localized: "Log temperature", comment: "Title of the editor for a new temperature")
+        }
+    }
+
+    var editTitle: String {
+        switch self {
+        case .feeding: return String(localized: "Edit feeding")
+        case .diaper: return String(localized: "Edit diaper")
+        case .sleep: return String(localized: "Edit sleep")
+        case .bath: return String(localized: "Edit bath")
+        case .medication: return String(localized: "Edit medicine")
+        case .pumping: return String(localized: "Edit pumping")
+        case .temperature: return String(localized: "Edit temperature")
+        }
+    }
+
+    var deleteTitle: String {
+        switch self {
+        case .feeding: return String(localized: "Delete feeding")
+        case .diaper: return String(localized: "Delete diaper")
+        case .sleep: return String(localized: "Delete sleep")
+        case .bath: return String(localized: "Delete bath")
+        case .medication: return String(localized: "Delete medicine")
+        case .pumping: return String(localized: "Delete pumping")
+        case .temperature: return String(localized: "Delete temperature")
         }
     }
 }

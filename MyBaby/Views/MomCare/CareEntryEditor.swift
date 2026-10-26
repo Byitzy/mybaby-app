@@ -30,7 +30,7 @@ struct CareEntryEditor: View {
                     }
                     Section("How were you feeling?") {
                         MoodPicker(selection: $mood)
-                        SleepStepper(title: "Sleep the night before", hours: $sleepHours)
+                        SleepStepper(title: String(localized: "Sleep the night before"), hours: $sleepHours)
                         PainPicker(level: $painLevel)
                     }
                 case .medication:
@@ -63,13 +63,13 @@ struct CareEntryEditor: View {
 
                 if entry != nil {
                     Section {
-                        Button("Delete \(kind.title.lowercased())", role: .destructive) {
+                        Button(deleteTitle, role: .destructive) {
                             confirmingDelete = true
                         }
                     }
                 }
             }
-            .navigationTitle(entry == nil ? "New \(kind.title.lowercased())" : "Edit \(kind.title.lowercased())")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -92,13 +92,35 @@ struct CareEntryEditor: View {
             .onAppear(perform: load)
         }
         .threeAMSheet()
+        // Private, like the care page it opens from.
+        .privateScreen()
     }
 
     private var notesPrompt: String {
         switch kind {
-        case .mood: return "Anything on your mind?"
-        case .medication: return "Optional"
-        case .recovery: return "Stitches, healing, feeding, how your body feels…"
+        case .mood: return String(localized: "Anything on your mind?")
+        case .medication: return String(localized: "Optional")
+        case .recovery: return String(localized: "Stitches, healing, feeding, how your body feels…")
+        }
+    }
+
+    /// "New check-in", "Edit medicine"… One string for each, so each language can say it its own way.
+    private var title: String {
+        switch (kind, entry == nil) {
+        case (.mood, true): return String(localized: "New check-in")
+        case (.mood, false): return String(localized: "Edit check-in")
+        case (.medication, true): return String(localized: "New medicine")
+        case (.medication, false): return String(localized: "Edit medicine")
+        case (.recovery, true): return String(localized: "New recovery note")
+        case (.recovery, false): return String(localized: "Edit recovery note")
+        }
+    }
+
+    private var deleteTitle: String {
+        switch kind {
+        case .mood: return String(localized: "Delete check-in")
+        case .medication: return String(localized: "Delete medicine")
+        case .recovery: return String(localized: "Delete recovery note")
         }
     }
 

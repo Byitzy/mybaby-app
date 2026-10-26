@@ -6,7 +6,9 @@ import Foundation
 ///
 /// Measurements and shots from the visit aren't stored here: they're a `GrowthEntry` and `Vaccine`s
 /// dated at the appointment, found again by that date (`measurementAtVisit`, `vaccinesGivenAtVisit`).
-/// Head circumference is kept here, because GrowthEntry has no field for it yet.
+/// Head circumference was kept here before GrowthEntry had a field for it. Recaps now save it on
+/// the entry and still copy it here, for a partner's phone on an earlier version of MyBaby; older
+/// recaps' values are read from here and merged into Growth (`GrowthReading`).
 extension Appointment {
     /// What the doctor said or advised.
     @NSManaged var visitNotes: String?
@@ -67,27 +69,31 @@ extension Appointment {
     func recapSummary(units: GrowthUnits) -> String? {
         guard hasRecap else { return nil }
         var parts: [String] = []
-        if let entry = measurementAtVisit {
-            if let kg = entry.weightKg {
-                parts.append("Weighed \(units.formatWeight(kg: kg))")
-            } else if let cm = entry.lengthCm {
-                parts.append("Measured \(units.formatLength(cm: cm))")
-            }
-        } else if headCircumferenceCm != nil {
-            parts.append("Measured")
+        let entry = measurementAtVisit
+        if let kg = entry?.weightKg {
+            parts.append(String(localized: "Weighed \(units.formatWeight(kg: kg))", comment: "Visit recap: the baby's weight at the visit"))
+        } else if let cm = entry?.lengthCm {
+            // "Length", not "Measured": "Measured %@" is also a date ("Measured Oct 20"), which other
+            // languages word differently.
+            parts.append(String(localized: "Length \(units.formatLength(cm: cm))", comment: "Visit recap: the baby's length at the visit, or a length percentile: Length 52 cm, Length 62nd"))
+        } else if let cm = entry?.headCircumferenceCm ?? headCircumferenceCm {
+            parts.append(String(localized: "Head \(units.formatLength(cm: cm))", comment: "Visit recap: the head circumference at the visit"))
         }
         let shots = vaccinesGivenAtVisit.count
-        if shots > 0 { parts.append(Format.plural(shots, "shot")) }
+        if shots > 0 {
+            parts.append(shots == 1 ? String(localized: "1 shot", comment: "Visit recap: one vaccine given") : String(localized: "\(shots) shots", comment: "Visit recap: vaccines given"))
+        }
         let hasNotes = !(visitNotes ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        if hasNotes || !answers.isEmpty { parts.append("notes") }
-        return parts.isEmpty ? "Visit noted" : parts.joined(separator: " · ")
+        if hasNotes || !answers.isEmpty { parts.append(String(localized: "notes", comment: "Visit recap: notes were written, after “Weighed 5.2 kg · 2 shots · ”")) }
+        return parts.isEmpty ? String(localized: "Visit noted") : parts.joined(separator: " · ")
     }
 
     /// For "Book the next visit": the next checkup after "2-month checkup" ("4-month checkup"), nothing
     /// after the last checkup, and the same title for anything else (a follow-up with a specialist).
+    /// A checkup saved in English finds its place too; the next one is in the iPhone's language.
     static func nextTitle(after title: String) -> String {
-        let checkups = commonTitles.filter { $0.hasSuffix("checkup") }
-        guard let index = checkups.firstIndex(of: title) else { return title }
+        let checkups = checkupTitles
+        guard let index = checkups.firstIndex(of: title) ?? englishCheckupTitles.firstIndex(of: title) else { return title }
         let next = checkups.index(after: index)
         return next < checkups.endIndex ? checkups[next] : ""
     }

@@ -246,15 +246,16 @@ struct NightPlanView: View {
     // MARK: Helpers
 
     private var remindersFooter: String {
-        var text = "The wake-up repeats every 30 seconds, up to 5 times, until you tap “I'm up”. "
+        var text = String(localized: "The wake-up repeats every 30 seconds, up to 5 times, until you tap “I'm up”.") + " "
         switch plan.alarmStyle {
         case .vibrate:
-            text += "Vibrate only makes no sound, so your partner and baby keep sleeping. Keep the phone under your pillow or in your hand, since a phone buzzing on a nightstand can still be heard. If you don't feel anything, turn on haptics in iPhone Settings › Sounds & Haptics."
+            text += String(localized: "Vibrate only makes no sound, so your partner and baby keep sleeping. Keep the phone under your pillow or in your hand, since a phone buzzing on a nightstand can still be heard. If you don't feel anything, turn on haptics in iPhone Settings › Sounds & Haptics.")
         case .sound:
-            text += "Sound uses the standard notification sound, so keep your ringer on."
+            text += String(localized: "Sound uses the standard notification sound, so keep your ringer on.")
         }
-        text += "\n\nApple Watch: while you wear it and your iPhone is locked, alerts come as a tap on your wrist, and you can tap “I'm up” there. When the watch is on its charger, your iPhone gets them instead. There's nothing to set up.\n\nIf you use a Sleep Focus or Do Not Disturb at night, add MyBaby to its allowed apps, or the alerts will stay silent."
-        text += "\n\nWith Family sharing on, the schedule syncs to your partner's phone automatically. On each phone, pick its owner under “This iPhone belongs to” (here or in Settings › Parents) so it only wakes them."
+        text += "\n\n" + String(localized: "Apple Watch: while you wear it and your iPhone is locked, alerts come as a tap on your wrist, and you can tap “I'm up” there. When the watch is on its charger, your iPhone gets them instead. There's nothing to set up.")
+        text += "\n\n" + String(localized: "If you use a Sleep Focus or Do Not Disturb at night, add MyBaby to its allowed apps, or the alerts will stay silent.")
+        text += "\n\n" + String(localized: "With Family sharing on, the schedule syncs to your partner's phone automatically. On each phone, pick its owner under “This iPhone belongs to” (here or in Settings › Parents) so it only wakes them.")
         return text
     }
 

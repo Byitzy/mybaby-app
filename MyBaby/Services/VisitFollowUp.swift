@@ -10,8 +10,8 @@ import UserNotifications
 /// - Tied to the appointment's own reminder: an appointment with "Reminder: None" gets no follow-up.
 /// - Only for the next `maxPending` (3) appointments, to stay within iOS's 64 pending notifications
 ///   (see the budget at the top of `NotificationManager`). The rest are scheduled as these go by.
-/// - Cancelled once the appointment has a recap, here or from the partner's phone, and moved when the
-///   appointment is edited or deleted.
+/// - Cancelled once the appointment has a recap or is itself cancelled, here or from the partner's
+///   phone, and moved when the appointment is edited or deleted.
 ///
 /// Started once at launch (`MyBabyApp.init`). It's worked out again after any save that touches an
 /// appointment, when changes arrive from the partner's phone, and when the app opens.
@@ -71,7 +71,7 @@ final class VisitFollowUp {
         guard let appointments = try? context.fetch(request) else { return }
         // Sorted by date, so these are the soonest.
         let upcoming = appointments
-            .filter { $0.reminderMinutes != nil && $0.uuid != nil }
+            .filter { $0.reminderMinutes != nil && $0.uuid != nil && !$0.isCancelled }
             .prefix(Self.maxPending)
         let keep = Set(upcoming.map(Self.identifier(for:)))
 
@@ -92,8 +92,12 @@ final class VisitFollowUp {
         guard interval > 1 else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "How did it go?"
-        content.body = "\(Self.question(for: appointment)) Add notes, measurements or shots from the visit."
+        content.title = String(localized: "How did it go?", comment: "Notification title after an appointment")
+        let question = Self.question(for: appointment)
+        content.body = String(
+            localized: "\(question) Add notes, measurements or shots from the visit.",
+            comment: "Notification after an appointment; the question is like “How did Mavie's 2-month checkup go?”"
+        )
         content.sound = .default
         content.userInfo = [Self.appointmentKey: uuid.uuidString]
 
@@ -111,12 +115,23 @@ final class VisitFollowUp {
 
     /// "How did Mavie's 2-month checkup go?"
     nonisolated static func question(for appointment: Appointment) -> String {
-        let what = appointment.title.isEmpty ? "appointment" : appointment.title
-        guard let name = appointment.baby?.displayName else { return "How did the \(what) go?" }
-        return "How did \(name)'s \(what) go?"
+        let title = appointment.title
+        switch (appointment.baby?.displayName, title.isEmpty) {
+        case (nil, true):
+            return String(localized: "How did the appointment go?", comment: "After an appointment with no title")
+        case (nil, false):
+            return String(localized: "How did the \(title) go?", comment: "After an appointment; its title, like 2-month checkup")
+        case (let name?, true):
+            return String(localized: "How did \(name)'s appointment go?", comment: "After an appointment with no title; the baby's name")
+        case (let name?, false):
+            return String(
+                localized: "How did \(name)'s \(title) go?",
+                comment: "After an appointment; the baby's name, then the appointment's title, like 2-month checkup"
+            )
+        }
     }
 
-    private static func identifier(for appointment: Appointment) -> String {
+    static func identifier(for appointment: Appointment) -> String {
         identifierPrefix + (appointment.uuid?.uuidString ?? "")
     }
 

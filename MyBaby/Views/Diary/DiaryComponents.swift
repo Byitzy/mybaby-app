@@ -66,7 +66,7 @@ struct DiaryEntryRow: View {
     private var spokenValue: String {
         var parts = [DiaryText.byline(entry, baby: baby).replacingOccurrences(of: " · ", with: ", ")]
         if !entry.text.isEmpty, entry.text != entry.displayTitle { parts.append(String(entry.text.prefix(200))) }
-        if !photoIDs.isEmpty { parts.append(Format.plural(photoIDs.count, "photo")) }
+        if !photoIDs.isEmpty { parts.append(String(localized: "\(photoIDs.count) photos")) }
         return parts.joined(separator: ". ")
     }
 }
@@ -111,9 +111,9 @@ struct SealedLetterCard: View {
     /// "From Mom · written Oct 12, 2026", or "Ready to open 💌" once its day has come.
     private var subtitle: String {
         var parts: [String] = []
-        if !isSealed { parts.append("Ready to open") }
-        if let author = entry.author { parts.append("From \(author)") }
-        parts.append("written \(entry.date.formatted(date: .abbreviated, time: .omitted))")
+        if !isSealed { parts.append(String(localized: "Ready to open", comment: "A letter for later whose day has come")) }
+        if let author = entry.author { parts.append(String(localized: "From \(author)", comment: "Who wrote a letter")) }
+        parts.append(String(localized: "written \(entry.date.formatted(date: .abbreviated, time: .omitted))", comment: "When a letter was written, after “From Sam ·”"))
         return parts.joined(separator: " · ")
     }
 }
@@ -149,15 +149,75 @@ enum DiaryText {
     /// "Oct 12, 2026 · 6 weeks old · by Mom", plus "about Month 3" for a note about a period.
     static func byline(_ entry: DiaryEntry, baby: Baby) -> String {
         var parts = [entry.dateAndAge(birthDate: baby.birthDate)]
-        if let author = entry.author { parts.append("by \(author)") }
+        if let author = entry.author { parts.append(String(localized: "by \(author)", comment: "Who wrote a diary entry, after its date")) }
         if let id = entry.periodID {
-            parts.append("about \(id.kind == .week ? "Week" : "Month") \(id.index)")
+            parts.append(id.kind == .week
+                ? String(localized: "about Week \(id.index)", comment: "A note about one week of the baby's life")
+                : String(localized: "about Month \(id.index)", comment: "A note about one month of the baby's life"))
         }
         return parts.joined(separator: " · ")
     }
 
     /// "Mavie's diary", or "Diary" before a name is set.
     static func title(for baby: Baby) -> String {
-        baby.name.isEmpty ? "Diary" : "\(baby.name)'s diary"
+        baby.name.isEmpty ? String(localized: "Diary") : String(localized: "\(baby.name)'s diary")
+    }
+
+    /// The sentence that fits the baby: `female` or `male` when the sex is set, or `unknown`, which uses
+    /// the name so nothing is assumed. Whole sentences, since a pronoun changes more than one word in
+    /// other languages.
+    static func bySex(
+        _ baby: Baby,
+        female: @autoclosure () -> String,
+        male: @autoclosure () -> String,
+        unknown: @autoclosure () -> String
+    ) -> String {
+        switch baby.sex {
+        case .female: return female()
+        case .male: return male()
+        case nil: return unknown()
+        }
+    }
+
+    /// "What did she learn?", a prompt for a note about a week or month.
+    static func whatDidTheyLearn(_ baby: Baby) -> String {
+        let name = baby.displayName
+        return bySex(
+            baby,
+            female: String(localized: "What did she learn?"),
+            male: String(localized: "What did he learn?"),
+            unknown: String(localized: "What did \(name) learn?")
+        )
+    }
+
+    /// The age the baby reaches when `period` ends, as a number and a unit, like `DiaryPeriod.ageReached`
+    /// ("6 weeks", "3 months", "1 year"). For whole sentences that say it, each with its own plurals,
+    /// rather than gluing the English words into a sentence.
+    static func ageReached(_ period: DiaryPeriod) -> (unit: AgeUnit, count: Int) {
+        switch period.kind {
+        case .week: return (.weeks, period.index)
+        case .month: return period.index % 12 == 0 ? (.years, period.index / 12) : (.months, period.index)
+        }
+    }
+
+    enum AgeUnit {
+        case weeks, months, years
+    }
+
+    /// "3 months old", for the keepsake's "2 months old → 3 months old".
+    static func ageOld(_ period: DiaryPeriod) -> String {
+        let age = ageReached(period)
+        switch age.unit {
+        case .weeks: return String(localized: "\(age.count) weeks old", comment: "The baby's age")
+        case .months: return String(localized: "\(age.count) months old", comment: "The baby's age")
+        case .years: return String(localized: "\(age.count) years old", comment: "The baby's age")
+        }
+    }
+
+    /// "18th", written the way the person's language writes it.
+    static func ordinal(_ number: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
+        return formatter.string(from: NSNumber(value: number)) ?? "\(number)"
     }
 }

@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 
 /// "Make a keepsake PDF": picks what goes in (one month, the first year or everything), whether the
@@ -25,9 +26,9 @@ struct KeepsakeView: View {
 
         var title: String {
             switch self {
-            case .month: return "One month"
-            case .firstYear: return "The first year"
-            case .everything: return "Everything"
+            case .month: return String(localized: "One month", comment: "What goes in the keepsake PDF")
+            case .firstYear: return String(localized: "The first year", comment: "What goes in the keepsake PDF")
+            case .everything: return String(localized: "Everything", comment: "What goes in the keepsake PDF")
             }
         }
     }
@@ -37,7 +38,7 @@ struct KeepsakeView: View {
             Form {
                 Section {
                     if months.isEmpty {
-                        LabeledContent("What to include", value: "Everything")
+                        LabeledContent("What to include", value: String(localized: "Everything", comment: "What goes in the keepsake PDF"))
                     } else {
                         Picker("What to include", selection: $choice) {
                             ForEach(Choice.allCases) { option in
@@ -108,9 +109,16 @@ struct KeepsakeView: View {
     }
 
     private var contentsFooter: String {
-        let base = "The diary entries with their photos, each month's summary and your notes about it."
+        let base = String(localized: "The diary entries with their photos, each month's summary and your notes about it.")
         if baby.birthDate == nil {
-            return "\(base) Add \(baby.possessivePronoun) birthday to have it arranged by month of life, with summaries."
+            let name = baby.displayName
+            let addBirthday = DiaryText.bySex(
+                baby,
+                female: String(localized: "Add her birthday to have it arranged by month of life, with summaries."),
+                male: String(localized: "Add his birthday to have it arranged by month of life, with summaries."),
+                unknown: String(localized: "Add \(name)'s birthday to have it arranged by month of life, with summaries.")
+            )
+            return "\(base) \(addBirthday)"
         }
         return base
     }

@@ -60,6 +60,10 @@ extension BabyEntityQuery: EntityStringQuery {
 }
 
 /// The words Siri says about a baby.
+///
+/// Sentences that name the baby come in whole versions, with and without the name ("Logged a bath for
+/// Mavie." and "Logged a bath."), rather than " for Mavie" added on, so each language can word them its
+/// own way.
 @MainActor
 enum SiriText {
     /// Whether the baby has been given a name, rather than showing as "Baby".
@@ -67,34 +71,50 @@ enum SiriText {
         !baby.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    /// " for Mavie", or nothing before the baby has a name: "Logged a wet diaper for Mavie."
-    static func forBaby(_ baby: Baby) -> String {
-        hasName(baby) ? " for \(baby.displayName)" : ""
+    /// `named` with the baby's name once they have one ("Logged a wet diaper for Mavie."), or else
+    /// `unnamed` ("Logged a wet diaper.").
+    static func sentence(for baby: Baby, named: (String) -> String, unnamed: @autoclosure () -> String) -> String {
+        hasName(baby) ? named(baby.displayName) : unnamed()
     }
 
     /// "Mavie", or "The baby" ("the baby" when `capitalized` is false) before the baby has a name.
     static func name(_ baby: Baby, capitalized: Bool = true) -> String {
         if hasName(baby) { return baby.displayName }
-        return capitalized ? "The baby" : "the baby"
+        return capitalized
+            ? String(localized: "The baby", comment: "Siri: the subject at the start of a sentence, before the baby has a name")
+            : String(localized: "the baby", comment: "Siri: the subject in the middle of a sentence, before the baby has a name")
     }
 
-    /// "Mavie's last feed". Before the baby has a name, `QuickLog.babyPrefix`: "The last feed", or
-    /// "Baby's last feed" with twins. Lowercased at the start when `capitalized` is false.
-    static func subject(_ baby: Baby, _ thing: String, capitalized: Bool = true) -> String {
-        let text = hasName(baby) ? "\(baby.displayName)'s \(thing)" : QuickLog.babyPrefix(baby, thing)
-        guard !capitalized, text.hasPrefix("The ") else { return text }
-        return "the " + text.dropFirst(4)
+    /// Whose it is, for "Mavie's last feed": the baby's name, or "Baby" with twins before they have
+    /// names. `nil` with one baby without a name, for "The last feed".
+    static func possessiveName(_ baby: Baby) -> String? {
+        if hasName(baby) || QuickLog.babyCount > 1 { return baby.displayName }
+        return nil
     }
 
-    /// "just now" or "2 hours, 10 minutes ago".
-    static func ago(_ date: Date, now: Date = .now) -> String {
+    /// "2 hours, 10 minutes": how long ago `date` was, for "…was 2 hours, 10 minutes ago". `nil` under a
+    /// minute ago, for "…was just now". The sentences say "ago" and "just now" themselves, since languages
+    /// put them in different places.
+    static func ago(_ date: Date, now: Date = .now) -> String? {
         let seconds = now.timeIntervalSince(date)
-        return seconds < 60 ? "just now" : "\(QuickLog.spokenDuration(seconds)) ago"
+        return seconds < 60 ? nil : QuickLog.spokenDuration(seconds)
     }
 
     /// "4:10 AM".
     static func time(_ date: Date) -> String {
         date.formatted(date: .omitted, time: .shortened)
+    }
+
+    /// "left 10 minutes and right 5 minutes": the sides of a breastfeeding that were used.
+    static func breastSides(left: Int, right: Int) -> String {
+        var sides: [String] = []
+        if left > 0 {
+            sides.append(String(localized: "left \(left) minutes", comment: "Siri: minutes of breastfeeding on the left side"))
+        }
+        if right > 0 {
+            sides.append(String(localized: "right \(right) minutes", comment: "Siri: minutes of breastfeeding on the right side"))
+        }
+        return sides.formatted(.list(type: .and))
     }
 
     /// The parent's unit for amounts, ml or oz.
@@ -131,7 +151,10 @@ final class SiriBabyNames {
                 MainActor.assumeIsolated { self?.scheduleRefresh() }
             })
         }
-        refresh(force: true)
+        // A moment after launch rather than before the first screen: it reads the babies and calls
+        // into the system. Until a first refresh there are no names to compare with, so any refresh
+        // tells Siri, as a forced one would.
+        scheduleRefresh()
     }
 
     /// Checks again shortly, once changes from iCloud have been merged into the view context.

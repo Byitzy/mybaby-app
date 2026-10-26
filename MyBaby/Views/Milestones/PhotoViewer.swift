@@ -25,7 +25,7 @@ struct PhotoViewer: View {
             }
             .tabViewStyle(.page(indexDisplayMode: photoIDs.count > 1 ? .always : .never))
             .background(Color.black.ignoresSafeArea())
-            .navigationTitle(photoIDs.count > 1 ? "\(selection + 1) of \(photoIDs.count)" : title)
+            .navigationTitle(photoIDs.count > 1 ? String(localized: "\(selection + 1) of \(photoIDs.count)", comment: "Which photo, e.g. “2 of 5”") : title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.black, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)

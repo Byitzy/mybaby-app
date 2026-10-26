@@ -28,6 +28,16 @@ struct ContentView: View {
                 store.requestSync()
             }
         }
+        // Why a medicine on the allergy list wasn't logged.
+        .alert("Not logged", isPresented: noticeBinding) {
+            Button("OK") { store.dismissNotice() }
+        } message: {
+            Text(store.notice ?? "")
+        }
+    }
+
+    private var noticeBinding: Binding<Bool> {
+        Binding(get: { store.notice != nil }, set: { if !$0 { store.dismissNotice() } })
     }
 }
 
@@ -80,23 +90,29 @@ struct StatusSection: View {
             if let feed = snapshot.lastFeed {
                 StatusRow(
                     emoji: feed.emoji,
-                    title: feed.detail.isEmpty ? "Last feed · \(feed.shortTitle)" : "Last feed · \(feed.shortTitle) · \(feed.detail)",
+                    title: feed.detail.isEmpty
+                        ? String(localized: "Last feed · \(feed.shortTitle)", comment: "Watch. What the feed was, e.g. Formula")
+                        : String(localized: "Last feed · \(feed.shortTitle) · \(feed.detail)", comment: "Watch. First: what the feed was, e.g. Formula; second: e.g. 120 ml"),
                     since: feed.date
                 )
             } else {
-                StatusRow(emoji: "🍼", title: "No feed logged yet", since: nil)
+                StatusRow(emoji: "🍼", title: String(localized: "No feed logged yet"), since: nil)
             }
 
             if let diaper = snapshot.lastDiaper {
-                StatusRow(emoji: diaper.emoji, title: "Last diaper · \(diaper.title)", since: diaper.date)
+                StatusRow(
+                    emoji: diaper.emoji,
+                    title: String(localized: "Last diaper · \(diaper.title)", comment: "Watch. What it was, e.g. Pee"),
+                    since: diaper.date
+                )
             } else {
-                StatusRow(emoji: "🧷", title: "No diaper logged yet", since: nil)
+                StatusRow(emoji: "🧷", title: String(localized: "No diaper logged yet"), since: nil)
             }
 
             if let start = snapshot.sleepStart {
-                StatusRow(emoji: "😴", title: "Asleep for", since: start, ago: false)
+                StatusRow(emoji: "😴", title: String(localized: "Asleep for", comment: "Watch: over how long the baby has been asleep"), since: start, ago: false)
             } else if let wake = snapshot.lastWake {
-                StatusRow(emoji: "🌤️", title: "Awake for", since: wake, ago: false)
+                StatusRow(emoji: "🌤️", title: String(localized: "Awake for", comment: "Watch: over how long the baby has been awake"), since: wake, ago: false)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -121,9 +137,15 @@ struct StatusRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
                 if let since {
-                    (Text(since, style: .relative) + Text(ago ? " ago" : ""))
-                        .font(.body.weight(.semibold))
-                        .monospacedDigit()
+                    Group {
+                        if ago {
+                            Text("\(since, style: .relative) ago", comment: "Watch: a time that counts up, e.g. 45 min ago")
+                        } else {
+                            Text(since, style: .relative)
+                        }
+                    }
+                    .font(.body.weight(.semibold))
+                    .monospacedDigit()
                 }
             }
         }
@@ -155,21 +177,41 @@ struct QuickLogGrid: View {
             }
 
             if snapshot.isSleeping {
-                BigButton(emoji: "🌤️", title: "Woke up", tint: .indigo, label: "Baby woke up, end the sleep") {
-                    store.log(.endSleep, message: "Sleep ended")
+                BigButton(
+                    emoji: "🌤️",
+                    title: String(localized: "Woke up", comment: "Watch button: end the sleep"),
+                    tint: .indigo,
+                    label: String(localized: "Baby woke up, end the sleep")
+                ) {
+                    store.log(.endSleep, message: String(localized: "Sleep ended"))
                 }
             } else {
-                BigButton(emoji: "😴", title: "Sleep", tint: .indigo, label: "Baby fell asleep, start a sleep") {
-                    store.log(.startSleep, message: "Sleep started")
+                BigButton(
+                    emoji: "😴",
+                    title: String(localized: "Sleep", comment: "Watch button: start a sleep"),
+                    tint: .indigo,
+                    label: String(localized: "Baby fell asleep, start a sleep")
+                ) {
+                    store.log(.startSleep, message: String(localized: "Sleep started"))
                 }
             }
 
-            BigLink(emoji: "🍼", title: "Bottle", tint: .orange, label: "Log a bottle") {
+            BigLink(
+                emoji: "🍼",
+                title: String(localized: "Bottle", comment: "Watch button: log a bottle"),
+                tint: .orange,
+                label: String(localized: "Log a bottle")
+            ) {
                 BottleView(context: context)
             }
 
-            BigLink(emoji: "💊", title: "Medicine", tint: .purple, label: "Log a medicine") {
-                MedicineView(medicines: context.medicines)
+            BigLink(
+                emoji: "💊",
+                title: String(localized: "Medicine", comment: "Watch button: log a medicine"),
+                tint: .purple,
+                label: String(localized: "Log a medicine")
+            ) {
+                MedicineView(medicines: context.medicines, babyName: snapshot.babyName)
             }
         }
     }
@@ -193,23 +235,33 @@ struct FeedingSection: View {
                     .font(.headline)
                 HStack(spacing: 6) {
                     ForEach(BreastSide.allCases) { side in
+                        let isSuggested = side == context.suggestedSide
                         BigButton(
-                            emoji: side == context.suggestedSide ? "⭐️" : "🤱",
-                            title: "Start \(side.title.lowercased())",
+                            emoji: isSuggested ? "⭐️" : "🤱",
+                            title: side == .left
+                                ? String(localized: "Start left", comment: "Watch button: start breastfeeding on the left side")
+                                : String(localized: "Start right", comment: "Watch button: start breastfeeding on the right side"),
                             tint: .pink,
-                            label: side == context.suggestedSide
-                                ? "Start breastfeeding on the \(side.title.lowercased()) side, suggested"
-                                : "Start breastfeeding on the \(side.title.lowercased()) side"
+                            label: Self.startLabel(side, suggested: isSuggested)
                         ) {
-                            store.log(.timerStart(side), message: "Timer started, \(side.title.lowercased())")
+                            store.log(
+                                .timerStart(side),
+                                message: side == .left
+                                    ? String(localized: "Timer started, left")
+                                    : String(localized: "Timer started, right")
+                            )
                         }
                     }
                 }
                 if let suggested = context.suggestedSide {
-                    Text("⭐️ \(suggested.title) is suggested from the last feed")
+                    (suggested == .left ? Text("⭐️ Left is suggested from the last feed") : Text("⭐️ Right is suggested from the last feed"))
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                        .accessibilityLabel("\(suggested.title) side is suggested from the last feed")
+                        .accessibilityLabel(
+                            suggested == .left
+                                ? Text("Left side is suggested from the last feed")
+                                : Text("Right side is suggested from the last feed")
+                        )
                 }
             }
         }
@@ -219,7 +271,7 @@ struct FeedingSection: View {
     @ViewBuilder
     private func running(_ timer: FeedingTimerState) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(timer.isRunning ? "🤱 Feeding on the \(timer.side.title.lowercased())" : "⏸ Paused on the \(timer.side.title.lowercased())")
+            Text(Self.timerTitle(timer))
                 .font(.footnote.weight(.semibold))
             FeedingClockText(state: timer)
                 .font(.system(.title, design: .rounded).weight(.semibold))
@@ -231,7 +283,7 @@ struct FeedingSection: View {
                         FeedingClockText(state: timer, side: side)
                     }
                     .accessibilityElement(children: .combine)
-                    .accessibilityLabel("\(side.title) side")
+                    .accessibilityLabel(side.sideTitle)
                 }
             }
             .font(.caption)
@@ -244,26 +296,57 @@ struct FeedingSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
 
         if timer.isRunning {
+            let toLeft = timer.side.other == .left
             BigButton(
                 emoji: "🔄",
-                title: "Switch to \(timer.side.other.title.lowercased())",
+                title: toLeft
+                    ? String(localized: "Switch to left", comment: "Watch button: switch breastfeeding to the left side")
+                    : String(localized: "Switch to right", comment: "Watch button: switch breastfeeding to the right side"),
                 tint: .pink,
-                label: "Switch to the \(timer.side.other.title.lowercased()) side"
+                label: toLeft ? String(localized: "Switch to the left side") : String(localized: "Switch to the right side")
             ) {
-                store.log(.timerSwitch, message: "Now on the \(timer.side.other.title.lowercased())")
+                store.log(.timerSwitch, message: toLeft ? String(localized: "Now on the left") : String(localized: "Now on the right"))
             }
         } else {
+            let onLeft = timer.side == .left
             BigButton(
                 emoji: "▶️",
-                title: "Resume \(timer.side.title.lowercased())",
+                title: onLeft
+                    ? String(localized: "Resume left", comment: "Watch button: resume breastfeeding on the left side")
+                    : String(localized: "Resume right", comment: "Watch button: resume breastfeeding on the right side"),
                 tint: .pink,
-                label: "Resume on the \(timer.side.title.lowercased()) side"
+                label: onLeft ? String(localized: "Resume on the left side") : String(localized: "Resume on the right side")
             ) {
-                store.log(.timerStart(timer.side), message: "Timer resumed")
+                store.log(.timerStart(timer.side), message: String(localized: "Timer resumed"))
             }
         }
-        BigButton(emoji: "✅", title: "Stop & save", tint: .green, label: "Stop the timer and save the feed") {
-            store.log(.timerStop, message: "Breastfeeding saved")
+        BigButton(
+            emoji: "✅",
+            title: String(localized: "Stop & save", comment: "Watch button: stop the breastfeeding timer and save the feed"),
+            tint: .green,
+            label: String(localized: "Stop the timer and save the feed")
+        ) {
+            store.log(.timerStop, message: String(localized: "Breastfeeding saved"))
+        }
+    }
+
+    /// What VoiceOver reads on a Start button: whole sentences for each side.
+    private static func startLabel(_ side: BreastSide, suggested: Bool) -> String {
+        switch (side, suggested) {
+        case (.left, true): return String(localized: "Start breastfeeding on the left side, suggested")
+        case (.left, false): return String(localized: "Start breastfeeding on the left side")
+        case (.right, true): return String(localized: "Start breastfeeding on the right side, suggested")
+        case (.right, false): return String(localized: "Start breastfeeding on the right side")
+        }
+    }
+
+    /// "🤱 Feeding on the left", or "⏸ Paused on the left".
+    private static func timerTitle(_ timer: FeedingTimerState) -> String {
+        switch (timer.isRunning, timer.side) {
+        case (true, .left): return String(localized: "🤱 Feeding on the left")
+        case (true, .right): return String(localized: "🤱 Feeding on the right")
+        case (false, .left): return String(localized: "⏸ Paused on the left")
+        case (false, .right): return String(localized: "⏸ Paused on the right")
         }
     }
 }

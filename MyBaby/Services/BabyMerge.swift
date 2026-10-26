@@ -187,7 +187,7 @@ final class DuplicateBabies: ObservableObject {
 
     /// What the parent is asked.
     static func question(for name: String) -> String {
-        "\(name) appears twice, probably from another iPhone or iPad. Merge them into one? Everything logged for both is kept."
+        String(localized: "\(name) appears twice, probably from another iPhone or iPad. Merge them into one? Everything logged for both is kept.")
     }
 
     /// Looks for duplicates again. Cheap: one fetch of the babies.

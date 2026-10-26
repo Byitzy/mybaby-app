@@ -43,9 +43,13 @@ enum GapReminder {
         guard fire > now.addingTimeInterval(1), coverage.currentGap(now: now) == nil else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = "Haven't logged in a while"
+        content.title = String(localized: "Haven't logged in a while", comment: "Notification title when nothing was logged for a while")
         let since = last.formatted(date: calendar.isDate(last, inSameDayAs: fire) ? .omitted : .abbreviated, time: .shortened)
-        content.body = "Nothing logged for \(baby.displayName) since \(since). Catch up, or mark the time as not tracked."
+        let name = baby.displayName
+        content.body = String(
+            localized: "Nothing logged for \(name) since \(since). Catch up, or mark the time as not tracked.",
+            comment: "Notification; the baby's name, then a time (or a date and time)"
+        )
         content.sound = .default
         content.threadIdentifier = identifier
 

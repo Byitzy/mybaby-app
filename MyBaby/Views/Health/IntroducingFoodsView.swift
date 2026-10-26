@@ -69,7 +69,7 @@ struct IntroducingFoodsView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    static let footer = "Your pediatrician can tell you when and how to introduce allergens, especially if your baby has eczema or a known allergy."
+    static let footer = String(localized: "Your pediatrician can tell you when and how to introduce allergens, especially if your baby has eczema or a known allergy.")
 
     private func row(_ entry: AllergenIntroduction, now: Date) -> some View {
         let allergy = activeAllergy(for: entry.allergen)
@@ -102,7 +102,7 @@ struct IntroducingFoodsView: View {
                     .font(.caption)
                 }
                 if entry.reactionDates.count > 3 {
-                    Text("and \(Format.plural(entry.reactionDates.count - 3, "more reaction"))")
+                    Text("and \(entry.reactionDates.count - 3) more reactions")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

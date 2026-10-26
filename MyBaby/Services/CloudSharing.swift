@@ -17,7 +17,15 @@ enum CloudSharing {
         // grandparent or a nanny can be invited as view only.
         controller.availablePermissions = [.allowReadWrite, .allowReadOnly, .allowPrivate]
         // UICloudSharingController doesn't work inside a SwiftUI sheet, so present it from UIKit.
-        topViewController()?.present(controller, animated: true)
+        guard let presenter = topViewController() else { return }
+        // On iPad it can open as a popover, which needs something to point at, or UIKit stops the app:
+        // the middle of the screen, with no arrow. iPhone has no popover, so nothing changes there.
+        if let popover = controller.popoverPresentationController, let view = presenter.view {
+            popover.sourceView = view
+            popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+        presenter.present(controller, animated: true)
     }
 
     private static func topViewController() -> UIViewController? {
@@ -37,8 +45,11 @@ private final class SharingDelegate: NSObject, UICloudSharingControllerDelegate 
     var share: CKShare?
     var store: NSPersistentStore?
 
+    /// "Ava's care log", from the babies' names; the sheet saves it into the share.
     func itemTitle(for csc: UICloudSharingController) -> String? {
-        csc.share?[CKShare.SystemFieldKey.title] as? String ?? "Baby's care log"
+        PersistenceController.shared.invitationTitle
+            ?? csc.share?[CKShare.SystemFieldKey.title] as? String
+            ?? String(localized: "Baby's care log", comment: "Title of the iCloud invitation when no baby has a name")
     }
 
     /// The app icon, instead of a generic document, in the sheet and the invitation.

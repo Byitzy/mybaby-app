@@ -189,10 +189,12 @@ struct DiaryEntryDetailView: View {
 
     /// "Written by Mom on Oct 12, 2026 · opens Feb 12, 2044".
     private var sealedDetail: String {
-        var text = entry.author.map { "Written by \($0) on " } ?? "Written on "
-        text += entry.date.formatted(date: .abbreviated, time: .omitted)
+        let written = entry.date.formatted(date: .abbreviated, time: .omitted)
+        var text = entry.author.map { String(localized: "Written by \($0) on \(written)") }
+            ?? String(localized: "Written on \(written)")
         if entry.openOnDate == nil, entry.openAtAge != nil, let opens = entry.opensOn(birthDate: baby.birthDate) {
-            text += " · opens \(opens.formatted(date: .abbreviated, time: .omitted))"
+            let day = opens.formatted(date: .abbreviated, time: .omitted)
+            text += " · " + String(localized: "opens \(day)", comment: "When a sealed letter opens, after “Written on Oct 12, 2026 ·”")
         }
         return text
     }

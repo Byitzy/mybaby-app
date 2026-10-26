@@ -6,6 +6,8 @@ struct RootView: View {
     private var context: NSManagedObjectContext { PersistenceController.shared.viewContext }
     @Environment(\.scenePhase) private var scenePhase
     @ObservedObject private var cloudStatus = CloudStatus.shared
+    /// Delete all MyBaby data: its progress screen, and what happened.
+    @ObservedObject private var dataWipe = DataWipe.shared
     @AppStorage(SettingsKey.threeAMMode) private var threeAMMode: ThreeAMMode = .off
     @AppStorage(SettingsKey.nightPlan, store: .shared) private var nightPlanData = Data()
     /// Moves on every minute while 3 AM mode follows the night, so it turns on and off by itself.
@@ -14,10 +16,16 @@ struct RootView: View {
     /// Plain state rather than `@SceneStorage`: restoring the tab there made the tab bar open the
     /// wrong tab on some iOS versions. A fresh launch starts on Today.
     @State private var selectedTab: AppTab = .today
+    /// The Terms of Use version agreed to on this device; the app waits until it's the current one.
+    @AppStorage(TermsOfUse.acceptedVersionKey) private var acceptedTermsVersion = 0
 
     var body: some View {
         Group {
-            if let message = cloudStatus.reloadingMessage {
+            if acceptedTermsVersion < TermsOfUse.version {
+                TermsAcceptanceView()
+            } else if dataWipe.isRunning {
+                DataWipeProgressView(wipe: dataWipe)
+            } else if let message = cloudStatus.reloadingMessage {
                 ProgressView(message)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -28,10 +36,12 @@ struct RootView: View {
         }
         // The current container's context, so screens rebuilt after the stores reopen use it.
         .environment(\.managedObjectContext, context)
+        // Once a burst of changes has settled: an iCloud import can post this hundreds of times in a
+        // row, and each time this reads the log and reschedules notifications on the main thread.
         .onReceive(
             NotificationCenter.default
                 .publisher(for: .NSPersistentStoreRemoteChange)
-                .receive(on: RunLoop.main)
+                .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
         ) { _ in
             // The partner's log, or one being restored, may have just arrived.
             PersistenceController.shared.checkForImportedBaby()
@@ -85,10 +95,24 @@ struct RootView: View {
         }
         .onChange(of: scenePhase) { _, phase in
             // Timers don't run in the background, so catch up right away when the app opens.
-            if phase == .active { now = .now }
+            if phase == .active {
+                now = .now
+                // After Delete all MyBaby data offline: finish deleting the iCloud copy.
+                Task { await DataWipe.shared.finishICloudIfPending() }
+            }
+        }
+        // Delete all MyBaby data starts over on Today, like a first launch.
+        .onChange(of: dataWipe.isRunning) { _, running in
+            if running { selectedTab = .today }
+        }
+        .sheet(item: $dataWipe.outcome) { outcome in
+            DataWipeResultView(wipe: dataWipe, outcome: outcome)
         }
         // Checked once per launch, so appearing again is harmless.
-        .onAppear { loadSampleDataIfRequested() }
+        .onAppear {
+            loadSampleDataIfRequested()
+            Task { await DataWipe.shared.finishICloudIfPending() }
+        }
     }
 
     /// Debug builds launched with `-MyBabySampleData YES` get Ava's sample log, for screenshots.
@@ -116,8 +140,6 @@ private struct AppContent: View {
     /// Remembered by RootView, so the parent is on the same tab after the rebuild.
     @Binding var selectedTab: AppTab
     @State private var today = Calendar.current.startOfDay(for: .now)
-    /// False when the owner invited this iPhone to the log as view only.
-    @State private var canEditLog = true
 
     init(selectedTab: Binding<AppTab>) {
         _selectedTab = selectedTab
@@ -162,6 +184,8 @@ private struct AppContent: View {
     /// Each tab is rebuilt when another baby is picked, so its fetches show that baby's log.
     private func tabs(_ baby: Baby) -> some View {
         tabView(baby)
+            // ⌘1 to ⌘5 with a keyboard, on iPad.
+            .tabKeyboardShortcuts($selectedTab)
             // A tapped "How did it go?" notification opens that visit's recap.
             .visitRecapRouting()
             .onChange(of: scenePhase) { _, phase in
@@ -174,17 +198,15 @@ private struct AppContent: View {
             .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged).receive(on: RunLoop.main)) { _ in
                 today = Calendar.current.startOfDay(for: .now)
             }
-            // View-only family can look but not log. Checked again when iCloud brings changes, since
-            // the owner can change someone's permission at any time.
-            .environment(\.canEditLog, canEditLog)
-            .task(id: baby.objectID) { canEditLog = PersistenceController.shared.canEdit(baby) }
-            .onReceive(NotificationCenter.default.publisher(for: .NSPersistentStoreRemoteChange).receive(on: RunLoop.main)) { _ in
-                canEditLog = PersistenceController.shared.canEdit(baby)
-            }
+            // View-only family can look but not log. `CloudStatus` checks again when iCloud brings
+            // changes, since the owner can change someone's permission at any time, so this reads its
+            // answer rather than asking the store on every render.
+            .environment(\.canEditLog, cloudStatus.canEdit(baby))
     }
 
     /// The five tabs. From iOS 18 each tab is tied to its `AppTab` value with `Tab`, so a tap on the
-    /// tab bar always opens that tab; iOS 17 uses `tabItem` and `tag`.
+    /// tab bar always opens that tab; iOS 17 uses `tabItem` and `tag`. On iPad from iOS 18 the tabs can
+    /// also be shown as a sidebar; iPhone keeps its tab bar.
     @ViewBuilder
     private func tabView(_ baby: Baby) -> some View {
         if #available(iOS 18, *) {
@@ -195,6 +217,7 @@ private struct AppContent: View {
                 Tab("Health", systemImage: "cross.case", value: AppTab.health) { healthTab(baby) }
                 Tab("More", systemImage: "ellipsis.circle", value: AppTab.more) { moreTab(baby) }
             }
+            .tabViewStyle(.sidebarAdaptable)
         } else {
             TabView(selection: $selectedTab) {
                 todayTab(baby)

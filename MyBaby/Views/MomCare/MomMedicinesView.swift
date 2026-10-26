@@ -102,7 +102,8 @@ struct MomMedicinesView: View {
     }
 
     private func lastTaken(_ dose: CareEntry, now: Date) -> String {
-        let ago = "Last taken \(Format.timeAgo(dose.date, now: now).lowercased())"
+        let timeAgo = Format.timeAgo(dose.date, now: now).lowercased()
+        let ago = String(localized: "Last taken \(timeAgo)", comment: "\"2h ago\"")
         guard let dosage = dose.dosage, !dosage.isEmpty else { return ago }
         return "\(dosage) · \(ago)"
     }
@@ -112,7 +113,7 @@ struct MomMedicinesView: View {
         newDose.medicationName = dose.medicationName
         newDose.dosage = dose.dosage
         context.saveIfChanged()
-        toast = Toast(message: "💊 \(dose.title) logged") { [context] in
+        toast = Toast(message: String(localized: "💊 \(dose.title) logged", comment: "A medicine's name")) { [context] in
             context.delete(newDose)
             context.saveIfChanged()
         }

@@ -2,6 +2,11 @@ import SwiftUI
 import UIKit
 
 /// Writes shareable files (CSV and PDF) to the temporary directory.
+///
+/// Not localized: the CSV headers and values stay in English whatever the app's language, so a
+/// spreadsheet reads the same everywhere and MyBaby's own importer (`MyBabyImporter`) can read the
+/// file back. File names passed in may be translated, but must keep the patterns `removeOldExports`
+/// looks for ("MyBaby-" for CSV files, "-report-", "-keepsake.pdf" or "-allergy-card.pdf" for PDFs).
 enum Exporter {
     static func activitiesCSV(_ activities: [Activity], plan: NightPlan = .load()) -> String {
         var rows = [[
@@ -13,26 +18,26 @@ enum Exporter {
         ]]
         for a in activities.sorted(by: { $0.startDate < $1.startDate }) {
             rows.append([
-                a.kind.title,
+                a.kind.exportName,
                 timestamp(a.startDate),
                 a.endDate.map { timestamp($0) } ?? "",
-                a.feedingType?.title ?? a.diaperType?.title ?? "",
+                a.feedingType?.exportName ?? a.diaperType?.exportName ?? "",
                 a.amountML.map { String(Int($0.rounded())) } ?? "",
                 a.leftMinutes.map { String($0) } ?? "",
                 a.rightMinutes.map { String($0) } ?? "",
                 a.foodDescription ?? "",
-                a.poopColor?.title ?? "",
-                a.poopConsistency?.title ?? "",
+                a.poopColor?.exportName ?? "",
+                a.poopConsistency?.exportName ?? "",
                 a.medicationName ?? "",
                 a.dosage ?? "",
-                a.caregiver.map { plan.name(of: $0) } ?? "",
+                a.caregiver.map { plan.exportName(of: $0) } ?? "",
                 a.notes,
             ])
             rows[rows.count - 1] += pumpingAndTemperatureColumns(a)
             // Added later with Catch up, rather than logged at the time.
-            rows[rows.count - 1].append(a.isApproximate ? "Yes" : "")
+            rows[rows.count - 1].append(a.isApproximate ? "Yes" : "") // Not localized: CSV value.
             // Common allergens tagged on a solids log.
-            rows[rows.count - 1].append(a.allergens.map(\.name).joined(separator: "; "))
+            rows[rows.count - 1].append(a.allergens.map(\.exportName).joined(separator: "; "))
         }
         return csv(rows)
     }
@@ -41,7 +46,7 @@ enum Exporter {
     static func trackingCSV(_ periods: [TrackingPeriod]) -> String {
         var rows = [["Start", "End", "Kind", "Reason", "Notes"]]
         for p in periods.sorted(by: { $0.start < $1.start }) {
-            rows.append([timestamp(p.start), timestamp(p.end), p.kind.title, p.reason?.title ?? "", p.notes])
+            rows.append([timestamp(p.start), timestamp(p.end), p.kind.exportName, p.reason?.exportName ?? "", p.notes])
         }
         return csv(rows)
     }
@@ -53,8 +58,8 @@ enum Exporter {
         columns.append(a.pumpRightML.map { String(Int($0.rounded())) } ?? "")
         columns.append(a.durationMinutes.map { String($0) } ?? "")
         columns.append(a.temperatureC.map { decimal($0, digits: 2) } ?? "")
-        columns.append(a.temperatureMethod?.title ?? "")
-        columns.append(a.symptoms.map(\.title).joined(separator: "; "))
+        columns.append(a.temperatureMethod?.exportName ?? "")
+        columns.append(a.symptoms.map(\.exportName).joined(separator: "; "))
         return columns
     }
 
@@ -62,9 +67,10 @@ enum Exporter {
     static func diaryCSV(_ entries: [DiaryEntry]) -> String {
         var rows = [["Date", "Kind", "Title", "Text", "Written by", "About", "Open on", "Open at age", "Photos"]]
         for e in entries.sorted(by: { $0.date < $1.date }) {
+            // Not localized: CSV value.
             let about = e.periodID.map { "\($0.kind == .week ? "Week" : "Month") \($0.index)" } ?? ""
             rows.append([
-                timestamp(e.date), e.kind.title, e.title, e.text, e.authorName, about,
+                timestamp(e.date), e.kind.exportName, e.title, e.text, e.authorName, about,
                 e.openOnDate.map { timestamp($0) } ?? "", e.openAtAge.map { String($0) } ?? "",
                 String(e.photoIDSet.count),
             ])
@@ -80,7 +86,8 @@ enum Exporter {
         ]]
         for a in allergies.sorted(by: { $0.createdAt < $1.createdAt }) {
             rows.append([
-                a.displayName, a.category.title, a.status.title, a.severity.title, a.reactionsSeen, a.diagnosedBy,
+                a.displayName, a.category.exportName, a.status.exportName, a.severity.exportName, a.reactionsSeen, a.diagnosedBy,
+                // Not localized: CSV value.
                 a.diagnosedDate.map { timestamp($0) } ?? "", a.hasAutoInjector ? "Yes" : "", a.autoInjectorLocation, a.notes,
             ])
         }
@@ -92,39 +99,74 @@ enum Exporter {
         var rows = [["Date", "What they had", "Symptoms", "Severity", "What you did", "Allergy", "Photo", "Notes"]]
         for r in reactions.sorted(by: { $0.date < $1.date }) {
             rows.append([
-                timestamp(r.date), r.food, r.symptoms.map(\.title).joined(separator: "; "), r.severity.title,
-                r.actions.map(\.title).joined(separator: "; "), r.allergy?.displayName ?? "",
-                r.photoIDSet.isEmpty ? "" : "Yes", r.notes,
+                timestamp(r.date), r.food, r.symptoms.map(\.exportName).joined(separator: "; "), r.severity.exportName,
+                r.actions.map(\.exportName).joined(separator: "; "), r.allergy?.displayName ?? "",
+                r.photoIDSet.isEmpty ? "" : "Yes", r.notes, // Not localized: CSV value.
             ])
         }
         return csv(rows)
     }
 
+    /// Newer columns go last (the clinic picked from the search, then the product, amount and expiry),
+    /// so older spreadsheets still line up.
     static func vaccinesCSV(_ vaccines: [Vaccine]) -> String {
-        var rows = [["Vaccine", "Date", "Status", "Dose", "Provider", "Lot number", "Notes"]]
+        var rows = [[
+            "Vaccine", "Date", "Status", "Dose", "Provider", "Lot number", "Notes",
+            "Provider address", "Latitude", "Longitude", "Phone",
+            "Product", "Dose amount", "Dose unit", "Expiry date",
+        ]]
         for v in vaccines.sorted(by: { $0.date < $1.date }) {
-            rows.append([v.name, timestamp(v.date), v.isGiven ? "Given" : "Due", v.doseLabel, v.provider, v.lotNumber, v.notes])
+            let place = v.place
+            rows.append([
+                // Not localized: the importer reads "Due" back.
+                v.name, timestamp(v.date), v.isGiven ? "Given" : "Due", v.doseLabel, v.provider, v.lotNumber, v.notes,
+                v.providerPlaceAddress,
+                place.map { String(format: "%.6f", locale: Locale(identifier: "en_US_POSIX"), $0.latitude) } ?? "",
+                place.map { String(format: "%.6f", locale: Locale(identifier: "en_US_POSIX"), $0.longitude) } ?? "",
+                v.providerPhone ?? "",
+                v.product,
+                v.doseAmount.map { decimal($0, digits: 3) } ?? "",
+                v.doseAmount == nil ? "" : v.amountUnit.symbol,
+                v.expiryDate.map { timestamp($0) } ?? "",
+            ])
         }
         return csv(rows)
     }
 
+    /// Every appointment, cancelled ones included and marked, since the export is the parents' own
+    /// full copy. Newer columns go last (cancelled, then the place picked from the search), so older
+    /// spreadsheets still line up.
     static func appointmentsCSV(_ appointments: [Appointment]) -> String {
-        var rows = [["Appointment", "Date", "Provider", "Location", "Notes", "Questions", "Visit notes"]]
+        var rows = [[
+            "Appointment", "Date", "Provider", "Location", "Notes", "Questions", "Visit notes", "Cancelled", "Cancelled on",
+            "Address", "Latitude", "Longitude", "Phone",
+        ]]
         for a in appointments.sorted(by: { $0.date < $1.date }) {
-            rows.append([a.title, timestamp(a.date), a.provider, a.location, a.notes, a.questions, a.visitNotes ?? ""])
+            let place = a.place
+            rows.append([
+                a.title, timestamp(a.date), a.provider, a.location, a.notes, a.questions, a.visitNotes ?? "",
+                // Not localized: CSV value.
+                a.isCancelled ? "Yes" : "", a.isCancelled ? (a.cancelledAt.map { timestamp($0) } ?? "") : "",
+                a.placeAddress,
+                place.map { String(format: "%.6f", locale: Locale(identifier: "en_US_POSIX"), $0.latitude) } ?? "",
+                place.map { String(format: "%.6f", locale: Locale(identifier: "en_US_POSIX"), $0.longitude) } ?? "",
+                a.locationPhone ?? "",
+            ])
         }
         return csv(rows)
     }
 
-    /// Weight and length in kilograms and centimeters, whatever units the app shows.
-    static func growthCSV(_ entries: [GrowthEntry]) -> String {
-        var rows = [["Date", "Weight (kg)", "Length (cm)", "Notes"]]
-        for g in entries.sorted(by: { $0.date < $1.date }) {
+    /// Weight, length and head circumference in kilograms and centimeters, whatever units the app
+    /// shows. Head circumference is the last column, so older spreadsheets still line up.
+    static func growthCSV(_ readings: [GrowthReading]) -> String {
+        var rows = [["Date", "Weight (kg)", "Length (cm)", "Notes", "Head circumference (cm)"]]
+        for g in readings.sorted(by: { $0.date < $1.date }) {
             rows.append([
                 timestamp(g.date),
                 g.weightKg.map { decimal($0, digits: 3) } ?? "",
                 g.lengthCm.map { decimal($0, digits: 2) } ?? "",
                 g.notes,
+                g.headCm.map { decimal($0, digits: 2) } ?? "",
             ])
         }
         return csv(rows)

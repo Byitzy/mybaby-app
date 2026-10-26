@@ -7,7 +7,12 @@
   <meta name="description" content="How MyBaby keeps your baby's log: on your iPhone, or end-to-end encrypted in your own iCloud. The developer never receives your data.">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="alternate" hreflang="en" href="https://byitzy.github.io/mybaby-app/privacy.html">
+  <link rel="alternate" hreflang="fr" href="https://byitzy.github.io/mybaby-app/fr/privacy.html">
+  <link rel="alternate" hreflang="es" href="https://byitzy.github.io/mybaby-app/es/privacy.html">
+  <link rel="alternate" hreflang="x-default" href="https://byitzy.github.io/mybaby-app/privacy.html">
   <link rel="stylesheet" href="style.css">
+  <script src="lang.js" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -16,7 +21,15 @@
       <nav class="site-nav" aria-label="Site">
         <ul>
           <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
           <li><a href="support.html">Support</a></li>
+        </ul>
+      </nav>
+      <nav class="lang-switch" aria-label="Language">
+        <ul>
+          <li><span aria-current="true">English</span></li>
+          <li><a href="fr/privacy.html" hreflang="fr" lang="fr">Français</a></li>
+          <li><a href="es/privacy.html" hreflang="es" lang="es">Español</a></li>
         </ul>
       </nav>
     </div>
@@ -40,12 +53,12 @@
     <p>MyBaby stores what you enter: your baby's name and birthday, and the care you log, such as feeds, diapers, sleep, baths, medicine, allergies and reactions, vaccines, appointments, growth measurements and notes. It also keeps your settings, such as units, reminders and your night shift plan.</p>
     <p>Where it lives is up to you:</p>
     <ul>
-      <li><strong>On this iPhone only.</strong> This is the default. Nothing leaves your phone, except the short summary it sends to your own paired Apple Watch if you use MyBaby there (see <a href="#watch">Apple Watch</a>).</li>
+      <li><strong>On this iPhone only.</strong> This is the default. Nothing leaves your phone, except the short summary it sends to your own paired Apple Watch if you use MyBaby there (see <a href="#watch">Apple Watch</a>), and what you type when you search for an appointment's place or a vaccine's clinic (see <a href="#places">Places</a>).</li>
       <li><strong>Synced with your iCloud.</strong> If you turn on iCloud sync, your log is also stored in your own iCloud account, so it's backed up and available on your other devices signed in to the same Apple Account.</li>
       <li><strong>Shared with your partner.</strong> If you invite someone, the log is shared with them through iCloud. See below.</li>
     </ul>
     <p>Parent care (your own check-ins, medicines and any birth recovery notes, shown in the app under your name, like "Sam's care") is private to the phone it's entered on. It's stored the same way as the rest of your data, on your iPhone or end-to-end encrypted in your own iCloud, but it isn't part of the baby's log, so it's never shared with your partner or included in the baby's exports and reports. Whether you gave birth and who the phone belongs to are settings kept on your iPhone. The parents' names are part of the night shift plan, so they're shared with your partner along with the log.</p>
-    <p>Your care page is locked with Face ID, Touch ID or your iPhone's passcode; MyBaby only learns from your iPhone whether it was you, and never sees your face, fingerprint or passcode.</p>
+    <p>Your care page is always locked with Face ID, Touch ID or your iPhone's passcode, and asks again each time you come back to it. MyBaby only learns from your iPhone whether it was you, and never sees your face, fingerprint or passcode. The page is left out of screenshots and hidden while your screen is recorded or shared.</p>
 
     <h2 id="icloud">iCloud sync and sharing</h2>
     <p>When iCloud is on, MyBaby uses Apple's CloudKit to store your log in your iCloud account (in its private database, and in its shared database if you share). Every field of your log is end-to-end encrypted, and the keys are kept in your iCloud Keychain. That means neither we nor Apple can read the contents.</p>
@@ -76,19 +89,25 @@
     <p>When iCloud is on, Apple's iCloud uses silent push notifications to tell your iPhone that something changed, so it can fetch the update. These signals carry none of your log's content.</p>
     <p>If you use a nursery monitor, its alerts reach your phone as notifications from Apple's iCloud, set up by MyBaby on your phone. Their text is fixed and generic, and they carry none of your log's content (see <a href="#nursery-monitor">Nursery monitor</a>).</p>
 
+    <h2 id="places">Places</h2>
+    <p>When you type in an appointment's location field, or a vaccine's clinic or provider field, MyBaby suggests places from Apple Maps as you type. To do that, what you type in that field is sent to Apple Maps, the same as typing in the Maps app, and handled under <a href="https://www.apple.com/legal/privacy/">Apple's privacy policy</a>. Nothing else from your log is sent with it, and the search only starts once you type. When you pick a suggestion, Apple Maps returns its address, where it is on the map and its phone number, if it has one; these are saved with the appointment or vaccine like the rest of your log. The small map of a picked place is loaded from Apple Maps too. MyBaby doesn't ask for or use your iPhone's location: suggestions are nudged toward the last place you picked, or toward your iPhone's Region setting. Directions open in the Maps app, which works out the route itself. You can always just type a place and save it without picking a suggestion.</p>
+
     <h2 id="calendar">Calendar</h2>
     <p>You can add an appointment to your iPhone's calendar with <em>Add to Calendar</em>, or turn on <em>Keep appointments in my calendar</em> in Settings to add upcoming appointments automatically and keep them up to date. Both are optional and off until you use them. <em>Add to Calendar</em> shows you the event before it's added and needs no calendar permission. Keeping appointments in your calendar asks for calendar access, so MyBaby can update and remove the events it added; it doesn't read or keep anything else from your calendar.</p>
-    <p>An event holds the appointment's title, your baby's name, the time and the doctor and place. Your notes and questions aren't copied. Once an event is in your calendar, it's no longer part of MyBaby's end-to-end encrypted log: it's stored by your calendar's provider (such as iCloud, Google or Outlook) under that provider's privacy policy, and anyone you share that calendar with can see it. Which event belongs to which appointment is remembered on your iPhone only.</p>
+    <p>An event holds the appointment's title, your baby's name, the time and the doctor and place (with its address and map location, if you picked it from the suggestions). Your notes and questions aren't copied. Once an event is in your calendar, it's no longer part of MyBaby's end-to-end encrypted log: it's stored by your calendar's provider (such as iCloud, Google or Outlook) under that provider's privacy policy, and anyone you share that calendar with can see it. Which event belongs to which appointment, and which events you added with <em>Add to Calendar</em> (so deleting all your data can remove them too), is remembered on your iPhone only.</p>
 
     <h2 id="widgets">Widgets and Live Activities</h2>
-    <p>MyBaby's Home Screen and Lock Screen widgets, and its Live Activities (the breastfeeding and sleep timers on the Lock Screen and in the Dynamic Island), are drawn by your iPhone. For the widgets, the app keeps a small summary of what they show, for each baby (such as your baby's name, the time and type of the last feed and diaper, whether baby is asleep, today's feed and diaper counts, the last pumping and the milk stash total, the last medicine given and when its next dose is allowed by the timing you entered, the breastfeeding timer and who's on night duty) in a folder on your iPhone that only MyBaby and its widgets can open. It's never synced to iCloud or sent anywhere, except to your paired Apple Watch as described below. What you choose in Edit Widget is kept by iOS on your iPhone and isn't synced either. Live Activities are started and updated by the app on your iPhone, not by notifications from a server.</p>
-    <p>Widgets and Live Activities on the Lock Screen can be seen without unlocking your iPhone. You can remove a widget at any time, and turn off Live Activities in iPhone Settings &rarr; MyBaby.</p>
+    <p>MyBaby's Home Screen and Lock Screen widgets, and its Live Activities (the breastfeeding and sleep timers, and cry alerts while they listen, on the Lock Screen and in the Dynamic Island), are drawn by your iPhone. For the widgets, the app keeps a small summary of what they show, for each baby (such as your baby's name, the time and type of the last feed and diaper, whether baby is asleep, today's feed and diaper counts, the last pumping and the milk stash total, the last medicine given and when its next dose is allowed by the timing you entered, the breastfeeding timer and who's on night duty), and whether cry alerts are listening on that iPhone, in a folder on your iPhone that only MyBaby and its widgets can open. It's never synced to iCloud or sent anywhere, except to your paired Apple Watch as described below. What you choose in Edit Widget is kept by iOS on your iPhone and isn't synced either. Live Activities are started and updated by the app on your iPhone, not by notifications from a server.</p>
+    <p>Widgets and Live Activities on the Lock Screen can be seen without unlocking your iPhone. While cry alerts listen, the widgets show a small microphone, and the cry alerts Live Activity shows that they're listening, since and until when, and whether crying is heard right now. That Live Activity shows nothing from your log, not even your baby's name. You can remove a widget at any time, and turn off Live Activities in iPhone Settings &rarr; MyBaby.</p>
 
     <h2 id="watch">Apple Watch</h2>
-    <p>If you use MyBaby on Apple Watch, your iPhone sends the watch a short summary of what it shows (such as the time of the last feed and diaper, whether baby is asleep, who's on night duty, your bottle amounts and the names of medicines you've logged), and the watch sends your taps back to the iPhone to log. This goes directly between your iPhone and your paired watch through Apple's WatchConnectivity. It doesn't go through any server, and we never receive it. The watch keeps only the latest summary, on the watch, where MyBaby's watch face complications show it too.</p>
+    <p>If you use MyBaby on Apple Watch, your iPhone sends the watch a short summary of what it shows (such as the time of the last feed and diaper and whether baby is asleep, for each of your babies, who's on night duty, your bottle amounts, the names of medicines you've logged and, for those medicines, any matching names on the allergy list), and the watch sends your taps back to the iPhone to log. This goes directly between your iPhone and your paired watch through Apple's WatchConnectivity. It doesn't go through any server, and we never receive it. The watch keeps only the latest summary, on the watch, where MyBaby's watch face complications show it too.</p>
 
     <h2 id="exports">Exports</h2>
     <p>You can export your log as a PDF report or as CSV files, for example to share with your pediatrician, share an allergy card with a caregiver, and make a keepsake PDF of your diary. Letters for later are only included in a keepsake if you turn that on. An export goes only where you send it, using the iPhone share sheet (Mail, Messages, Files and so on). Once it's left your phone, it's handled by the app or person you sent it to. MyBaby deletes its temporary copies from your iPhone after you share.</p>
+
+    <h2 id="imports">Importing from another app</h2>
+    <p>You can bring a log over from another baby tracker (such as Huckleberry, Glow Baby or Nara Baby), from MyBaby's own export on another iPhone, or from any CSV file, in Settings &rarr; Your data &rarr; Import from another app. The file you pick is read on your iPhone, straight from where it is (for example in Files or iCloud Drive), and only while the import is open. It's never uploaded anywhere, never sent to us, and MyBaby doesn't copy or keep it: once the import is done or closed, the file's contents are gone from the app. Only the entries you choose to import are saved, in your log, and they're stored and shared exactly like entries you log yourself. A short list of recent imports (which app, the file's name, which baby and how many entries) stays on your iPhone so you can remove an import again; it isn't synced or sent anywhere.</p>
 
     <h2 id="feedback">Feedback</h2>
     <p>You can send us feedback from the app, in Settings &rarr; Help &amp; support &rarr; Send feedback. MyBaby fills in an email, which you see and can change, and you send it from your own email account. Nothing is sent from the app by itself. An email you choose to send reaches us, with whatever you wrote and any screenshot you added.</p>
@@ -104,11 +123,13 @@
     <p>MyBaby is used by parents and caregivers to record their baby's care. It isn't directed to children, and it doesn't collect any information from children.</p>
 
     <h2 id="deleting">Deleting your data</h2>
-    <p>Because your data is on your devices and in your own iCloud, you're in control of deleting it:</p>
+    <p>Because your data is on your devices and in your own iCloud, you're in control of deleting it. MyBaby has no account to close: your data is everything MyBaby keeps on your iPhone and in your iCloud, so deleting it is the same as deleting your account.</p>
     <ul>
+      <li><strong>Delete everything:</strong> Settings &rarr; Your data &rarr; <strong>Delete all MyBaby data</strong>. It removes every baby's log (with photos, the diary, milestones, allergies and reports), your private Parent care page, your settings, widgets, Live Activities and reminders from your iPhone, deletes your iCloud copy (including the nursery monitor's alert inbox), and clears the summary on your Apple Watch. You can also remove the appointments MyBaby added to your calendar. It asks you to type DELETE and to confirm with Face ID, Touch ID or your passcode, and suggests exporting a copy first. If your iPhone is offline, everything on the iPhone is deleted right away and the iCloud copy is deleted the next time MyBaby opens while online (or when you tap Finish deleting iCloud copy).</li>
+      <li><strong>If your log is shared:</strong> if you created it and invited someone, deleting everything also removes the shared log from their iPhone, because the share is deleted with your iCloud copy. If you joined someone else's log, your iPhone leaves it, and their own log isn't deleted.</li>
       <li><strong>Delete entries</strong> in the app: swipe to delete in History. If you track more than one baby, you can remove a baby and everything logged for them from their profile in Settings &rarr; Babies.</li>
       <li><strong>Delete your iCloud copy:</strong> Settings &rarr; iCloud &amp; sharing &rarr; Delete my iCloud copy. This removes your log from iCloud and keeps the copy on your iPhone. It's available while sync is on and the log isn't shared.</li>
-      <li><strong>Delete the app</strong> to remove everything stored on your iPhone. If iCloud sync was on, the iCloud copy stays until you delete it too.</li>
+      <li><strong>Delete the app</strong> to remove everything stored on your iPhone. Deleting the app alone doesn't delete your iCloud copy: if iCloud sync was on, it stays until you delete it too, so use Delete all MyBaby data first.</li>
       <li><strong>Manage iCloud storage</strong> in iPhone Settings &rarr; your name &rarr; iCloud &rarr; Manage Storage, where you can delete MyBaby's data from iCloud.</li>
       <li><strong>Shared logs:</strong> stop sharing, remove someone, or leave a log in Settings &rarr; iCloud &amp; sharing &rarr; Manage sharing.</li>
     </ul>
@@ -123,7 +144,7 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <p><a href="index.html">MyBaby</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="support.html">Support</a></p>
+      <p><a href="index.html">MyBaby</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="support.html">Support</a></p>
       <p>MyBaby is a tracking tool, not medical advice.</p>
     </div>
   </footer>

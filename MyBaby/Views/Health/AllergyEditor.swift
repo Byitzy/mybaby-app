@@ -171,9 +171,9 @@ struct AllergyEditor: View {
 
     private var statusFooter: String {
         switch status {
-        case .suspected: return "Suspected: you've seen a reaction, or think there might be one, but it hasn't been confirmed."
-        case .confirmed: return "Confirmed: a doctor or allergist confirmed it."
-        case .outgrown: return "Outgrown: a doctor said it's gone. It stays on the list, but no longer shows warnings or goes on the allergy card."
+        case .suspected: return String(localized: "Suspected: you've seen a reaction, or think there might be one, but it hasn't been confirmed.")
+        case .confirmed: return String(localized: "Confirmed: a doctor or allergist confirmed it.")
+        case .outgrown: return String(localized: "Outgrown: a doctor said it's gone. It stays on the list, but no longer shows warnings or goes on the allergy card.")
         }
     }
 

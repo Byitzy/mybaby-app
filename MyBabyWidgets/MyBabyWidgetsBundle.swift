@@ -14,6 +14,7 @@ struct MyBabyWidgetsBundle: WidgetBundle {
         LockScreenWidget()
         FeedingLiveActivity()
         SleepLiveActivity()
+        ListeningLiveActivity()
     }
 }
 
@@ -98,7 +99,8 @@ struct LockScreenProvider: AppIntentTimelineProvider {
 /// The app reloads the widgets whenever the snapshot changes; between those, a timeline only needs
 /// entries for things that change with time alone: every few minutes for the Lock Screen's "2h 10m"
 /// (Home Screen widgets count with `Text(_:style: .relative)`), each night-shift handoff for who's on
-/// duty, when a medicine's next dose is allowed, and midnight for the "today" counts.
+/// duty, when a medicine's next dose is allowed, when cry alerts stop listening by themselves, and
+/// midnight for the "today" counts.
 enum SnapshotTimeline {
     static func make(
         snapshot: WidgetSnapshot?,
@@ -117,6 +119,8 @@ enum SnapshotTimeline {
             let baby = snapshot.baby(babyID)
             if let next = baby.nextDose?.date { boundaries.append(next) }
             if let next = baby.lastMedicine?.nextAllowed { boundaries.append(next) }
+            // The mic badge goes away at the stop time, even if the app can't reload the widgets then.
+            if let stop = snapshot.listening?.stopsAt { boundaries.append(stop) }
             let calendar = Calendar.current
             if let midnight = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) {
                 boundaries.append(midnight)
@@ -135,24 +139,28 @@ extension WidgetSnapshot {
     /// Sample data for the widget gallery.
     static var example: WidgetSnapshot {
         let now = Date.now
-        var snapshot = WidgetSnapshot(babyName: "Baby")
+        var snapshot = WidgetSnapshot(babyName: String(localized: "Baby", comment: "A baby without a name"))
         snapshot.lastFeed = Feed(
             date: now.addingTimeInterval(-(2 * 3600 + 10 * 60)),
-            title: "Bottle (formula)",
-            shortTitle: "Formula",
+            title: String(localized: "Bottle (formula)"),
+            shortTitle: String(localized: "Formula", comment: "A bottle of formula, short"),
             emoji: "🍼",
-            detail: "120 ml"
+            detail: WidgetFormat.milliliters(120)
         )
-        snapshot.lastDiaper = Diaper(date: now.addingTimeInterval(-45 * 60), title: "Pee", emoji: "💧")
+        snapshot.lastDiaper = Diaper(
+            date: now.addingTimeInterval(-45 * 60),
+            title: String(localized: "Pee", comment: "A wet diaper, short"),
+            emoji: "💧"
+        )
         snapshot.lastWake = now.addingTimeInterval(-65 * 60)
 
         var baby = snapshot.baby(nil)
         baby.countedDay = Calendar.current.startOfDay(for: now)
         baby.feedsToday = 5
         baby.diapersToday = 4
-        baby.lastPumping = BabySnapshot.Pumping(date: now.addingTimeInterval(-3 * 3600), amountText: "150 ml")
-        baby.stash = BabySnapshot.Stash(totalText: "840 ml", bagCount: 6)
-        baby.usualBottle = BabySnapshot.Bottle(isFormula: true, ml: 120, amountText: "120 ml")
+        baby.lastPumping = BabySnapshot.Pumping(date: now.addingTimeInterval(-3 * 3600), amountText: WidgetFormat.milliliters(150))
+        baby.stash = BabySnapshot.Stash(totalText: WidgetFormat.milliliters(840), bagCount: 6)
+        baby.usualBottle = BabySnapshot.Bottle(isFormula: true, ml: 120, amountText: WidgetFormat.milliliters(120))
         snapshot.babies = [baby]
         return snapshot
     }
@@ -161,20 +169,33 @@ extension WidgetSnapshot {
 // MARK: - Formatting
 
 enum WidgetFormat {
-    /// "45m", "2h 10m", like the app's `Format.duration`.
+    /// "45m", "2h 10m", like the app's `Format.duration`, in the words of the iPhone's language
+    /// ("2 h 10 min" in French). Whole minutes, rounded down.
     static func short(_ seconds: TimeInterval) -> String {
         let totalMinutes = max(0, Int(seconds / 60))
-        let hours = totalMinutes / 60
-        let minutes = totalMinutes % 60
-        if hours == 0 { return "\(minutes)m" }
-        if minutes == 0 { return "\(hours)h" }
-        return "\(hours)h \(minutes)m"
+        return shortFormatter.string(from: TimeInterval(totalMinutes * 60)) ?? "\(totalMinutes)"
     }
+
+    private static let shortFormatter: DateComponentsFormatter = {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.allowedUnits = [.hour, .minute]
+        return formatter
+    }()
 
     /// "2h 10m ago", or "Just now".
     static func ago(_ date: Date, now: Date) -> String {
         let seconds = now.timeIntervalSince(date)
-        return seconds < 60 ? "Just now" : "\(short(seconds)) ago"
+        if seconds < 60 {
+            return String(localized: "Just now", comment: "When something was logged, under a minute ago")
+        }
+        let duration = short(seconds)
+        return String(localized: "\(duration) ago", comment: "How long ago something was logged, short, e.g. 2h 10m ago")
+    }
+
+    /// "120 ml", for the widget gallery's sample.
+    static func milliliters(_ value: Int) -> String {
+        String(localized: "\(value) ml", comment: "An amount in milliliters")
     }
 
     /// "4:10 AM", or "Tue 4:10 AM" when it's not the same day as `now`.

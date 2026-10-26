@@ -116,11 +116,18 @@ struct GapPromptSection: View {
 
     /// "Nothing logged since 9:10 AM (5 h)." The day is added when it wasn't today.
     private func title(_ gap: Coverage.Gap) -> String {
-        "Nothing logged since \(since(gap)) (\(max(1, Int(gap.duration / 3600))) h)."
+        let hours = max(1, Int(gap.duration / 3600))
+        return String(
+            localized: "Nothing logged since \(since(gap)) (\(hours) h).",
+            comment: "Today's gap card: a time (with the weekday when it wasn't today), then whole hours"
+        )
     }
 
     private func spokenTitle(_ gap: Coverage.Gap) -> String {
-        "Nothing logged since \(since(gap)), \(Format.spokenDuration(gap.duration))"
+        String(
+            localized: "Nothing logged since \(since(gap)), \(Format.spokenDuration(gap.duration))",
+            comment: "VoiceOver: today's gap card, with how long it's been in words"
+        )
     }
 
     private func since(_ gap: Coverage.Gap) -> String {

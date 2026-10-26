@@ -84,7 +84,7 @@ struct ActivityRow: View {
 
                 VStack(alignment: .trailing, spacing: Spacing.xxs) {
                     // "≈ 2:10 PM" for an approximate entry added with Catch up.
-                    Text("\(activity.isApproximate ? "≈ " : "")\(activity.startDate.formatted(date: .omitted, time: .shortened))")
+                    Text(verbatim: "\(activity.isApproximate ? "≈ " : "")\(activity.startDate.formatted(date: .omitted, time: .shortened))")
                         .font(.subheadline.monospacedDigit())
                     if showsDate {
                         Text(activity.startDate, format: .dateTime.month(.abbreviated).day())
@@ -109,13 +109,15 @@ struct ActivityRow: View {
     private func spokenLabel(detail: String, caregiverName: String?) -> String {
         var parts = [activity.title]
         if !detail.isEmpty { parts.append(Format.spoken(detail)) }
-        let approx = activity.isApproximate ? "approx. " : ""
-        if showsDate {
-            parts.append(approx + activity.startDate.formatted(.dateTime.month(.wide).day().hour().minute()))
-        } else {
-            parts.append(approx + activity.startDate.formatted(date: .omitted, time: .shortened))
+        let time = showsDate
+            ? activity.startDate.formatted(.dateTime.month(.wide).day().hour().minute())
+            : activity.startDate.formatted(date: .omitted, time: .shortened)
+        parts.append(activity.isApproximate
+            ? String(localized: "approx. \(time)", comment: "VoiceOver: the time of an approximate entry added with Catch up")
+            : time)
+        if let caregiverName {
+            parts.append(String(localized: "handled by \(caregiverName)", comment: "VoiceOver: which parent handled an entry"))
         }
-        if let caregiverName { parts.append("handled by \(caregiverName)") }
         if !activity.notes.isEmpty { parts.append(activity.notes) }
         return parts.joined(separator: ", ")
     }
@@ -126,6 +128,19 @@ struct Toast: Equatable {
     let id = UUID()
     let message: String
     var undo: (() -> Void)?
+
+    /// A literal message is looked up in the String Catalog, like `String(localized:)`.
+    init(message: String.LocalizationValue, undo: (() -> Void)? = nil) {
+        self.message = String(localized: message)
+        self.undo = undo
+    }
+
+    /// A message that's already localized is shown as it is.
+    @_disfavoredOverload
+    init<S: StringProtocol>(message: S, undo: (() -> Void)? = nil) {
+        self.message = String(message)
+        self.undo = undo
+    }
 
     static func == (lhs: Toast, rhs: Toast) -> Bool { lhs.id == rhs.id }
 }
@@ -181,15 +196,46 @@ extension View {
 
 /// A number with a small title, like "Feeds/day 8.2". The value is `.primary` for contrast; the
 /// category's tint is a soft wash behind it.
+///
+/// A literal title is looked up in the String Catalog, like `Text("…")`; a `String` is shown as it is.
 struct StatTile: View {
-    let title: String
+    private let title: Text
     let value: String
     var emoji: String = ""
     var tint: Color = .accentColor
     /// What VoiceOver reads instead of `title`, e.g. "Feeds per day" for "Feeds/day".
-    var spokenTitle: String?
+    private var spokenTitle: Text?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    init(
+        title: LocalizedStringKey,
+        value: String,
+        emoji: String = "",
+        tint: Color = .accentColor,
+        spokenTitle: LocalizedStringKey? = nil
+    ) {
+        self.title = Text(title)
+        self.value = value
+        self.emoji = emoji
+        self.tint = tint
+        self.spokenTitle = spokenTitle.map { Text($0) }
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(
+        title: S,
+        value: String,
+        emoji: String = "",
+        tint: Color = .accentColor,
+        spokenTitle: String? = nil
+    ) {
+        self.title = Text(title)
+        self.value = value
+        self.emoji = emoji
+        self.tint = tint
+        self.spokenTitle = spokenTitle.map { Text($0) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Spacing.xs) {
@@ -198,7 +244,7 @@ struct StatTile: View {
                     Text(emoji)
                         .accessibilityHidden(true)
                 }
-                Text(title)
+                title
                     .lineLimit(2)
             }
             .font(.caption.weight(.medium))
@@ -218,32 +264,53 @@ struct StatTile: View {
     }
 }
 
+/// A titled card. Literal texts are looked up in the String Catalog, like `Text("…")`. When the title
+/// or the subtitle is a `String`, both are shown as they are, so a literal next to it needs
+/// `String(localized:)`.
 struct Card<Content: View>: View {
-    let title: String
-    var subtitle: String = ""
+    private let title: Text
+    /// Nil for none.
+    private let subtitle: Text?
     let content: Content
+    /// Side by side on iPad, as tall as the other cards in its row (see `CardColumns`).
+    @Environment(\.cardFillsRow) private var fillsRow
 
-    init(_ title: String, subtitle: String = "", @ViewBuilder content: () -> Content) {
-        self.title = title
-        self.subtitle = subtitle
+    init(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil, @ViewBuilder content: () -> Content) {
+        self.title = Text(title)
+        self.subtitle = subtitle.map { Text($0) }
+        self.content = content()
+    }
+
+    /// An empty subtitle shows none.
+    @_disfavoredOverload
+    init<T: StringProtocol, S: StringProtocol>(_ title: T, subtitle: S, @ViewBuilder content: () -> Content) {
+        self.title = Text(title)
+        self.subtitle = subtitle.isEmpty ? nil : Text(subtitle)
+        self.content = content()
+    }
+
+    @_disfavoredOverload
+    init<T: StringProtocol>(_ title: T, @ViewBuilder content: () -> Content) {
+        self.title = Text(title)
+        self.subtitle = nil
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(title)
+                title
                     .font(.headline)
                     .accessibilityAddTraits(.isHeader)
-                if !subtitle.isEmpty {
-                    Text(subtitle)
+                if let subtitle {
+                    subtitle
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
             content
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: fillsRow ? CGFloat.infinity : nil, alignment: .topLeading)
         .cardStyle()
     }
 }

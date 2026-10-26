@@ -11,14 +11,18 @@ struct ReportDocument: View {
     let vaccines: [Vaccine]
     let upcomingVaccines: [Vaccine]
     let unit: VolumeUnit
-    /// Every weight and length measurement, oldest first.
-    let growthEntries: [GrowthEntry]
+    /// Every weight, length and head circumference measurement, oldest first.
+    let growthEntries: [GrowthReading]
     let growthUnits: GrowthUnits
     /// Temperature readings in the range, oldest first.
     var temperatures: [Activity] = []
     var temperatureUnit: TemperatureUnit = .celsius
     /// For the WHO percentiles in the growth table. Left out when not set.
     var sex: BabySex? = nil
+    /// For a baby born before 37 weeks: percentiles use corrected age from this day until 2.
+    var dueDate: Date? = nil
+    /// Shows the time of birth next to the date, when it was entered.
+    var hasBirthTime = false
     /// Every allergy on the list, confirmed first. The section is left out when there are none.
     var allergies: [Allergy] = []
     /// Reactions logged in the range, newest first.
@@ -51,7 +55,7 @@ struct ReportDocument: View {
                 .font(.system(size: 24, weight: .bold))
             HStack(spacing: 6) {
                 if let birthDate {
-                    Text("Born \(birthDate.formatted(date: .abbreviated, time: .omitted)) · \(Format.age(birthDate: birthDate))")
+                    Text("Born \(birthDate.formatted(date: .abbreviated, time: hasBirthTime ? .shortened : .omitted)) · \(Format.age(birthDate: birthDate))")
                     Text("·")
                 }
                 if let first = summaries.first?.day, let last = summaries.last?.day {
@@ -65,14 +69,14 @@ struct ReportDocument: View {
 
     private var averagesSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionTitle("Daily averages")
+            sectionTitle(String(localized: "Daily averages"))
             HStack(spacing: 10) {
-                averageBox("Feedings", decimal(averages.feedings))
-                averageBox("Bottle", unit.format(ml: averages.bottleML))
-                averageBox("Breast", "\(Int(averages.breastMinutes.rounded())) min")
-                averageBox("Wet", decimal(averages.wet))
-                averageBox("Dirty", decimal(averages.dirty))
-                averageBox("Sleep", Format.hours(averages.sleepHours * 3600))
+                averageBox(String(localized: "Feedings"), decimal(averages.feedings))
+                averageBox(String(localized: "Bottle"), unit.format(ml: averages.bottleML))
+                averageBox(String(localized: "Breast", comment: "Breastfeeding, short"), VisitSummary.minutes(averages.breastMinutes.rounded()))
+                averageBox(String(localized: "Wet", comment: "Wet diapers, short"), decimal(averages.wet))
+                averageBox(String(localized: "Dirty", comment: "Dirty diapers, short"), decimal(averages.dirty))
+                averageBox(String(localized: "Sleep"), Format.hours(averages.sleepHours * 3600))
             }
             Text("\(averages.basisNote) Baths in period: \(averages.totalBaths). Medicine doses: \(averages.totalMedications).")
                 .font(.system(size: 9))
@@ -82,11 +86,12 @@ struct ReportDocument: View {
 
     private var dailyTable: some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionTitle("Day by day")
+            sectionTitle(String(localized: "Day by day"))
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 5) {
                 GridRow {
-                    ForEach(["Date", "Feeds", "Bottle", "Breast", "Wet", "Dirty", "Sleep", "Bath", "Tracked"], id: \.self) { title in
-                        Text(title).font(.system(size: 10, weight: .semibold))
+                    // By position, in case two headings read the same in a language.
+                    ForEach(Array(Self.dailyColumns.enumerated()), id: \.offset) { column in
+                        Text(column.element).font(.system(size: 10, weight: .semibold))
                     }
                 }
                 Divider().gridCellUnsizedAxes(.horizontal)
@@ -95,7 +100,7 @@ struct ReportDocument: View {
                         Text(day.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
                         Text(count(day.feedings, day))
                         Text(day.bottleML > 0 ? unit.format(ml: day.bottleML) : "–")
-                        Text(day.breastMinutes > 0 ? "\(day.breastMinutes) min" : "–")
+                        Text(day.breastMinutes > 0 ? VisitSummary.minutes(Double(day.breastMinutes)) : "–")
                         Text(count(day.wet, day))
                         Text(count(day.dirty, day))
                         Text(day.sleepSeconds > 0 ? Format.duration(day.sleepSeconds) : "–")
@@ -111,15 +116,28 @@ struct ReportDocument: View {
         }
     }
 
+    /// The day-by-day table's headings.
+    private static let dailyColumns = [
+        String(localized: "Date"),
+        String(localized: "Feeds", comment: "Table heading: feeds that day"),
+        String(localized: "Bottle"),
+        String(localized: "Breast", comment: "Breastfeeding, short"),
+        String(localized: "Wet", comment: "Wet diapers, short"),
+        String(localized: "Dirty", comment: "Dirty diapers, short"),
+        String(localized: "Sleep"),
+        String(localized: "Bath", comment: "Table heading: baths that day"),
+        String(localized: "Tracked", comment: "Table heading: how much of the day was logged"),
+    ]
+
     /// A count, or "–" on a day nobody tracked, where 0 would read as "none happened".
     private func count(_ value: Int, _ day: DaySummary) -> String {
-        day.coverage == .none && value == 0 ? "–" : "\(value)"
+        day.coverage == .none && value == 0 ? "–" : value.formatted()
     }
 
     @ViewBuilder
     private var medicationSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionTitle("Medicine given")
+            sectionTitle(String(localized: "Medicine given"))
             if medications.isEmpty {
                 Text("None logged.").font(.system(size: 10)).foregroundStyle(.gray)
             }
@@ -134,7 +152,7 @@ struct ReportDocument: View {
     private var allergySection: some View {
         if !allergies.isEmpty || !reactions.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                sectionTitle("Allergies")
+                sectionTitle(String(localized: "Allergies"))
                 if allergies.isEmpty {
                     Text("None listed.").font(.system(size: 10)).foregroundStyle(.gray)
                 }
@@ -153,7 +171,7 @@ struct ReportDocument: View {
 
     private var vaccineSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            sectionTitle("Vaccines given")
+            sectionTitle(String(localized: "Vaccines given"))
             if vaccines.isEmpty {
                 Text("None logged.").font(.system(size: 10)).foregroundStyle(.gray)
             }
@@ -174,11 +192,12 @@ struct ReportDocument: View {
     private var growthSection: some View {
         if !growthEntries.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                sectionTitle("Growth")
-                Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 5) {
+                sectionTitle(String(localized: "Growth"))
+                Grid(alignment: .leading, horizontalSpacing: showsHead ? 16 : 24, verticalSpacing: 5) {
                     GridRow {
-                        ForEach(growthColumns, id: \.self) { title in
-                            Text(title).font(.system(size: 10, weight: .semibold))
+                        // By position: with head circumference, "Percentile" appears three times.
+                        ForEach(Array(growthColumns.enumerated()), id: \.offset) { column in
+                            Text(column.element).font(.system(size: 10, weight: .semibold))
                         }
                     }
                     Divider().gridCellUnsizedAxes(.horizontal)
@@ -192,6 +211,12 @@ struct ReportDocument: View {
                             Text(entry.lengthCm.map { growthUnits.formatLength(cm: $0) } ?? "–")
                             if showsPercentiles {
                                 Text(percentileText(.length, entry.lengthCm, on: entry.date))
+                            }
+                            if showsHead {
+                                Text(entry.headCm.map { growthUnits.formatLength(cm: $0) } ?? "–")
+                                if showsPercentiles {
+                                    Text(percentileText(.headCircumference, entry.headCm, on: entry.date))
+                                }
                             }
                         }
                         .font(.system(size: 10).monospacedDigit())
@@ -212,18 +237,18 @@ struct ReportDocument: View {
         let pumpDays = summaries.filter { $0.pumpSessions > 0 }.reversed()
         if !pumpDays.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
-                sectionTitle("Pumping")
+                sectionTitle(String(localized: "Pumping"))
                 Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 5) {
                     GridRow {
-                        ForEach(["Date", "Sessions", "Pumped"], id: \.self) { title in
-                            Text(title).font(.system(size: 10, weight: .semibold))
+                        ForEach(Array(Self.pumpingColumns.enumerated()), id: \.offset) { column in
+                            Text(column.element).font(.system(size: 10, weight: .semibold))
                         }
                     }
                     Divider().gridCellUnsizedAxes(.horizontal)
                     ForEach(Array(pumpDays)) { day in
                         GridRow {
                             Text(day.day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))
-                            Text("\(day.pumpSessions)")
+                            Text(day.pumpSessions.formatted())
                             Text(day.pumpedML > 0 ? unit.format(ml: day.pumpedML) : "–")
                         }
                         .font(.system(size: 10).monospacedDigit())
@@ -238,7 +263,7 @@ struct ReportDocument: View {
     private var temperatureSection: some View {
         if !temperatures.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
-                sectionTitle("Temperatures")
+                sectionTitle(String(localized: "Temperatures"))
                 ForEach(temperatures) { reading in
                     Text(temperatureLine(reading)).font(.system(size: 10))
                 }
@@ -260,16 +285,42 @@ struct ReportDocument: View {
         sex != nil && birthDate != nil && GrowthStandards.who != nil
     }
 
+    /// Head circumference columns only once one has been measured, so the table stays as it was otherwise.
+    private var showsHead: Bool {
+        growthEntries.contains { $0.headCm != nil }
+    }
+
+    /// The pumping table's headings.
+    private static let pumpingColumns = [
+        String(localized: "Date"),
+        String(localized: "Sessions", comment: "Table heading: pumping sessions that day"),
+        String(localized: "Pumped", comment: "Milk pumped"),
+    ]
+
     private var growthColumns: [String] {
-        showsPercentiles
-            ? ["Date", "Weight", "Weight percentile", "Length", "Length percentile"]
-            : ["Date", "Weight", "Length"]
+        let date = String(localized: "Date")
+        let weight = String(localized: "Weight")
+        let length = String(localized: "Length")
+        let head = String(localized: "Head", comment: "Short for head circumference")
+        let percentile = String(localized: "Percentile", comment: "Table heading")
+        switch (showsPercentiles, showsHead) {
+        case (true, true):
+            // Shorter headings, so seven columns fit across the page.
+            return [date, weight, percentile, length, percentile, head, percentile]
+        case (true, false):
+            return [date, weight, String(localized: "Weight percentile"), length, String(localized: "Length percentile")]
+        case (false, true):
+            return [date, weight, length, head]
+        case (false, false):
+            return [date, weight, length]
+        }
     }
 
     /// "48th", or "–" when there's no measurement or it's outside the WHO tables.
     private func percentileText(_ measure: GrowthMeasure, _ value: Double?, on date: Date) -> String {
-        guard let value, let sex, let birthDate, let standards = GrowthStandards.who,
-              let days = GrowthStandards.ageDays(birthDate: birthDate, at: date),
+        guard let value, let sex, let standards = GrowthStandards.who,
+              let start = GrowthStandards.ageStart(birthDate: birthDate, dueDate: dueDate, on: date),
+              let days = GrowthStandards.ageDays(birthDate: start, at: date),
               let percentile = standards.percentile(measure, sex: sex, ageDays: days, value: value)
         else { return "–" }
         return percentile.shortText
@@ -284,7 +335,12 @@ struct ReportDocument: View {
     private func vaccineLine(_ vaccine: Vaccine) -> String {
         var line = "\(vaccine.date.formatted(date: .abbreviated, time: .omitted))  —  \(vaccine.name)"
         if !vaccine.doseLabel.isEmpty { line += " (\(vaccine.doseLabel))" }
-        if !vaccine.lotNumber.isEmpty { line += " · Lot \(vaccine.lotNumber)" }
+        let product = [vaccine.product, vaccine.doseAmountText ?? ""].filter { !$0.isEmpty }.joined(separator: " ")
+        if !product.isEmpty { line += " · " + product }
+        if !vaccine.lotNumber.isEmpty { line += " · " + String(localized: "Lot \(vaccine.lotNumber)", comment: "A vaccine's lot number") }
+        if let expiry = vaccine.expiryDate {
+            line += " · " + String(localized: "Exp. \(expiry.formatted(date: .abbreviated, time: .omitted))", comment: "A vaccine's expiry date, short")
+        }
         return line
     }
 

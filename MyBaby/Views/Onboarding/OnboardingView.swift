@@ -6,6 +6,7 @@ struct OnboardingView: View {
 
     @State private var name = ""
     @State private var birthDate = Date.now
+    @State private var hasBirthTime = false
     @State private var sex: BabySex?
     @State private var backUpToICloud = false
     /// Optional. Saved as parent 1 (this iPhone's owner) and parent 2; see `ParentSettings`.
@@ -41,7 +42,8 @@ struct OnboardingView: View {
                     TextField("Baby's name", text: $name)
                         .textContentType(.givenName)
                         .submitLabel(.done)
-                    DateField("Birthday", selection: $birthDate, includesTime: false)
+                    DateField("Birthday", selection: $birthDate, includesTime: hasBirthTime)
+                    Toggle("Time of birth", isOn: $hasBirthTime)
                     BabySexPicker(selection: $sex)
                 }
 
@@ -92,6 +94,10 @@ struct OnboardingView: View {
                 Section {
                     Button {
                         let baby = PersistenceController.shared.createBaby(name: trimmedName, birthDate: birthDate)
+                        if hasBirthTime {
+                            baby.hasBirthTime = true
+                            baby.managedObjectContext?.saveIfChanged()
+                        }
                         ParentSettings.saveFromOnboarding(yourName: yourName, partnerName: partnerName, context: PersistenceController.shared.viewContext)
                         if let sex {
                             baby.sex = sex

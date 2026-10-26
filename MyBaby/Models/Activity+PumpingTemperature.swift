@@ -67,10 +67,18 @@ extension Activity {
     /// "Total 120 ml · Left 60 ml · Right 60 ml · 15 min".
     func pumpingDetailParts(unit: VolumeUnit) -> [String] {
         var parts: [String] = []
-        if let total = pumpedTotalML, total > 0 { parts.append("Total \(unit.format(ml: total))") }
-        if let left = pumpLeftML, left > 0 { parts.append("Left \(unit.format(ml: left))") }
-        if let right = pumpRightML, right > 0 { parts.append("Right \(unit.format(ml: right))") }
-        if let minutes = durationMinutes, minutes > 0 { parts.append("\(minutes) min") }
+        if let total = pumpedTotalML, total > 0 {
+            parts.append(String(localized: "Total \(unit.format(ml: total))", comment: "Milk pumped from both sides"))
+        }
+        if let left = pumpLeftML, left > 0 {
+            parts.append(String(localized: "Left \(unit.format(ml: left))", comment: "Milk pumped from the left side"))
+        }
+        if let right = pumpRightML, right > 0 {
+            parts.append(String(localized: "Right \(unit.format(ml: right))", comment: "Milk pumped from the right side"))
+        }
+        if let minutes = durationMinutes, minutes > 0 {
+            parts.append(String(localized: "\(minutes) min", comment: "How long a pumping session took, in minutes"))
+        }
         return parts
     }
 
@@ -79,7 +87,7 @@ extension Activity {
         var parts: [String] = []
         if let temperatureC {
             parts.append(unit.format(celsius: temperatureC))
-            if isFever { parts.append("Fever") }
+            if isFever { parts.append(String(localized: "Fever")) }
         }
         if let temperatureMethod { parts.append(temperatureMethod.title) }
         let symptoms = self.symptoms
@@ -89,12 +97,24 @@ extension Activity {
 }
 
 /// Where a temperature was taken. The fever line depends on it.
-enum TemperatureMethod: String, CaseIterable, Identifiable, Codable {
+enum TemperatureMethod: String, CaseIterable, Identifiable, Codable, Sendable {
     case rectal, armpit, ear, forehead, oral
 
     var id: String { rawValue }
 
     var title: String {
+        switch self {
+        case .rectal: return String(localized: "Rectal", comment: "Where a temperature was taken")
+        case .armpit: return String(localized: "Armpit", comment: "Where a temperature was taken")
+        case .ear: return String(localized: "Ear", comment: "Where a temperature was taken")
+        case .forehead: return String(localized: "Forehead", comment: "Where a temperature was taken")
+        case .oral: return String(localized: "Oral", comment: "Where a temperature was taken: by mouth")
+        }
+    }
+
+    /// The CSV export's Temperature method column, which the importer reads back.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
         switch self {
         case .rectal: return "Rectal"
         case .armpit: return "Armpit"
@@ -112,6 +132,20 @@ enum Symptom: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
 
     var title: String {
+        switch self {
+        case .cough: return String(localized: "Cough", comment: "Symptom")
+        case .runnyNose: return String(localized: "Runny nose", comment: "Symptom")
+        case .vomiting: return String(localized: "Vomiting", comment: "Symptom")
+        case .diarrhea: return String(localized: "Diarrhea", comment: "Symptom")
+        case .rash: return String(localized: "Rash", comment: "Symptom")
+        case .fussy: return String(localized: "Fussy", comment: "Symptom: the baby is fussy")
+        case .poorFeeding: return String(localized: "Poor feeding", comment: "Symptom: the baby isn't feeding well")
+        }
+    }
+
+    /// The CSV export's Symptoms column, which the importer reads back.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
         switch self {
         case .cough: return "Cough"
         case .runnyNose: return "Runny nose"
@@ -149,11 +183,20 @@ enum FeverGuide {
     static func caution(underThreeMonths: Bool?) -> (title: String, message: String) {
         switch underThreeMonths {
         case true?:
-            return ("Fever in a baby under 3 months", "Call your pediatrician right away, or seek care now.")
+            return (
+                String(localized: "Fever in a baby under 3 months"),
+                String(localized: "Call your pediatrician right away, or seek care now.")
+            )
         case false?:
-            return ("Fever", "Keep an eye on it, and call your pediatrician if you're worried.")
+            return (
+                String(localized: "Fever"),
+                String(localized: "Keep an eye on it, and call your pediatrician if you're worried.", comment: "After a fever reading in a baby 3 months or older")
+            )
         case nil:
-            return ("Fever", "If your baby is under 3 months old, call your pediatrician right away or seek care now. Otherwise keep an eye on it, and call if you're worried.")
+            return (
+                String(localized: "Fever"),
+                String(localized: "If your baby is under 3 months old, call your pediatrician right away or seek care now. Otherwise keep an eye on it, and call if you're worried.")
+            )
         }
     }
 

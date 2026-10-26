@@ -23,12 +23,32 @@ struct WatchContext: Codable, Equatable {
     struct Medicine: Codable, Equatable, Hashable {
         var name: String
         var dosage: String
+        /// The names on the baby's allergy list it matches (confirmed or suspected, by
+        /// `AllergyMatch.medicineMatches` on the iPhone), or `nil` when none. The watch marks it with ⚠︎
+        /// and doesn't log it: that's for the iPhone, after checking with a doctor or pharmacist.
+        /// Optional, so contexts sent before it existed still decode.
+        var allergies: [String]? = nil
+
+        var isOnAllergyList: Bool { !(allergies ?? []).isEmpty }
+    }
+
+    /// A tap the iPhone didn't log, and why, for the watch to show. It comes in the reply to that tap
+    /// and, for a while, in every context after it, so a tap queued while the iPhone was out of reach
+    /// hears back too. The watch shows each one once.
+    struct Refusal: Codable, Equatable {
+        /// The `WatchCommand.id` of the tap.
+        var commandID: UUID
+        var message: String
     }
 
     /// Bumped if the format changes in a way older readers can't handle.
     var version = 1
     /// What the widgets show (last feed, diaper, sleep, night shifts, breastfeeding timer), for the baby
     /// shown in the iPhone app. `nil` before a baby has been added.
+    ///
+    /// Its `babies` has every baby, trimmed to what the complications show, so a complication set to a
+    /// particular baby works whichever baby the iPhone shows, and goes on working from the last context
+    /// while the iPhone is out of reach. (`nil` from an iPhone app older than that.)
     var snapshot: WidgetSnapshot?
     /// "ml" or "oz".
     var volumeUnit = "ml"
@@ -39,6 +59,8 @@ struct WatchContext: Codable, Equatable {
     var medicines: [Medicine] = []
     /// The side to start breastfeeding on, as the app suggests from the last feed.
     var suggestedSide: BreastSide?
+    /// The latest tap the iPhone didn't log, while it's recent.
+    var refusal: Refusal?
     /// When the iPhone sent it.
     var sentAt = Date.now
 
@@ -53,6 +75,20 @@ struct WatchContext: Codable, Equatable {
             copy.snapshot?.updatedAt = updatedAt
         }
         return copy == self
+    }
+}
+
+// MARK: - Allergies
+
+extension WatchContext {
+    /// "Mavie's list includes amoxicillin. Log it on the iPhone after checking with your doctor or
+    /// pharmacist." Why a medicine on the baby's allergy list isn't logged from the watch: in the
+    /// iPhone's reply, and on the watch when it already knows.
+    static func allergyMessage(babyName: String, allergyName: String) -> String {
+        String(
+            localized: "\(babyName)'s list includes \(allergyName.lowercased()). Log it on the iPhone after checking with your doctor or pharmacist.",
+            comment: "Why a medicine wasn't logged from the Apple Watch: it matches the baby's allergy list. First: baby's name, second: the allergy"
+        )
     }
 }
 
@@ -81,6 +117,16 @@ extension WatchContext {
 }
 
 // MARK: - Storage (on the watch)
+
+extension WidgetSnapshot {
+    /// The babies a watch face complication can be set to: every baby the iPhone sent, or only the one
+    /// it shows when it sent no list (MyBaby on the iPhone not yet updated).
+    var watchBabies: [BabySnapshot] {
+        if let babies { return babies.filter { !$0.id.isEmpty } }
+        guard let babyID, !babyID.isEmpty else { return [] }
+        return [baby(babyID)]
+    }
+}
 
 extension WatchContext {
     /// `WatchContext.json` in the watch's App Group, which the complications read too. Without the App

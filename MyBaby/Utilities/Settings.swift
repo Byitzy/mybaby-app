@@ -48,8 +48,8 @@ enum VolumeUnit: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .ml: return "Milliliters (ml)"
-        case .oz: return "Ounces (oz)"
+        case .ml: return String(localized: "Milliliters (ml)")
+        case .oz: return String(localized: "Ounces (oz)")
         }
     }
 
@@ -67,8 +67,11 @@ enum VolumeUnit: String, CaseIterable, Identifiable {
 
     func format(value: Double) -> String {
         switch self {
-        case .ml: return "\(Int(value.rounded())) ml"
-        case .oz: return "\(value.formatted(.number.precision(.fractionLength(0...1)))) oz"
+        case .ml:
+            return String(localized: "\(Int(value.rounded())) ml", comment: "An amount in milliliters, e.g. “120 ml”")
+        case .oz:
+            let ounces = value.formatted(.number.precision(.fractionLength(0...1)))
+            return String(localized: "\(ounces) oz", comment: "An amount in fluid ounces, e.g. “4.5 oz”")
         }
     }
 
@@ -96,12 +99,16 @@ enum TemperatureUnit: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .celsius: return "Celsius (°C)"
-        case .fahrenheit: return "Fahrenheit (°F)"
+        case .celsius: return String(localized: "Celsius (°C)")
+        case .fahrenheit: return String(localized: "Fahrenheit (°F)")
         }
     }
 
-    var symbol: String { self == .celsius ? "°C" : "°F" }
+    var symbol: String {
+        self == .celsius
+            ? String(localized: "°C", comment: "Unit symbol: degrees Celsius")
+            : String(localized: "°F", comment: "Unit symbol: degrees Fahrenheit")
+    }
 
     func fromCelsius(_ celsius: Double) -> Double {
         self == .celsius ? celsius : celsius * 9 / 5 + 32
@@ -113,7 +120,11 @@ enum TemperatureUnit: String, CaseIterable, Identifiable {
 
     /// "38.4 °C" or "101.1 °F".
     func format(celsius: Double) -> String {
-        "\(fromCelsius(celsius).formatted(.number.precision(.fractionLength(1)))) \(symbol)"
+        let number = fromCelsius(celsius).formatted(.number.precision(.fractionLength(1)))
+        switch self {
+        case .celsius: return String(localized: "\(number) °C", comment: "A temperature in degrees Celsius, e.g. “38.4 °C”")
+        case .fahrenheit: return String(localized: "\(number) °F", comment: "A temperature in degrees Fahrenheit, e.g. “101.1 °F”")
+        }
     }
 }
 
@@ -133,14 +144,23 @@ enum GrowthUnits: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .metric: return "Kilograms & centimeters"
-        case .imperial: return "Pounds & inches"
+        case .metric: return String(localized: "Kilograms & centimeters")
+        case .imperial: return String(localized: "Pounds & inches")
         }
     }
 
     /// The unit weight charts are drawn in.
-    var weightUnit: String { self == .metric ? "kg" : "lb" }
-    var lengthUnit: String { self == .metric ? "cm" : "in" }
+    var weightUnit: String {
+        self == .metric
+            ? String(localized: "kg", comment: "Unit symbol: kilograms")
+            : String(localized: "lb", comment: "Unit symbol: pounds")
+    }
+
+    var lengthUnit: String {
+        self == .metric
+            ? String(localized: "cm", comment: "Unit symbol: centimeters")
+            : String(localized: "in", comment: "Unit symbol: inches")
+    }
 
     // MARK: Conversions
 
@@ -181,16 +201,16 @@ enum GrowthUnits: String, CaseIterable, Identifiable {
     func formatWeight(kg: Double) -> String {
         switch self {
         case .metric:
-            return "\(kg.formatted(.number.precision(.fractionLength(0...2)))) kg"
+            return Self.kilograms(kg.formatted(.number.precision(.fractionLength(0...2))))
         case .imperial:
             let parts = Self.poundsAndOunces(kg: kg)
-            return "\(parts.pounds) lb \(Int(parts.ounces)) oz"
+            return String(localized: "\(parts.pounds) lb \(Int(parts.ounces)) oz", comment: "A weight in pounds and ounces, e.g. “9 lb 4 oz”")
         }
     }
 
     /// "52.5 cm" or "20.7 in".
     func formatLength(cm: Double) -> String {
-        "\(fromCm(cm).formatted(.number.precision(.fractionLength(0...1)))) \(lengthUnit)"
+        length(fromCm(cm).formatted(.number.precision(.fractionLength(0...1))))
     }
 
     /// A signed change in weight: "+180 g", "+1.2 kg" or "+0.4 lb".
@@ -198,24 +218,47 @@ enum GrowthUnits: String, CaseIterable, Identifiable {
         switch self {
         case .metric:
             let grams = (kg * 1000).rounded()
-            if abs(grams) < 1000 { return Self.signed(grams, digits: 0, unit: "g") }
-            return Self.signed(kg, digits: 2, unit: "kg")
+            if abs(grams) < 1000 {
+                guard let number = Self.signed(grams, digits: 0) else { return Self.noChange }
+                return String(localized: "\(number) g", comment: "A change in weight in grams, e.g. “+180 g”")
+            }
+            guard let number = Self.signed(kg, digits: 2) else { return Self.noChange }
+            return Self.kilograms(number)
         case .imperial:
-            return Self.signed(fromKg(kg), digits: 1, unit: "lb")
+            guard let number = Self.signed(fromKg(kg), digits: 1) else { return Self.noChange }
+            return String(localized: "\(number) lb", comment: "A weight in pounds, e.g. “+0.4 lb”")
         }
     }
 
     /// A signed change in length: "+1.5 cm" or "+0.6 in".
     func formatLengthChange(cm: Double) -> String {
-        Self.signed(fromCm(cm), digits: 1, unit: lengthUnit)
+        guard let number = Self.signed(fromCm(cm), digits: 1) else { return Self.noChange }
+        return length(number)
     }
 
-    /// "+0.4 lb", "−20 g", or "No change" when it rounds to zero.
-    private static func signed(_ value: Double, digits: Int, unit: String) -> String {
+    /// "4.2 kg", from a number already formatted.
+    private static func kilograms(_ number: String) -> String {
+        String(localized: "\(number) kg", comment: "A weight in kilograms, e.g. “4.2 kg” or “+1.2 kg”")
+    }
+
+    /// "52.5 cm" or "20.7 in", from a number already formatted.
+    private func length(_ number: String) -> String {
+        switch self {
+        case .metric: return String(localized: "\(number) cm", comment: "A length in centimeters, e.g. “52.5 cm” or “+1.5 cm”")
+        case .imperial: return String(localized: "\(number) in", comment: "A length in inches, e.g. “20.7 in” or “+0.6 in”")
+        }
+    }
+
+    private static var noChange: String {
+        String(localized: "No change", comment: "A growth measurement the same as the last one")
+    }
+
+    /// "+0.4", "−20", or `nil` when it rounds to zero.
+    private static func signed(_ value: Double, digits: Int) -> String? {
         let magnitude = abs(value).formatted(.number.precision(.fractionLength(0...digits)))
         let scale = pow(10, Double(digits))
         let rounded = (value * scale).rounded() / scale
-        if rounded == 0 { return "No change" }
-        return "\(rounded > 0 ? "+" : "−")\(magnitude) \(unit)"
+        if rounded == 0 { return nil }
+        return "\(rounded > 0 ? "+" : "−")\(magnitude)"
     }
 }

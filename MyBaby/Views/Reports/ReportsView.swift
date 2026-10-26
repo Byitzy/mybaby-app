@@ -11,9 +11,9 @@ enum ReportRange: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .week: return "7 days"
-        case .twoWeeks: return "14 days"
-        case .month: return "30 days"
+        case .week: return String(localized: "7 days")
+        case .twoWeeks: return String(localized: "14 days")
+        case .month: return String(localized: "30 days")
         }
     }
 }
@@ -39,6 +39,7 @@ private struct ReportContent: View {
     @AppStorage(SettingsKey.nightPlan, store: .shared) private var nightPlanData = Data()
     @AppStorage(SettingsKey.growthUnits, store: .shared) private var growthUnits: GrowthUnits = .localeDefault
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     @FetchRequest private var activities: FetchedResults<Activity>
     @FetchRequest private var vaccines: FetchedResults<Vaccine>
@@ -82,18 +83,26 @@ private struct ReportContent: View {
         let days = self.summaries
         let averages = ReportAverages(days)
 
+        // On iPad the charts sit two by two, under the full-width range, averages and Patterns.
+        let layout = usesTwoColumns
+            ? AnyLayout(CardColumns(columns: 2, spacing: 16))
+            : AnyLayout(VStackLayout(spacing: 16))
+
         ScrollView {
-            VStack(spacing: 16) {
+            layout {
                 Picker("Range", selection: $range) {
                     ForEach(ReportRange.allCases) { range in
                         Text(range.title).tag(range)
                     }
                 }
                 .pickerStyle(.segmented)
+                .spansCardColumns()
 
                 averagesGrid(averages)
+                    .spansCardColumns()
 
                 PatternsLink(baby: baby)
+                    .spansCardColumns()
 
                 Card("Feedings", subtitle: "Number of feedings per day") {
                     Chart {
@@ -107,7 +116,7 @@ private struct ReportContent: View {
                             .cornerRadius(4)
                             .opacity(Self.barOpacity(day))
                             .accessibilityLabel(Self.dayLabel(day.day))
-                            .accessibilityValue(Self.spoken(Format.plural(day.feedings, "feeding"), day))
+                            .accessibilityValue(Self.spoken(String(localized: "\(day.feedings) feedings"), day))
                         }
                     }
                     .frame(height: 160)
@@ -148,7 +157,7 @@ private struct ReportContent: View {
                                 .cornerRadius(4)
                                 .opacity(Self.barOpacity(day))
                                 .accessibilityLabel(Self.dayLabel(day.day))
-                                .accessibilityValue(Self.spoken(Format.plural(day.breastMinutes, "minute"), day))
+                                .accessibilityValue(Self.spoken(String(localized: "\(day.breastMinutes) minutes"), day))
                             }
                         }
                         .frame(height: 160)
@@ -169,7 +178,7 @@ private struct ReportContent: View {
                                 .cornerRadius(4)
                                 .opacity(Self.barOpacity(day))
                                 .accessibilityLabel(Self.dayLabel(day.day))
-                                .accessibilityValue(Self.spoken("\(unit.format(ml: day.pumpedML)) pumped", day))
+                                .accessibilityValue(Self.spoken(String(localized: "\(unit.format(ml: day.pumpedML)) pumped", comment: "An amount of milk: 120 ml pumped"), day))
                             }
                         }
                         .frame(height: 160)
@@ -187,24 +196,24 @@ private struct ReportContent: View {
                                 x: .value("Day", day.day, unit: .day),
                                 y: .value("Count", day.wet)
                             )
-                            .foregroundStyle(by: .value("Type", "Wet 💧"))
-                            .position(by: .value("Type", "Wet 💧"))
+                            .foregroundStyle(by: .value("Type", Self.wetLabel))
+                            .position(by: .value("Type", Self.wetLabel))
                             .opacity(Self.barOpacity(day))
                             .accessibilityLabel(Self.dayLabel(day.day))
-                            .accessibilityValue(Self.spoken(Format.plural(day.wet, "wet diaper"), day))
+                            .accessibilityValue(Self.spoken(String(localized: "\(day.wet) wet diapers"), day))
                             BarMark(
                                 x: .value("Day", day.day, unit: .day),
                                 y: .value("Count", day.dirty)
                             )
-                            .foregroundStyle(by: .value("Type", "Dirty 💩"))
-                            .position(by: .value("Type", "Dirty 💩"))
+                            .foregroundStyle(by: .value("Type", Self.dirtyLabel))
+                            .position(by: .value("Type", Self.dirtyLabel))
                             .opacity(Self.barOpacity(day))
                             .accessibilityLabel(Self.dayLabel(day.day))
-                            .accessibilityValue(Self.spoken(Format.plural(day.dirty, "dirty diaper"), day))
+                            .accessibilityValue(Self.spoken(String(localized: "\(day.dirty) dirty diapers"), day))
                         }
                     }
                     // Domain and range in order, so the legend always reads wet, then dirty.
-                    .chartForegroundStyleScale(domain: ["Wet 💧", "Dirty 💩"], range: [Palette.wetDiaper, Palette.dirtyDiaper])
+                    .chartForegroundStyleScale(domain: [Self.wetLabel, Self.dirtyLabel], range: [Palette.wetDiaper, Palette.dirtyDiaper])
                     .frame(height: 160)
                     CoverageLegend(days: days, tint: Palette.wetDiaper)
                 }
@@ -221,7 +230,7 @@ private struct ReportContent: View {
                             .cornerRadius(4)
                             .opacity(Self.barOpacity(day))
                             .accessibilityLabel(Self.dayLabel(day.day))
-                            .accessibilityValue(Self.spoken(day.sleepSeconds > 0 ? "\(Format.spokenDuration(day.sleepSeconds)) of sleep" : "No sleep logged", day))
+                            .accessibilityValue(Self.spoken(day.sleepSeconds > 0 ? String(localized: "\(Format.spokenDuration(day.sleepSeconds)) of sleep", comment: "A duration: 9 hours, 20 minutes of sleep") : String(localized: "No sleep logged"), day))
                         }
                     }
                     .frame(height: 160)
@@ -261,8 +270,11 @@ private struct ReportContent: View {
                     }
                 }
             }
+            .environment(\.cardFillsRow, usesTwoColumns)
             .padding()
         }
+        // Wide enough on iPad for two charts side by side, centered in a very wide window.
+        .readableContentWidth(ReadableWidth.twoColumns)
         .background(Palette.screenBackground)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -280,6 +292,12 @@ private struct ReportContent: View {
     }
 
     private var nightPlan: NightPlan { NightPlan(data: nightPlanData) }
+
+    /// Charts in two columns and all six averages in one row, on iPad (a regular width) at the usual
+    /// text sizes. One column in Split View and Slide Over, as on iPhone.
+    private var usesTwoColumns: Bool {
+        horizontalSizeClass == .regular && !dynamicTypeSize.isAccessibilitySize
+    }
 
     /// "Monday, Oct 20", for VoiceOver on each bar.
     static func dayLabel(_ day: Date) -> String {
@@ -300,8 +318,12 @@ private struct ReportContent: View {
 
     /// A bar's VoiceOver value, saying when the day was only partly tracked.
     static func spoken(_ value: String, _ day: DaySummary) -> String {
-        day.coverage == .partial ? "\(value), partly tracked" : value
+        day.coverage == .partial ? String(localized: "\(value), partly tracked", comment: "A bar's value: 8 feedings, partly tracked") : value
     }
+
+    /// The diaper chart's two series, named in its legend.
+    static let wetLabel = String(localized: "Wet 💧", comment: "Wet diapers, in the chart's legend")
+    static let dirtyLabel = String(localized: "Dirty 💩", comment: "Dirty diapers, in the chart's legend")
 
     /// A light gray full-height column for each day nobody tracked, instead of a zero bar. Labelled
     /// "No data" when the columns are wide enough (7 days); the legend under the chart names it too.
@@ -384,17 +406,27 @@ private struct ReportContent: View {
         }
     }
 
-    /// The latest weight and length, whenever they were measured.
+    /// Every measurement, with the head circumference older recaps kept on the appointment.
+    private var growthReadings: [GrowthReading] {
+        let appointments = (baby.appointments as? Set<Appointment>).map { Array($0) } ?? []
+        return GrowthReading.all(entries: Array(growthEntries), appointments: appointments)
+    }
+
+    /// The latest weight, length and head circumference, whenever they were measured.
     private var growthCard: some View {
         let weighed = growthEntries.last(where: { $0.weightKg != nil })
         let measured = growthEntries.last(where: { $0.lengthCm != nil })
+        let head = growthReadings.last(where: { $0.headCm != nil })
 
         return Card("Growth", subtitle: "Latest measurements") {
             if let weighed, let kg = weighed.weightKg {
-                growthRow("⚖️", "Weight", value: growthUnits.formatWeight(kg: kg), date: weighed.date)
+                growthRow("⚖️", String(localized: "Weight"), value: growthUnits.formatWeight(kg: kg), date: weighed.date)
             }
             if let measured, let cm = measured.lengthCm {
-                growthRow("📏", "Length", value: growthUnits.formatLength(cm: cm), date: measured.date)
+                growthRow("📏", String(localized: "Length"), value: growthUnits.formatLength(cm: cm), date: measured.date)
+            }
+            if let head, let cm = head.headCm {
+                growthRow("👶", String(localized: "Head circumference"), value: growthUnits.formatLength(cm: cm), date: head.date)
             }
         }
     }
@@ -413,7 +445,8 @@ private struct ReportContent: View {
 
     private func averagesGrid(_ averages: ReportAverages) -> some View {
         // Two columns at the largest text sizes, so the numbers stay readable.
-        let columns = Array(repeating: GridItem(.flexible()), count: dynamicTypeSize.gridColumns(3))
+        // All six in one row on iPad.
+        let columns = Array(repeating: GridItem(.flexible()), count: dynamicTypeSize.gridColumns(usesTwoColumns ? 6 : 3))
         return VStack(alignment: .leading, spacing: Spacing.s) {
             LazyVGrid(columns: columns, spacing: 10) {
                 StatTile(title: "Feeds/day", value: decimal(averages.feedings), emoji: "🍼", tint: ActivityKind.feeding.color, spokenTitle: "Feeds per day")
@@ -449,11 +482,13 @@ private struct ReportContent: View {
             vaccines: vaccines.filter(\.isGiven),
             upcomingVaccines: vaccines.filter { !$0.isGiven },
             unit: unit,
-            growthEntries: Array(growthEntries),
+            growthEntries: growthReadings,
             growthUnits: growthUnits,
             temperatures: temperatures,
             temperatureUnit: TemperatureUnit.current,
             sex: baby.sex,
+            dueDate: baby.dueDate,
+            hasBirthTime: baby.hasBirthTime,
             allergies: baby.allergyList(),
             reactions: baby.allergyReactionList(since: ReportBuilder.startDay(days: range.rawValue))
         )

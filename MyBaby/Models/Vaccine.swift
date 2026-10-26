@@ -33,19 +33,7 @@ final class Vaccine: NSManagedObject, Identifiable {
 }
 
 extension Vaccine {
-    /// Names to pick from when adding a vaccine. Your pediatrician's schedule is the source of truth.
-    static let commonNames = [
-        "Hepatitis B (HepB)",
-        "RSV antibody (nirsevimab)",
-        "Rotavirus (RV)",
-        "DTaP",
-        "Hib",
-        "Pneumococcal (PCV)",
-        "Polio (IPV)",
-        "Influenza (Flu)",
-        "COVID-19",
-        "MMR",
-        "Varicella (Chickenpox)",
-        "Hepatitis A (HepA)",
-    ]
+    /// Names to pick from when adding a shot, from the vaccine guide. Your pediatrician's schedule is
+    /// the source of truth.
+    static var commonNames: [String] { VaccineGuide.commonNames }
 }

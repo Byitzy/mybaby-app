@@ -116,9 +116,9 @@ final class RemoteCryAlerts {
         let targets = targets(for: audience)
         guard !targets.isEmpty else {
             if audience == .offDuty {
-                return "The crying went on, but the other parent's phone isn't set up for monitor alerts."
+                return String(localized: "The crying went on, but the other parent's phone isn't set up for monitor alerts.")
             }
-            return "No parent's phone is ready for monitor alerts yet. Open MyBaby once on each parent's iPhone, with iCloud on."
+            return String(localized: "No parent's phone is ready for monitor alerts yet. Open MyBaby once on each parent's iPhone, with iCloud on.")
         }
 
         let createdAt = Date.now
@@ -148,10 +148,18 @@ final class RemoteCryAlerts {
 
         var summary: [String] = []
         if !sent.isEmpty {
-            summary.append("\(kind == .test ? "Test sent" : "Sent") to \(sent.formatted(.list(type: .and))).")
+            let phones = sent.formatted(.list(type: .and))
+            summary.append(kind == .test
+                ? String(localized: "Test sent to \(phones).", comment: "Nursery monitor; the phones' names, like Sam's iPhone and Alex's iPhone")
+                : String(localized: "Sent to \(phones).", comment: "Nursery monitor; the phones' names, like Sam's iPhone and Alex's iPhone")
+            )
         }
         if !waiting.isEmpty {
-            summary.append("Couldn't reach \(waiting.formatted(.list(type: .and))) yet, so it's trying again.")
+            let phones = waiting.formatted(.list(type: .and))
+            summary.append(String(
+                localized: "Couldn't reach \(phones) yet, so it's trying again.",
+                comment: "Nursery monitor; the phones' names, like Sam's iPhone"
+            ))
         }
         summary += notes
         return summary.joined(separator: " ")
@@ -193,7 +201,9 @@ final class RemoteCryAlerts {
             byOwner[row.ownerUserRecordName] = Target(
                 owner: row.ownerUserRecordName,
                 shareURL: row.shareURL,
-                name: row.deviceName.isEmpty ? "a parent's phone" : row.deviceName
+                name: row.deviceName.isEmpty
+                    ? String(localized: "a parent's phone", comment: "Stands in for a phone's name in the middle of a sentence")
+                    : row.deviceName
             )
         }
         return byOwner.values.sorted { $0.name < $1.name }
@@ -203,7 +213,7 @@ final class RemoteCryAlerts {
     /// database when the inbox is its own, otherwise into the zone it joined in the shared database.
     private func deliver(_ delivery: Delivery) async -> Outcome {
         guard PersistenceController.isSyncEnabled else {
-            return .failed("iCloud sync is off on this device, so it can't reach the parents' phones.")
+            return .failed(String(localized: "iCloud sync is off on this device, so it can't reach the parents' phones."))
         }
         let inboxes = AlertInboxes.shared
         let container = AlertInboxes.container
@@ -222,10 +232,7 @@ final class RemoteCryAlerts {
         } else if let joined = await inboxes.joinedZone(owner: target.owner, shareURL: target.shareURL, container: container) {
             zoneID = joined
         } else {
-            return .retry(
-                after: 60,
-                note: "\(target.name) hasn't let this monitor in yet. Open MyBaby once on it, with iCloud on."
-            )
+            return .retry(after: 60, note: Self.notLetInNote(target.name))
         }
 
         let record = CryAlertRecord.make(
@@ -251,24 +258,40 @@ final class RemoteCryAlerts {
                 return .retry(after: error.retryAfterSeconds ?? Self.backoff(delivery.attempts), note: nil)
             case .zoneNotFound, .userDeletedZone:
                 if isOwn {
-                    return .retry(after: 60, note: "\(target.name)'s inbox is missing. Open MyBaby once on it to set it up again.")
+                    let phone = target.name
+                    return .retry(after: 60, note: String(
+                        localized: "\(phone)'s inbox is missing. Open MyBaby once on it to set it up again.",
+                        comment: "Nursery monitor; a phone's name, like Sam's iPhone"
+                    ))
                 }
                 inboxes.forgetJoined(owner: target.owner)
                 return .retry(after: 5, note: nil)
             case .unknownItem, .permissionFailure, .participantMayNeedVerification:
                 // The share was stopped or changed: join it again.
                 inboxes.forgetJoined(owner: target.owner)
-                return .retry(after: 30, note: "\(target.name) hasn't let this monitor in yet. Open MyBaby once on it, with iCloud on.")
+                return .retry(after: 30, note: Self.notLetInNote(target.name))
             case .notAuthenticated:
-                return .failed("Sign in to iCloud on this device so it can reach the parents' phones.")
+                return .failed(String(localized: "Sign in to iCloud on this device so it can reach the parents' phones."))
             case .quotaExceeded:
-                return .failed("The iCloud storage for \(target.name) is full, so the alert couldn't be saved there.")
+                let phone = target.name
+                return .failed(String(
+                    localized: "The iCloud storage for \(phone) is full, so the alert couldn't be saved there.",
+                    comment: "Nursery monitor; a phone's name, like Sam's iPhone"
+                ))
             default:
                 return .retry(after: Self.backoff(delivery.attempts), note: nil)
             }
         } catch {
             return .retry(after: Self.backoff(delivery.attempts), note: nil)
         }
+    }
+
+    /// "Sam's iPhone hasn't let this monitor in yet…"
+    private static func notLetInNote(_ phone: String) -> String {
+        String(
+            localized: "\(phone) hasn't let this monitor in yet. Open MyBaby once on it, with iCloud on.",
+            comment: "Nursery monitor; a phone's name, like Sam's iPhone"
+        )
     }
 
     /// 2, 4, 8, 16, 32, then 60 seconds.

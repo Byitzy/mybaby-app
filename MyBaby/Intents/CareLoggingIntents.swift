@@ -64,9 +64,29 @@ struct LogPumpingIntent: AppIntent {
         }
 
         let amountText = unit.format(value: amount)
-        let sideText = side.map { " on the \($0.title.lowercased())" } ?? ""
         guard addToStash else {
-            return .result(dialog: "Logged \(amountText) pumped\(sideText)\(SiriText.forBaby(target)).")
+            let text: String
+            switch side {
+            case nil:
+                text = SiriText.sentence(
+                    for: target,
+                    named: { String(localized: "Logged \(amountText) pumped for \($0).", comment: "Siri. First: the amount, e.g. 120 ml; second: the baby's name") },
+                    unnamed: String(localized: "Logged \(amountText) pumped.", comment: "Siri. The amount, e.g. 120 ml")
+                )
+            case .left?:
+                text = SiriText.sentence(
+                    for: target,
+                    named: { String(localized: "Logged \(amountText) pumped on the left for \($0).", comment: "Siri. First: the amount, e.g. 120 ml; second: the baby's name") },
+                    unnamed: String(localized: "Logged \(amountText) pumped on the left.", comment: "Siri. The amount, e.g. 120 ml")
+                )
+            case .right?:
+                text = SiriText.sentence(
+                    for: target,
+                    named: { String(localized: "Logged \(amountText) pumped on the right for \($0).", comment: "Siri. First: the amount, e.g. 120 ml; second: the baby's name") },
+                    unnamed: String(localized: "Logged \(amountText) pumped on the right.", comment: "Siri. The amount, e.g. 120 ml")
+                )
+            }
+            return .result(dialog: "\(text)")
         }
 
         let bag = MilkBag.create(amountML: ml, pumpedDate: session.startDate, storage: storage, in: context)
@@ -79,8 +99,23 @@ struct LogPumpingIntent: AppIntent {
         }
         QuickLog.save()
         CareReminders.refreshMilkStash(context: context)
-        let place = storage == .room ? "at room temperature" : "in the \(storage.title.lowercased())"
-        return .result(dialog: "Logged \(amountText) pumped\(sideText), and added it to the stash \(place).")
+        // Where it went, as a phrase on its own ("in the fridge"), which each language words its own way.
+        let place: String
+        switch storage {
+        case .room: place = String(localized: "at room temperature", comment: "Siri: where pumped milk was put in the stash, as in: added it to the stash at room temperature")
+        case .fridge: place = String(localized: "in the fridge", comment: "Siri: where pumped milk was put in the stash, as in: added it to the stash in the fridge")
+        case .freezer: place = String(localized: "in the freezer", comment: "Siri: where pumped milk was put in the stash, as in: added it to the stash in the freezer")
+        }
+        let text: String
+        switch side {
+        case nil:
+            text = String(localized: "Logged \(amountText) pumped, and added it to the stash \(place).", comment: "Siri. First: the amount, e.g. 120 ml; second: where, e.g. in the fridge")
+        case .left?:
+            text = String(localized: "Logged \(amountText) pumped on the left, and added it to the stash \(place).", comment: "Siri. First: the amount, e.g. 120 ml; second: where, e.g. in the fridge")
+        case .right?:
+            text = String(localized: "Logged \(amountText) pumped on the right, and added it to the stash \(place).", comment: "Siri. First: the amount, e.g. 120 ml; second: where, e.g. in the fridge")
+        }
+        return .result(dialog: "\(text)")
     }
 }
 
@@ -158,7 +193,12 @@ struct LogBathOrTemperatureIntent: AppIntent {
         let target = try SiriBaby.resolveForLogging(baby)
         guard entry == .temperature else {
             try QuickLog.insert(.bath, for: target)
-            return .result(dialog: "Logged a bath\(SiriText.forBaby(target)).")
+            let text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged a bath for \($0).") },
+                unnamed: String(localized: "Logged a bath.")
+            )
+            return .result(dialog: "\(text)")
         }
 
         guard let reading = temperature else {
@@ -179,7 +219,11 @@ struct LogBathOrTemperatureIntent: AppIntent {
         if unit != shown {
             said += " (\(shown.format(celsius: celsius)))"
         }
-        var text = "Logged \(said)\(SiriText.forBaby(target))."
+        var text = SiriText.sentence(
+            for: target,
+            named: { String(localized: "Logged \(said) for \($0).", comment: "Siri. First: a temperature, e.g. 38.4 °C; second: the baby's name") },
+            unnamed: String(localized: "Logged \(said).", comment: "Siri. A temperature, e.g. 38.4 °C")
+        )
         if FeverGuide.isFever(celsius: celsius, method: taken) {
             let caution = FeverGuide.caution(
                 underThreeMonths: FeverGuide.isUnderThreeMonths(birthDate: target.birthDate, on: .now)
@@ -230,7 +274,7 @@ extension DiaryKind: AppEnum {
 struct AddDiaryNoteIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Diary Note"
     static var description = IntentDescription(
-        "Adds a note to your baby's diary: a moment, something new they learned, a first, something funny, or a letter for later. Siri never reads the diary back."
+        "Adds a note to your baby's diary: a moment, something new they learned, a first, something funny, or a letter for later. The diary is never read aloud."
     )
     static var openAppWhenRun = false
 
@@ -276,9 +320,17 @@ struct AddDiaryNoteIntent: AppIntent {
         QuickLog.save()
 
         if chosen == .letter {
-            return .result(dialog: "Sealed a letter\(SiriText.forBaby(target)), to open at 18.")
+            let text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Sealed a letter for \($0), to open at 18.") },
+                unnamed: String(localized: "Sealed a letter, to open at 18.")
+            )
+            return .result(dialog: "\(text)")
         }
-        return .result(dialog: "Saved to \(SiriText.subject(target, "diary", capitalized: false)).")
+        if let name = SiriText.possessiveName(target) {
+            return .result(dialog: "Saved to \(name)'s diary.")
+        }
+        return .result(dialog: "Saved to the diary.")
     }
 
     /// Like the editor's "Written by": this iPhone's parent (Settings › Parents), or on a shared iPhone

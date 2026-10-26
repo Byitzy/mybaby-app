@@ -7,10 +7,32 @@
   <meta name="description" content="MyBaby is a simple iPhone app for tracking your newborn's feeds, diapers, sleep and health, keeping a diary of the moments you want to remember, and sharing it all with your partner.">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="alternate" hreflang="en" href="https://byitzy.github.io/mybaby-app/">
+  <link rel="alternate" hreflang="fr" href="https://byitzy.github.io/mybaby-app/fr/">
+  <link rel="alternate" hreflang="es" href="https://byitzy.github.io/mybaby-app/es/">
+  <link rel="alternate" hreflang="x-default" href="https://byitzy.github.io/mybaby-app/">
   <link rel="stylesheet" href="style.css">
+  <script src="lang.js" defer></script>
+  <script>
+    // Until a language is picked in the switcher (lang.js saves it), a French or Spanish browser goes to its
+    // own language. Once one is picked, this page stays in English. If storage is blocked, it stays too.
+    try {
+      if (!localStorage.getItem("mybaby-lang")) {
+        var lang = ((navigator.languages && navigator.languages[0]) || navigator.language || "").slice(0, 2).toLowerCase();
+        if (lang === "fr" || lang === "es") location.replace(lang + "/");
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <main class="wrap">
+    <nav class="lang-switch" aria-label="Language">
+      <ul>
+        <li><span aria-current="true">English</span></li>
+        <li><a href="fr/index.html" hreflang="fr" lang="fr">Français</a></li>
+        <li><a href="es/index.html" hreflang="es" lang="es">Español</a></li>
+      </ul>
+    </nav>
     <div class="hero">
       <img src="icon.png" alt="" width="96" height="96">
       <h1>MyBaby</h1>
@@ -18,6 +40,7 @@
       <p>Log hands-free with Siri: &ldquo;Log a wet diaper in MyBaby&rdquo;, &ldquo;MyBaby, the baby's asleep&rdquo; or &ldquo;Ask MyBaby when the baby last ate&rdquo;.</p>
       <ul class="links">
         <li><a href="privacy.html">Privacy policy</a></li>
+        <li><a href="terms.html">Terms of Use</a></li>
         <li><a href="support.html">Support</a></li>
       </ul>
       <p class="meta">Download on the App Store (coming soon)</p>

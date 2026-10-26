@@ -14,16 +14,26 @@ extension EnvironmentValues {
     }
 }
 
-/// Explains why the buttons are off, for someone invited to the log as view only.
+/// Explains why the buttons are off, for someone invited to the log as view only. A literal message
+/// is looked up in the String Catalog, like `Text("…")`; a `String` is shown as it is.
 struct ViewOnlyBanner: View {
-    var message = "You can see everything, but only the parents can add or change entries."
+    private let message: Text
+
+    init(message: LocalizedStringKey = "You can see everything, but only the parents can add or change entries.") {
+        self.message = Text(message)
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(message: S) {
+        self.message = Text(message)
+    }
 
     var body: some View {
         Label {
             VStack(alignment: .leading, spacing: 2) {
                 Text("View only")
                     .font(.subheadline.weight(.semibold))
-                Text(message)
+                message
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -7,7 +7,12 @@
   <meta name="description" content="Help with MyBaby: sharing with your partner, iCloud, twins, night shifts, cry alerts, exports and more.">
   <link rel="icon" type="image/png" href="icon.png">
   <link rel="apple-touch-icon" href="icon.png">
+  <link rel="alternate" hreflang="en" href="https://byitzy.github.io/mybaby-app/support.html">
+  <link rel="alternate" hreflang="fr" href="https://byitzy.github.io/mybaby-app/fr/support.html">
+  <link rel="alternate" hreflang="es" href="https://byitzy.github.io/mybaby-app/es/support.html">
+  <link rel="alternate" hreflang="x-default" href="https://byitzy.github.io/mybaby-app/support.html">
   <link rel="stylesheet" href="style.css">
+  <script src="lang.js" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -16,7 +21,15 @@
       <nav class="site-nav" aria-label="Site">
         <ul>
           <li><a href="privacy.html">Privacy</a></li>
+          <li><a href="terms.html">Terms</a></li>
           <li><a href="support.html" aria-current="page">Support</a></li>
+        </ul>
+      </nav>
+      <nav class="lang-switch" aria-label="Language">
+        <ul>
+          <li><span aria-current="true">English</span></li>
+          <li><a href="fr/support.html" hreflang="fr" lang="fr">Français</a></li>
+          <li><a href="es/support.html" hreflang="es" lang="es">Español</a></li>
         </ul>
       </nav>
     </div>
@@ -73,13 +86,14 @@
     <p>Reminders move as soon as your partner's feed reaches your iPhone through iCloud, usually within seconds, even while MyBaby is in the background. If your phone couldn't sync in time (no connection, Low Power Mode, or iOS holding back background activity), a reminder can still go off. iOS also doesn't wake an app you swiped away in the app switcher until you open it again. Opening MyBaby catches up right away. Make sure iCloud sync is on for both of you, and that Background App Refresh is allowed for MyBaby in iPhone Settings &rarr; General.</p>
 
     <h3 id="watch">Does MyBaby work with Apple Watch?</h3>
-    <p>Yes. Install MyBaby on your Apple Watch (from the Watch app on your iPhone, under Available Apps) to see the time since the last feed and diaper, log a diaper, sleep, bottle or medicine, and run the breastfeeding timer from your wrist. Add the MyBaby complication to a watch face to see the last feed at a glance. Taps on the watch are sent to your iPhone to log; if the iPhone is out of reach, they're saved and sent when it's back.</p>
+    <p>Yes. Install MyBaby on your Apple Watch (from the Watch app on your iPhone, under Available Apps) to see the time since the last feed and diaper, log a diaper, sleep, bottle or medicine, and run the breastfeeding timer from your wrist. Add the MyBaby complication to a watch face to see the last feed at a glance, or pick another detail (the last diaper, sleep, the next medicine dose or who's on night duty) and a particular baby when you edit the watch face. Taps on the watch are sent to your iPhone to log; if the iPhone is out of reach, they're saved and sent when it's back.</p>
     <p>Alerts reach your wrist too. If you're wearing your Apple Watch and your iPhone is locked, iOS sends the alert to your wrist as a tap. If the watch is on its charger, your iPhone buzzes instead.</p>
 
     <h3 id="siri">How do I use Siri with MyBaby?</h3>
     <p>Say what you want followed by <strong>&ldquo;in MyBaby&rdquo;</strong> (or &ldquo;in My Baby&rdquo;), so Siri knows which app you mean. For example: &ldquo;Log a wet diaper in MyBaby&rdquo;, &ldquo;MyBaby, the baby's asleep&rdquo;, &ldquo;The baby woke up in MyBaby&rdquo;, &ldquo;Ask MyBaby about today&rdquo;, &ldquo;Log a temperature in MyBaby&rdquo;, &ldquo;Start cry alerts in MyBaby&rdquo; or &ldquo;Add a note in MyBaby&rdquo;. With twins, add the name: &ldquo;Log a diaper for Noah in MyBaby&rdquo;.</p>
     <p>If Siri doesn't recognize these at first, open MyBaby once, and check that Siri is set up in iPhone Settings (under Siri, or Siri &amp; Search) and that MyBaby is allowed to use it there, in the list of apps. Starting cry alerts opens MyBaby, because iPhone only lets the microphone start while the app is on screen.</p>
     <p>The Shortcuts app lists everything MyBaby can do, including actions without a Siri phrase, like switching breastfeeding sides or logging medicine. Open Shortcuts, tap <strong>+</strong>, then search for MyBaby. Siri never reads your diary back.</p>
+    <p>If a medicine matches one on your baby's allergy list (Health &rarr; Allergies), Siri asks &ldquo;Log it anyway?&rdquo; before logging it, and nothing is logged if you say no. The widget's Medicine button never logs it: it shows <strong>Check allergy list</strong> and opens MyBaby instead.</p>
 
     <h3 id="cry-alerts">Any tips for cry alerts?</h3>
     <ul>
@@ -111,6 +125,22 @@
 
     <h3 id="pediatrician">How do I export a report for my pediatrician?</h3>
     <p>Go to <strong>Reports</strong>, pick 7, 14 or 30 days, and tap <strong>Share PDF</strong> for a one-page report you can print, email or show at a checkup. For the full log as a spreadsheet, go to More &rarr; Settings &rarr; <strong>Export all data (CSV)</strong>. With more than one baby, the export is for the baby you're viewing. Exports go only where you send them.</p>
+    <p>Growth in the report, the visit summary and the export includes head circumference, if you've measured it, with its WHO percentile once your baby's sex and birthday are set.</p>
+
+    <h3 id="cancel-appointment">Can I cancel an appointment without deleting it?</h3>
+    <p>Yes. Open the appointment in Health &rarr; Appointments (or touch and hold it) and tap <strong>Cancel appointment</strong>. It moves to a Cancelled group, struck through, with its questions and notes kept. Its reminder and the &ldquo;How did it go?&rdquo; note are turned off, and if <strong>Keep appointments in my calendar</strong> is on, it's taken out of your calendar. Swipe right on it, or open it, and tap <strong>Restore</strong> to bring it all back. The export marks cancelled appointments.</p>
+
+    <h3 id="import">Can I bring my log from another app, or another iPhone?</h3>
+    <p>Yes. Export your data from the other app first, save the file to Files, then in MyBaby go to More &rarr; Settings &rarr; Your data &rarr; <strong>Import from another app</strong>. Choose the file (CSV, TXT or ZIP), where it's from, and which baby it's for, or add a new one. MyBaby shows a preview before anything is saved: how many feeds, diapers, sleeps and so on, the dates it covers, what's already in MyBaby, and any rows it can't read, with the reason.</p>
+    <ul>
+      <li><strong>Huckleberry:</strong> open the child's profile and choose Export tracking data as CSV. The link arrives by email.</li>
+      <li><strong>Glow Baby:</strong> Export Report &rarr; CSV, pick All, then export. Glow emails a ZIP; pick the ZIP itself.</li>
+      <li><strong>Nara Baby:</strong> Activity &rarr; tap the child's picture &rarr; Export Data.</li>
+      <li><strong>MyBaby on another iPhone</strong> (without iCloud): Settings &rarr; Export all data (CSV), send the files to the new iPhone (AirDrop works well), and pick them all at once.</li>
+      <li><strong>Another app</strong>, like Baby Tracker, Baby Connect, Sprout Baby or Baby Daybook: export a CSV and choose Another app. MyBaby shows the first rows and suggests which column is the date, the type, the amount and so on, for you to check.</li>
+    </ul>
+    <p>Times are read in the time zone you pick (your iPhone's, unless you change it). Entries already in MyBaby aren't added twice, so importing the same file again is safe. Time the other app has no entries for stays unlogged; it isn't counted as nothing happening. Changed your mind? Settings &rarr; Your data &rarr; Recent imports &rarr; <strong>Remove</strong> deletes exactly what that import added, and nothing you logged in MyBaby.</p>
+    <p>The file is read on your iPhone. It's never uploaded, and MyBaby doesn't keep it after the import.</p>
 
     <h3 id="feedback">How do I send feedback or report a bug?</h3>
     <p>In MyBaby, go to More &rarr; Settings &rarr; Help &amp; support &rarr; <strong>Send feedback</strong>. Pick what it's about (something's not working, an idea, something you love, or a question), write your message, and add a screenshot if it helps. MyBaby opens an email from your own account with everything filled in, so you see exactly what's sent and can change anything first. Nothing is sent from the app by itself.</p>
@@ -118,10 +148,14 @@
     <p>Once the code is public, you can also report bugs and suggest ideas as issues on the project's GitHub page. Issues are public, so please leave out your baby's name and health details there.</p>
 
     <h3 id="delete">How do I delete my data?</h3>
+    <p>MyBaby has no account to close. Your data is what MyBaby keeps on your iPhone and in your own iCloud, so deleting it is the same as deleting your account.</p>
     <ul>
+      <li>To delete everything, go to More &rarr; Settings &rarr; Your data &rarr; <strong>Delete all MyBaby data</strong>. It deletes every baby's log, photos, diary, milestones, allergies and reports, your private Parent care page, your settings, widgets and reminders, your iCloud copy and the summary on your Apple Watch, and can also remove the appointments MyBaby added to your calendar. Export a copy first if you'd like to keep one: the same screen has buttons for the CSV export and a keepsake PDF. You'll type DELETE, then confirm with Face ID, Touch ID or your passcode. MyBaby then starts fresh, as if it was just installed.</li>
+      <li>If you created a shared log, deleting everything removes it from your partner's iPhone too. If you joined your partner's log, your iPhone leaves it and their log stays.</li>
+      <li>Offline? Everything on your iPhone is deleted right away. The iCloud copy is deleted the next time MyBaby opens while online, or when you tap <strong>Finish deleting iCloud copy</strong>.</li>
       <li>Delete single entries by swiping them away in History.</li>
       <li>Delete your iCloud copy in Settings &rarr; iCloud &amp; sharing &rarr; <strong>Delete my iCloud copy</strong>. The log on your iPhone stays.</li>
-      <li>Delete the app to remove everything on your iPhone.</li>
+      <li>Deleting the app removes everything on your iPhone, but not your iCloud copy. Use Delete all MyBaby data first if you used iCloud sync.</li>
       <li>Manage iCloud data in iPhone Settings &rarr; your name &rarr; iCloud &rarr; Manage Storage.</li>
       <li>Stop sharing or leave a shared log in Settings &rarr; iCloud &amp; sharing &rarr; Manage sharing.</li>
     </ul>
@@ -145,7 +179,7 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <p><a href="index.html">MyBaby</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="support.html">Support</a></p>
+      <p><a href="index.html">MyBaby</a> &middot; <a href="privacy.html">Privacy</a> &middot; <a href="terms.html">Terms</a> &middot; <a href="support.html">Support</a></p>
       <p>Contact: <a href="mailto:mybaby@manhattin.com">mybaby@manhattin.com</a></p>
     </div>
   </footer>

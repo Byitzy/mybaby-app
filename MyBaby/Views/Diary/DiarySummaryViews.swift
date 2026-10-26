@@ -39,14 +39,26 @@ struct DiarySummariesList: View {
                     }
                 }
             } else {
+                // String(localized:) since the message is a String: the call takes its String version.
                 EmptyStateView(
-                    "Summaries start with a birthday",
+                    String(localized: "Summaries start with a birthday"),
                     systemImage: "calendar",
-                    message: "Weeks and months are counted from the day \(baby.displayName) was born. Add \(baby.possessivePronoun) birthday in More › Babies, and each week and month gets a summary."
+                    message: noBirthdayMessage
                 )
                 .listRowBackground(Color.clear)
             }
         }
+    }
+
+    /// A sentence for each, since the pronoun changes it in other languages.
+    private var noBirthdayMessage: String {
+        let name = baby.displayName
+        return DiaryText.bySex(
+            baby,
+            female: String(localized: "Weeks and months are counted from the day \(name) was born. Add her birthday in More › Babies, and each week and month gets a summary."),
+            male: String(localized: "Weeks and months are counted from the day \(name) was born. Add his birthday in More › Babies, and each week and month gets a summary."),
+            unknown: String(localized: "Weeks and months are counted from the day \(name) was born. Add \(name)'s birthday in More › Babies, and each week and month gets a summary.")
+        )
     }
 
     private var notedPeriods: Set<DiaryPeriod.ID> {
@@ -94,8 +106,8 @@ private struct PeriodRow: View {
     }
 
     private var status: String {
-        if !period.isFinished() { return "In progress" }
-        return hasNote ? "Has a note from you" : ""
+        if !period.isFinished() { return String(localized: "In progress") }
+        return hasNote ? String(localized: "Has a note from you") : ""
     }
 }
 
@@ -173,11 +185,29 @@ struct PeriodSummaryView: View {
         }
     }
 
-    /// "Mavie's third month" / "Mavie's week 6".
+    /// "Mavie's third month" / "Mavie's week 6". "First" to "twelfth" in words, then "13th": each its
+    /// own sentence, since the ordinal changes with the noun in other languages.
     private var headline: String {
+        let name = baby.displayName
         switch period.kind {
-        case .week: return "\(baby.displayName)'s week \(period.index)"
-        case .month: return "\(baby.displayName)'s \(Self.ordinalWord(period.index)) month"
+        case .week: return String(localized: "\(name)'s week \(period.index)")
+        case .month:
+            switch period.index {
+            case 1: return String(localized: "\(name)'s first month")
+            case 2: return String(localized: "\(name)'s second month")
+            case 3: return String(localized: "\(name)'s third month")
+            case 4: return String(localized: "\(name)'s fourth month")
+            case 5: return String(localized: "\(name)'s fifth month")
+            case 6: return String(localized: "\(name)'s sixth month")
+            case 7: return String(localized: "\(name)'s seventh month")
+            case 8: return String(localized: "\(name)'s eighth month")
+            case 9: return String(localized: "\(name)'s ninth month")
+            case 10: return String(localized: "\(name)'s tenth month")
+            case 11: return String(localized: "\(name)'s eleventh month")
+            case 12: return String(localized: "\(name)'s twelfth month")
+            default:
+                return String(localized: "\(name)'s \(DiaryText.ordinal(period.index)) month", comment: "e.g. “Mavie's 13th month”")
+            }
         }
     }
 
@@ -185,15 +215,18 @@ struct PeriodSummaryView: View {
     private var subheadline: String {
         let range = period.dateRange()
         if period.isFinished() {
-            return "\(range) · \(period.ageReached) old on \(period.end.formatted(.dateTime.day().month(.abbreviated)))"
+            let day = period.end.formatted(.dateTime.day().month(.abbreviated))
+            let age = DiaryText.ageReached(period)
+            switch age.unit {
+            case .weeks:
+                return String(localized: "\(range) · \(age.count) weeks old on \(day)", comment: "e.g. “5 Jan – 11 Jan · 6 weeks old on 12 Jan”")
+            case .months:
+                return String(localized: "\(range) · \(age.count) months old on \(day)", comment: "e.g. “12 Jan – 11 Feb · 3 months old on 12 Feb”")
+            case .years:
+                return String(localized: "\(range) · \(age.count) years old on \(day)", comment: "e.g. “12 Jan – 11 Feb · 1 year old on 12 Feb”")
+            }
         }
-        return "\(range) · so far"
-    }
-
-    /// "first" to "twelfth", then "13th".
-    static func ordinalWord(_ number: Int) -> String {
-        let words = ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth", "eleventh", "twelfth"]
-        return (1...words.count).contains(number) ? words[number - 1] : GrowthPercentile.ordinal(number)
+        return String(localized: "\(range) · so far", comment: "A week or month that's still going")
     }
 
     // MARK: Notes
@@ -205,7 +238,7 @@ struct PeriodSummaryView: View {
                 .foregroundStyle(.primary)
                 .accessibilityAddTraits(.isHeader)
             if summary.notes.isEmpty {
-                Text("A few words about this \(period.noun), for \(baby.displayName) to read one day. What made you smile? What did \(baby.subjectPronoun) learn?")
+                Text(notesInvitation)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -217,7 +250,10 @@ struct PeriodSummaryView: View {
             Button {
                 editorTarget = .note(about: period)
             } label: {
-                Label(summary.notes.isEmpty ? "Write about this \(period.noun)" : "Add another note", systemImage: "square.and.pencil")
+                Label(
+                    summary.notes.isEmpty ? (period.kind == .week ? "Write about this week" : "Write about this month") : "Add another note",
+                    systemImage: "square.and.pencil"
+                )
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -228,30 +264,36 @@ struct PeriodSummaryView: View {
         .cardStyle(tint: Palette.diary)
     }
 
+    /// "A few words about this month, for Mavie to read one day. What made you smile? What did she learn?"
+    private var notesInvitation: String {
+        let opening = period.kind == .week
+            ? String(localized: "A few words about this week, for \(baby.displayName) to read one day. What made you smile?")
+            : String(localized: "A few words about this month, for \(baby.displayName) to read one day. What made you smile?")
+        return "\(opening) \(DiaryText.whatDidTheyLearn(baby))"
+    }
+
     // MARK: The log
 
     private func logCard(_ summary: DiarySummary) -> some View {
-        Card("Feeds, sleep and diapers", subtitle: summary.coverageText) {
+        Card(String(localized: "Feeds, sleep and diapers"), subtitle: summary.coverageText) {
             if summary.hasNoLog {
-                Text(summary.isInProgress
-                     ? "Nothing logged yet this \(period.noun)."
-                     : "Nothing was logged this \(period.noun), so there's nothing to count. That's okay: notes and photos still belong here.")
+                Text(nothingLogged(summary))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             } else {
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: dynamicTypeSize.gridColumns(3))
                 LazyVGrid(columns: columns, spacing: 10) {
                     SummaryStat(
-                        emoji: "🍼", title: "Feeds", value: "\(summary.feeds)",
+                        emoji: "🍼", title: String(localized: "Feeds"), value: "\(summary.feeds)",
                         detail: perDay(summary.averages.feedings, summary), tint: ActivityKind.feeding.color
                     )
                     SummaryStat(
-                        emoji: "😴", title: "Sleep", value: Format.hours(summary.sleepSeconds),
-                        detail: summary.longestSleep.map { "Longest \(Format.duration($0))" },
+                        emoji: "😴", title: String(localized: "Sleep"), value: Format.hours(summary.sleepSeconds),
+                        detail: summary.longestSleep.map { String(localized: "Longest \(Format.duration($0))", comment: "The longest sleep") },
                         tint: ActivityKind.sleep.color
                     )
                     SummaryStat(
-                        emoji: "🧷", title: "Diapers", value: "\(summary.diapers)",
+                        emoji: "🧷", title: String(localized: "Diapers"), value: "\(summary.diapers)",
                         detail: summary.diapersPerDay.flatMap { perDay($0, summary) }, tint: ActivityKind.diaper.color
                     )
                 }
@@ -269,10 +311,23 @@ struct PeriodSummaryView: View {
         }
     }
 
+    /// "Nothing logged yet this month.", or that nothing was, once it's over.
+    private func nothingLogged(_ summary: DiarySummary) -> String {
+        switch (period.kind, summary.isInProgress) {
+        case (.week, true): return String(localized: "Nothing logged yet this week.")
+        case (.month, true): return String(localized: "Nothing logged yet this month.")
+        case (.week, false):
+            return String(localized: "Nothing was logged this week, so there's nothing to count. That's okay: notes and photos still belong here.")
+        case (.month, false):
+            return String(localized: "Nothing was logged this month, so there's nothing to count. That's okay: notes and photos still belong here.")
+        }
+    }
+
     /// "About 8 a day", from fully tracked days, or nil when there are none.
     private func perDay(_ value: Double, _ summary: DiarySummary) -> String? {
         guard summary.averages.basedOnDays > 0 else { return nil }
-        return "About \(value.formatted(.number.precision(.fractionLength(0...1)))) a day"
+        let number = value.formatted(.number.precision(.fractionLength(0...1)))
+        return String(localized: "About \(number) a day", comment: "e.g. “About 8 a day”")
     }
 
     // MARK: Growth, milestones and health
@@ -282,7 +337,7 @@ struct PeriodSummaryView: View {
         let weight = summary.weightLine(units: growthUnits, baby: baby)
         let length = summary.lengthLine(units: growthUnits, baby: baby)
         if weight != nil || length != nil {
-            Card("Growth", subtitle: Format.plural(summary.growth.count, "measurement")) {
+            Card(String(localized: "Growth"), subtitle: String(localized: "\(summary.growth.count) measurements", comment: "Growth measurements")) {
                 if let weight {
                     LabeledContent("Weight", value: weight)
                         .font(.subheadline)
@@ -339,7 +394,7 @@ struct PeriodSummaryView: View {
                 ForEach(summary.appointments) { appointment in
                     healthLine(
                         "🩺",
-                        appointment.title.isEmpty ? "Appointment" : appointment.title,
+                        appointment.title.isEmpty ? String(localized: "Appointment") : appointment.title,
                         appointment.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
                     )
                 }
@@ -372,7 +427,7 @@ struct PeriodSummaryView: View {
         // Notes about this period are at the top already.
         let entries = summary.entries.filter { $0.periodID != period.id }
         if !entries.isEmpty || !photoIDs.isEmpty {
-            Card("From the diary", subtitle: diarySubtitle(entries: entries.count)) {
+            Card(String(localized: "From the diary"), subtitle: diarySubtitle(entries: entries.count)) {
                 ForEach(entries) { entry in
                     NavigationLink {
                         DiaryEntryDetailView(entry: entry, baby: baby)
@@ -392,8 +447,10 @@ struct PeriodSummaryView: View {
 
     private func diarySubtitle(entries: Int) -> String {
         var parts: [String] = []
-        if entries > 0 { parts.append(entries == 1 ? "1 entry" : "\(entries) entries") }
-        if !photoIDs.isEmpty { parts.append(Format.plural(photoIDs.count, "photo")) }
+        if entries > 0 {
+            parts.append(entries == 1 ? String(localized: "1 entry", comment: "Diary entries") : String(localized: "\(entries) entries", comment: "Diary entries"))
+        }
+        if !photoIDs.isEmpty { parts.append(String(localized: "\(photoIDs.count) photos")) }
         return parts.joined(separator: " · ")
     }
 }

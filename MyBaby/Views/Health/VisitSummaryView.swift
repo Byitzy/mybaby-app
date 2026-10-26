@@ -12,27 +12,27 @@ struct SummaryRow: Identifiable {
 /// The text both the screen and the PDF show, so they always say the same thing.
 extension VisitSummary {
     func feedingRows(unit: VolumeUnit) -> [SummaryRow] {
-        var rows = [SummaryRow(label: "Feeds per day", value: decimal(averages.feedings))]
+        var rows = [SummaryRow(label: String(localized: "Feeds per day"), value: decimal(averages.feedings))]
         if averages.bottleML > 0 {
-            rows.append(SummaryRow(label: "Bottle per day", value: unit.format(ml: averages.bottleML)))
+            rows.append(SummaryRow(label: String(localized: "Bottle per day"), value: unit.format(ml: averages.bottleML)))
         }
         if averages.breastMinutes > 0 {
-            rows.append(SummaryRow(label: "Breastfeeding per day", value: "\(Int(averages.breastMinutes.rounded())) min"))
+            rows.append(SummaryRow(label: String(localized: "Breastfeeding per day"), value: Self.minutes(averages.breastMinutes.rounded())))
         }
         return rows
     }
 
     var diaperRows: [SummaryRow] {
         [
-            SummaryRow(label: "Wet diapers per day", value: decimal(averages.wet)),
-            SummaryRow(label: "Dirty diapers per day", value: decimal(averages.dirty)),
+            SummaryRow(label: String(localized: "Wet diapers per day"), value: decimal(averages.wet)),
+            SummaryRow(label: String(localized: "Dirty diapers per day"), value: decimal(averages.dirty)),
         ]
     }
 
     var sleepRows: [SummaryRow] {
-        var rows = [SummaryRow(label: "Sleep per day", value: Format.hours(averages.sleepHours * 3600))]
+        var rows = [SummaryRow(label: String(localized: "Sleep per day"), value: Format.hours(averages.sleepHours * 3600))]
         if let longestSleep {
-            rows.append(SummaryRow(label: "Longest sleep", value: Format.duration(longestSleep)))
+            rows.append(SummaryRow(label: String(localized: "Longest sleep"), value: Format.duration(longestSleep)))
         }
         return rows
     }
@@ -40,10 +40,13 @@ extension VisitSummary {
     func growthRows(_ units: GrowthUnits) -> [SummaryRow] {
         var rows: [SummaryRow] = []
         if let weight {
-            rows.append(growthRow("Weight", weight, value: units.formatWeight(kg:), change: units.formatWeightChange(kg:)))
+            rows.append(growthRow(String(localized: "Weight"), weight, value: units.formatWeight(kg:), change: units.formatWeightChange(kg:)))
         }
         if let length {
-            rows.append(growthRow("Length", length, value: units.formatLength(cm:), change: units.formatLengthChange(cm:)))
+            rows.append(growthRow(String(localized: "Length"), length, value: units.formatLength(cm:), change: units.formatLengthChange(cm:)))
+        }
+        if let headCircumference {
+            rows.append(growthRow(String(localized: "Head circumference"), headCircumference, value: units.formatLength(cm:), change: units.formatLengthChange(cm:)))
         }
         return rows
     }
@@ -56,9 +59,11 @@ extension VisitSummary {
     ) -> SummaryRow {
         var text = value(growth.value)
         if let percentile = growth.percentile { text += " · \(percentile.text)" }
-        var detail = "Measured \(growth.date.formatted(.dateTime.month(.abbreviated).day()))"
+        let measured = growth.date.formatted(.dateTime.month(.abbreviated).day())
+        var detail = String(localized: "Measured \(measured)")
         if let difference = growth.change, let previousDate = growth.previousDate {
-            detail += ", \(change(difference)) since \(previousDate.formatted(.dateTime.month(.abbreviated).day()))"
+            let since = previousDate.formatted(.dateTime.month(.abbreviated).day())
+            detail = String(localized: "Measured \(measured), \(change(difference)) since \(since)", comment: "Two dates and a change: Measured Oct 20, +180 g since Oct 12")
         }
         return SummaryRow(label: label, value: text, detail: detail)
     }
@@ -73,7 +78,10 @@ extension VisitSummary {
 
     /// "Acetaminophen — 3 doses, last Oct 20 (2.5 ml)".
     func medicineLine(_ medicine: MedicineGiven) -> String {
-        var line = "\(medicine.name) — \(Format.plural(medicine.doses, "dose")), last \(medicine.lastGiven.formatted(.dateTime.month(.abbreviated).day()))"
+        let last = medicine.lastGiven.formatted(.dateTime.month(.abbreviated).day())
+        var line = medicine.doses == 1
+            ? String(localized: "\(medicine.name) — 1 dose, last \(last)", comment: "A medicine, then the date it was last given")
+            : String(localized: "\(medicine.name) — \(medicine.doses) doses, last \(last)", comment: "A medicine, how many doses, then the date it was last given")
         if !medicine.lastDose.isEmpty { line += " (\(medicine.lastDose))" }
         return line
     }
@@ -85,16 +93,34 @@ extension VisitSummary {
     }
 
     func flaggedLine(_ diaper: FlaggedDiaper) -> String {
-        "\(diaper.date.formatted(.dateTime.month(.abbreviated).day().hour().minute())) — \(diaper.color.title) poop"
+        "\(diaper.date.formatted(.dateTime.month(.abbreviated).day().hour().minute())) — \(Self.poopText(diaper.color))"
+    }
+
+    /// "Red poop", whole, so each language can agree the color with its word for poop.
+    private static func poopText(_ color: PoopColor) -> String {
+        switch color {
+        case .yellow: return String(localized: "Yellow poop")
+        case .green: return String(localized: "Green poop")
+        case .brown: return String(localized: "Brown poop")
+        case .black: return String(localized: "Black poop")
+        case .red: return String(localized: "Red poop")
+        case .white: return String(localized: "White poop")
+        }
+    }
+
+    /// "25 min", in the user's language.
+    static func minutes(_ minutes: Double) -> String {
+        Measurement(value: minutes, unit: UnitDuration.minutes)
+            .formatted(.measurement(width: .abbreviated, usage: .asProvided, numberFormatStyle: .number.precision(.fractionLength(0))))
     }
 
     /// "Based on 12 fully tracked days (2 partly tracked days not counted)." and, when some days
     /// weren't fully tracked, a caution that low numbers on them may not be real.
     var averagesNote: String {
-        guard averages.basedOnDays > 0 else { return "No full days logged in this period yet." }
+        guard averages.basedOnDays > 0 else { return String(localized: "No full days logged in this period yet.") }
         let notFull = summaries.filter { $0.coverage == .partial || $0.coverage == .none }.count
         guard notFull > 0 else { return averages.basisNote }
-        let untracked = notFull == 1 ? "1 day wasn't fully tracked." : "\(notFull) days weren't fully tracked."
+        let untracked = notFull == 1 ? String(localized: "1 day wasn't fully tracked.") : String(localized: "\(notFull) days weren't fully tracked.")
         return "\(averages.basisNote) \(untracked) \(ReportAverages.undercountNote)"
     }
 
@@ -171,6 +197,11 @@ struct VisitSummaryView: View {
                 Text(summary.appointmentDate.formatted(date: .complete, time: .shortened))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                if !summary.place.isEmpty {
+                    Label(summary.place, systemImage: "mappin.and.ellipse")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
                 Text("\(summary.periodTitle) · \(summary.averagesNote)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -201,7 +232,7 @@ struct VisitSummaryView: View {
             }
         }
 
-        rows("🍼", "Feeding", summary.feedingRows(unit: unit))
+        rows("🍼", String(localized: "Feeding"), summary.feedingRows(unit: unit))
         Section {
             ForEach(summary.diaperRows) { row($0) }
             ForEach(summary.flaggedDiapers) { diaper in
@@ -211,7 +242,7 @@ struct VisitSummaryView: View {
         } header: {
             EmojiTitle("🧷", "Diapers")
         }
-        rows("😴", "Sleep", summary.sleepRows)
+        rows("😴", String(localized: "Sleep"), summary.sleepRows)
 
         let growth = summary.growthRows(growthUnits)
         if !growth.isEmpty {
@@ -220,7 +251,8 @@ struct VisitSummaryView: View {
             } header: {
                 EmojiTitle("📏", "Growth")
             } footer: {
-                if summary.weight?.percentile != nil || summary.length?.percentile != nil {
+                if summary.weight?.percentile != nil || summary.length?.percentile != nil
+                    || summary.headCircumference?.percentile != nil {
                     Text(GrowthList.whoFooter)
                 }
             }

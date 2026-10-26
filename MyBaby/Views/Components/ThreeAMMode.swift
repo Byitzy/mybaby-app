@@ -12,9 +12,9 @@ enum ThreeAMMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .off: return "Off"
-        case .atNight: return "At night"
-        case .always: return "Always"
+        case .off: return String(localized: "Off", comment: "3 AM mode setting")
+        case .atNight: return String(localized: "At night", comment: "3 AM mode setting: on during the night")
+        case .always: return String(localized: "Always", comment: "3 AM mode setting")
         }
     }
 
@@ -77,11 +77,16 @@ private struct ThreeAMLook: ViewModifier {
 }
 
 /// Sheets are drawn above the root view's red filter, so each one adds it again.
+///
+/// Every editor sheet already has this, so it also gives them their iPad size: a form sheet in the
+/// middle of the screen, never full screen (see `formSheetSizing`).
 private struct ThreeAMSheet: ViewModifier {
     @Environment(\.isThreeAMMode) private var isOn
 
     func body(content: Content) -> some View {
-        content.modifier(ThreeAMLook(isOn: isOn))
+        content
+            .modifier(ThreeAMLook(isOn: isOn))
+            .formSheetSizing()
     }
 }
 

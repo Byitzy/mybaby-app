@@ -100,7 +100,8 @@ private struct SupportRegionHeader: View {
     let change: () -> Void
 
     var body: some View {
-        let title = regionName.map { "Support for \($0)" } ?? "Support for your region"
+        let title = regionName.map { name in String(localized: "Support for \(name)", comment: "A country or region") }
+            ?? String(localized: "Support for your region")
         ViewThatFits(in: .horizontal) {
             HStack(spacing: Spacing.xs) {
                 titleText(title)
@@ -172,7 +173,8 @@ private struct EmergencyCallout: View {
     /// "Call 1 0 1 7 7, ambulance", so VoiceOver reads the digits one by one.
     private func spokenCall(_ number: EmergencyNumber) -> String {
         let digits = SupportDirectory.spoken(number.number)
-        return number.label.map { "Call \(digits), \($0)" } ?? "Call \(digits)"
+        return number.label.map { label in String(localized: "Call \(digits), \(label)", comment: "A phone number, then what it's for") }
+            ?? String(localized: "Call \(digits)", comment: "A phone number or a helpline's name")
     }
 }
 
@@ -220,12 +222,15 @@ struct SupportResourceRows: View {
 
     /// "Text "SHOUT" to 85258", or "Text 988".
     private func textTitle(_ sms: SupportResource.TextLine) -> String {
-        sms.body.map { "Text \"\($0)\" to \(sms.number)" } ?? "Text \(sms.number)"
+        sms.body.map { body in String(localized: "Text \"\(body)\" to \(sms.number)", comment: "A text message to send, then a number") }
+            ?? String(localized: "Text \(sms.number)", comment: "A number to text")
     }
 
     private func spokenText(_ sms: SupportResource.TextLine) -> String {
         let digits = SupportDirectory.spoken(sms.number)
-        return sms.body.map { "Text \($0) to \(resource.name), \(digits)" } ?? "Text \(resource.name), \(digits)"
+        let name = resource.name
+        return sms.body.map { body in String(localized: "Text \(body) to \(name), \(digits)", comment: "Read by VoiceOver: the message, the helpline's name, its number") }
+            ?? String(localized: "Text \(name), \(digits)", comment: "Read by VoiceOver: the helpline's name, its number")
     }
 
     /// "postpartum.net" for https://www.postpartum.net.
@@ -246,7 +251,7 @@ private struct SupportFootnote: View {
 }
 
 /// The list of supported regions, searchable, with "Other / not listed" at the end.
-private struct SupportRegionPicker: View {
+struct SupportRegionPicker: View {
     let directory: SupportDirectory
     /// A region code, `SupportDirectory.otherCode`, or empty for the iPhone's Region.
     @Binding var selection: String
@@ -258,14 +263,18 @@ private struct SupportRegionPicker: View {
             List {
                 if search.isEmpty {
                     Section {
-                        row(title: automaticTitle, subtitle: "From your iPhone's Region setting", code: "")
+                        row(title: automaticTitle, subtitle: String(localized: "From your iPhone's Region setting"), code: "")
                     }
                 }
                 Section {
                     ForEach(matchingRegions) { region in
                         row(title: region.name, subtitle: nil, code: region.code)
                     }
-                    row(title: "Other / not listed", subtitle: "Your local emergency number and an international directory of helplines", code: SupportDirectory.otherCode)
+                    row(
+                        title: String(localized: "Other / not listed"),
+                        subtitle: String(localized: "Your local emergency number and an international directory of helplines"),
+                        code: SupportDirectory.otherCode
+                    )
                 } footer: {
                     Text("MyBaby uses your iPhone's Region setting (Settings → General → Language & Region), never your location.")
                 }
@@ -283,8 +292,10 @@ private struct SupportRegionPicker: View {
 
     /// "Automatic (Canada)", or "Automatic (not listed)" when the iPhone's region isn't one of them.
     private var automaticTitle: String {
-        let name = directory.region(code: SupportDirectory.deviceRegionCode)?.name ?? "not listed"
-        return "Automatic (\(name))"
+        guard let name = directory.region(code: SupportDirectory.deviceRegionCode)?.name else {
+            return String(localized: "Automatic (not listed)")
+        }
+        return String(localized: "Automatic (\(name))", comment: "The iPhone's country or region")
     }
 
     /// Matches a country's name or code, or one of its provinces ("Quebec" finds Canada).

@@ -14,7 +14,19 @@ extension SettingsKey {
 @MainActor
 enum ParentSettings {
     /// Offered under an empty name field. There can be two moms or two dads, so both fields get all of them.
-    static let suggestions = ["Mom", "Dad", "Mama", "Papa", "Mommy", "Daddy"]
+    /// A language may have fewer words for these, so any that come out the same are offered once.
+    static let suggestions: [String] = {
+        let names = [
+            String(localized: "Mom", comment: "Suggested name for a parent"),
+            String(localized: "Dad", comment: "Suggested name for a parent"),
+            String(localized: "Mama", comment: "Suggested name for a parent"),
+            String(localized: "Papa", comment: "Suggested name for a parent"),
+            String(localized: "Mommy", comment: "Suggested name for a parent"),
+            String(localized: "Daddy", comment: "Suggested name for a parent"),
+        ]
+        var seen = Set<String>()
+        return names.filter { seen.insert($0).inserted }
+    }()
 
     static func save(_ plan: NightPlan, context: NSManagedObjectContext) {
         plan.save()
@@ -96,7 +108,7 @@ struct ParentsSection: View {
     // MARK: Pieces
 
     private func nameRow(_ parent: Parent) -> some View {
-        let placeholder = parent == .parent1 ? "Parent 1" : "Parent 2"
+        let placeholder = Self.placeholder(parent)
         return VStack(alignment: .leading, spacing: Spacing.s) {
             HStack(spacing: Spacing.m) {
                 Circle()
@@ -121,7 +133,7 @@ struct ParentsSection: View {
     /// Mom, Dad, Mama… under an empty field, leaving out the one the other parent already uses.
     private func suggestionChips(for parent: Parent) -> some View {
         let taken = plan.givenName(of: parent.other).lowercased()
-        let placeholder = parent == .parent1 ? "Parent 1" : "Parent 2"
+        let placeholder = Self.placeholder(parent)
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: Spacing.s) {
                 ForEach(ParentSettings.suggestions.filter { $0.lowercased() != taken }, id: \.self) { suggestion in
@@ -149,9 +161,14 @@ struct ParentsSection: View {
 
     // MARK: Helpers
 
+    /// "Parent 1" or "Parent 2", in an empty name field.
+    private static func placeholder(_ parent: Parent) -> String {
+        parent == .parent1 ? String(localized: "Parent 1") : String(localized: "Parent 2")
+    }
+
     private var footer: String {
-        let text = "Night-shift wake-ups and cry alerts only buzz the person this iPhone belongs to. Names are shared with your partner's iPhone; this choice isn't."
-        return canEditLog ? text : text + " Only the parents can change the names."
+        let text = String(localized: "Night-shift wake-ups and cry alerts only buzz the person this iPhone belongs to. Names are shared with your partner's iPhone; this choice isn't.")
+        return canEditLog ? text : text + " " + String(localized: "Only the parents can change the names.")
     }
 
     private func nameBinding(_ parent: Parent) -> Binding<String> {

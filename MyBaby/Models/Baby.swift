@@ -10,7 +10,13 @@ import Foundation
 final class Baby: NSManagedObject, Identifiable {
     @NSManaged var uuid: UUID?
     @NSManaged var name: String
+    /// The day of birth, with the time when `hasBirthTime` (otherwise the time part means nothing).
     @NSManaged var birthDate: Date?
+    /// Whether the parent entered the time of birth too.
+    @NSManaged var hasBirthTime: Bool
+    /// Length of pregnancy at birth, e.g. 34 weeks + 2 days. `nil` when not entered; 40 for full term.
+    @NSManaged var gestationWeeksNumber: NSNumber?
+    @NSManaged var gestationDaysNumber: NSNumber?
     @NSManaged var createdAt: Date
     /// The shared parts of the night plan, so both parents follow the same schedule.
     @NSManaged var nightPlanData: Data?
@@ -95,12 +101,12 @@ final class Baby: NSManagedObject, Identifiable {
 
     /// The name, or "Baby" before one is set.
     var displayName: String {
-        name.isEmpty ? "Baby" : name
+        name.isEmpty ? String(localized: "Baby", comment: "A baby's name before one is set") : name
     }
 
     /// The name with only letters and digits, for file names.
     var fileSafeName: String {
         let safe = name.components(separatedBy: CharacterSet.alphanumerics.inverted).joined()
-        return safe.isEmpty ? "Baby" : safe
+        return safe.isEmpty ? String(localized: "Baby", comment: "A baby's name before one is set") : safe
     }
 }

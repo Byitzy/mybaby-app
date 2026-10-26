@@ -9,8 +9,10 @@ import Foundation
 /// are optional as well, and `nil` also means following the app.
 ///
 /// The list comes from the widget snapshot in the App Group (`WidgetSnapshot.babies`), so it works in the
-/// widget extension, which never opens the database. Built into the app and MyBabyWidgets; the Apple
-/// Watch targets leave it out (see the project's exceptions for Shared/).
+/// widget extension, which never opens the database. Built into the app and MyBabyWidgets, and into
+/// MyBabyWatchWidgets for the watch face complications (also with `WIDGET_EXTENSION`); the watch app
+/// leaves it out (see the project's exceptions for Shared/). On the watch the list comes from the last
+/// summary the iPhone sent (`WatchContext`), and "Follow the app" reads "Follow the iPhone".
 struct BabyEntity: AppEntity {
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Baby"
     static var defaultQuery = BabyEntityQuery()
@@ -20,6 +22,11 @@ struct BabyEntity: AppEntity {
     var name: String
 
     var displayRepresentation: DisplayRepresentation {
+        #if os(watchOS)
+        if followsApp {
+            return DisplayRepresentation(title: "Follow the iPhone", subtitle: "The baby shown in MyBaby on your iPhone")
+        }
+        #endif
         if followsApp {
             return DisplayRepresentation(title: "Follow the app", subtitle: "The baby shown in MyBaby")
         }
@@ -30,7 +37,11 @@ struct BabyEntity: AppEntity {
 
     /// The baby shown in the app, whichever that is at the time.
     static var followApp: BabyEntity {
-        BabyEntity(id: followAppID, name: "Follow the app")
+        #if os(watchOS)
+        return BabyEntity(id: followAppID, name: String(localized: "Follow the iPhone"))
+        #else
+        return BabyEntity(id: followAppID, name: String(localized: "Follow the app"))
+        #endif
     }
 
     var followsApp: Bool { id == Self.followAppID }
@@ -40,7 +51,11 @@ struct BabyEntity: AppEntity {
 
     /// "Follow the app", then every baby in the latest snapshot, oldest first.
     static func all() -> [BabyEntity] {
+        #if os(watchOS)
+        let babies = WatchContext.load()?.snapshot?.watchBabies ?? []
+        #else
         let babies = (WidgetSnapshot.load()?.babies ?? []).filter { !$0.id.isEmpty }
+        #endif
         return [followApp] + babies.map { BabyEntity(id: $0.id, name: $0.name) }
     }
 }
@@ -60,7 +75,7 @@ struct BabyEntityQuery: EntityQuery {
         // A baby missing from the snapshot (not written yet, or removed) keeps its place in the widget's
         // settings; the widget shows the baby shown in the app until it's back or another is picked.
         return identifiers.map { id in
-            known.first { $0.id == id } ?? BabyEntity(id: id, name: "Baby")
+            known.first { $0.id == id } ?? BabyEntity(id: id, name: String(localized: "Baby", comment: "A baby without a name"))
         }
     }
 

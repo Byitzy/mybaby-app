@@ -8,9 +8,10 @@ struct BabiesView: View {
     @State private var addingBaby = false
     /// The baby whose profile is open, from the ⓘ button.
     @State private var profileBaby: Baby?
+    /// Whether babies can be added here, kept up to date without asking the store on every render.
+    @ObservedObject private var cloudStatus = CloudStatus.shared
 
     var body: some View {
-        let persistence = PersistenceController.shared
         let current = Baby.preferred(from: Array(babies), selectedID: selectedBabyID)
 
         List {
@@ -47,9 +48,9 @@ struct BabiesView: View {
                 } label: {
                     Label("Add a baby", systemImage: "plus")
                 }
-                .disabled(!persistence.canAddBabies)
+                .disabled(!cloudStatus.canAddBabies)
             } footer: {
-                if !persistence.canAddBabies {
+                if !cloudStatus.canAddBabies {
                     Text(AddBabyView.joinedNote)
                 }
             }
@@ -61,7 +62,7 @@ struct BabiesView: View {
                 Button { addingBaby = true } label: {
                     Label("Add a baby", systemImage: "plus")
                 }
-                .disabled(!persistence.canAddBabies)
+                .disabled(!cloudStatus.canAddBabies)
             }
         }
         .sheet(isPresented: $addingBaby) {
@@ -118,12 +119,13 @@ struct AddBabyView: View {
     @State private var sex: BabySex?
     @State private var isSaving = false
     @State private var isShared = false
+    @ObservedObject private var cloudStatus = CloudStatus.shared
 
     /// Why a parent who joined their partner's log can't add a baby on their own iPhone.
-    static let joinedNote = "Your partner set up this log, so new babies are added on their iPhone. Once they add one, it shows up here too."
+    static let joinedNote = String(localized: "Your partner set up this log, so new babies are added on their iPhone. Once they add one, it shows up here too.")
 
     var body: some View {
-        let canAdd = PersistenceController.shared.canAddBabies
+        let canAdd = cloudStatus.canAddBabies
 
         NavigationStack {
             Form {

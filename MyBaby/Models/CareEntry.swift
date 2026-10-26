@@ -83,9 +83,11 @@ final class CareEntry: NSManagedObject, Identifiable {
     var detail: String {
         var parts: [String] = []
         if let mood { parts.append("\(mood.emoji) \(mood.title)") }
-        if let sleepHours { parts.append("Slept \(Format.hours(sleepHours * 3600))") }
+        if let sleepHours {
+            parts.append(String(localized: "Slept \(Format.hours(sleepHours * 3600))", comment: "Parent check-in: how long the parent slept, e.g. “Slept 5h”"))
+        }
         if let dosage, !dosage.isEmpty { parts.append(dosage) }
-        if let painLevel { parts.append("Pain \(painLevel)/10") }
+        if let painLevel { parts.append(String(localized: "Pain \(painLevel)/10", comment: "Parent's pain level out of 10")) }
         if let bleeding { parts.append(bleeding.title) }
         return parts.joined(separator: " · ")
     }
@@ -98,9 +100,9 @@ enum CareKind: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .mood: return "Check-in"
-        case .medication: return "Medicine"
-        case .recovery: return "Recovery note"
+        case .mood: return String(localized: "Check-in", comment: "A parent's daily check-in on how they feel")
+        case .medication: return String(localized: "Medicine", comment: "Kind of log entry, or of allergy")
+        case .recovery: return String(localized: "Recovery note", comment: "A parent's note on recovering after giving birth")
         }
     }
 
@@ -131,11 +133,11 @@ enum Mood: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .veryLow: return "Very low"
-        case .low: return "Low"
-        case .okay: return "Okay"
-        case .good: return "Good"
-        case .great: return "Great"
+        case .veryLow: return String(localized: "Very low", comment: "Parent's mood")
+        case .low: return String(localized: "Low", comment: "Parent's mood")
+        case .okay: return String(localized: "Okay", comment: "Parent's mood")
+        case .good: return String(localized: "Good", comment: "Parent's mood")
+        case .great: return String(localized: "Great", comment: "Parent's mood")
         }
     }
 
@@ -150,20 +152,22 @@ enum Bleeding: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .none: return "No bleeding"
-        case .light: return "Light bleeding"
-        case .moderate: return "Moderate bleeding"
-        case .heavy: return "Heavy bleeding"
+        case .none: return String(localized: "No bleeding")
+        case .light: return String(localized: "Light bleeding")
+        case .moderate: return String(localized: "Moderate bleeding")
+        case .heavy: return String(localized: "Heavy bleeding")
         }
     }
 
-    /// For the picker, where the row already says "Bleeding".
+    /// For the picker, where the row already says "Bleeding". "Light" and "Moderate" have keys of
+    /// their own: the same English words elsewhere (a light appearance, a moderate allergy) take
+    /// other words or genders in French and Spanish.
     var shortTitle: String {
         switch self {
-        case .none: return "None"
-        case .light: return "Light"
-        case .moderate: return "Moderate"
-        case .heavy: return "Heavy"
+        case .none: return String(localized: "None")
+        case .light: return String(localized: "bleeding.light", defaultValue: "Light", comment: "Amount of bleeding, in a picker labeled Bleeding")
+        case .moderate: return String(localized: "bleeding.moderate", defaultValue: "Moderate", comment: "Amount of bleeding, in a picker labeled Bleeding")
+        case .heavy: return String(localized: "Heavy", comment: "Amount of bleeding, in a picker labeled Bleeding")
         }
     }
 }

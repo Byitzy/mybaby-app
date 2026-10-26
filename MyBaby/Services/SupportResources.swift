@@ -15,10 +15,10 @@ enum SupportKind: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .crisis: return "Crisis lines"
-        case .perinatal: return "Pregnancy and new-parent support"
-        case .healthLine: return "Health lines"
-        case .general: return "More support"
+        case .crisis: return String(localized: "Crisis lines", comment: "Section of help lines: suicide and emotional crisis lines")
+        case .perinatal: return String(localized: "Pregnancy and new-parent support", comment: "Section of help lines")
+        case .healthLine: return String(localized: "Health lines", comment: "Section of help lines: nurse and health advice lines")
+        case .general: return String(localized: "More support", comment: "Section of help lines")
         }
     }
 }
@@ -112,7 +112,11 @@ struct SupportRegion: Decodable, Hashable, Identifiable {
         let numbers = emergency.map(\.text)
         guard let last = numbers.last else { return nil }
         guard numbers.count > 1 else { return last }
-        return numbers.dropLast().joined(separator: ", ") + " or " + last
+        let others = numbers.dropLast().joined(separator: ", ")
+        return String(
+            localized: "\(others) or \(last)",
+            comment: "Emergency numbers to call: the first ones (separated by commas), then the last one, like “15 (SAMU) or 112”"
+        )
     }
 
     func subregion(code: String) -> SupportSubregion? {

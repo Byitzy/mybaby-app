@@ -47,7 +47,7 @@ struct CryGateMetrics: Sendable, Equatable {
 enum CryGateError: LocalizedError {
     case noFormat
 
-    var errorDescription: String? { "The microphone's audio couldn't be prepared for listening." }
+    var errorDescription: String? { String(localized: "The microphone's audio couldn't be prepared for listening.") }
 }
 
 /// The cheap first stage of cry detection, in front of SoundAnalysis.

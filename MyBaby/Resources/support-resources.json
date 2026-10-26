@@ -206,7 +206,7 @@
               "phone": "1-888-315-9257",
               "hours": "24 hours",
               "kind": "healthLine",
-              "sources": ["https://www.gov.mb.ca/contact/urgent_toll_free.html"]
+              "sources": ["https://www.gov.mb.ca/contact/urgent_toll_free.html", "https://www.manitoba.ca/health/contact.html"]
             }
           ]
         },
@@ -286,6 +286,36 @@
               "sources": ["https://www.hss.gov.nt.ca/en/services/811"]
             }
           ]
+        },
+        {
+          "code": "YT",
+          "name": "Yukon",
+          "resources": [
+            {
+              "name": "Yukon HealthLine 811",
+              "description": "Free, confidential health advice from a registered nurse, who can also point you to help in your community.",
+              "phone": "811",
+              "url": "https://yukon.ca/en/811",
+              "hours": "24/7",
+              "kind": "healthLine",
+              "sources": ["https://yukon.ca/en/811", "https://yukonhospitals.ca/en/watson-lake-community-hospital/programs-and-services/emergency-services-wlch"]
+            }
+          ]
+        },
+        {
+          "code": "NU",
+          "name": "Nunavut",
+          "resources": [
+            {
+              "name": "Nunavut Kamatsiaqtut Help Line",
+              "description": "Someone to talk to, anonymously, for anyone in Nunavut. Toll-free outside Iqaluit; in Iqaluit, call 867-979-3333.",
+              "phone": "1-800-265-3333",
+              "url": "https://www.nunavuthelpline.ca",
+              "hours": "24/7",
+              "kind": "crisis",
+              "sources": ["https://www.nunavuthelpline.ca/"]
+            }
+          ]
         }
       ],
       "sources": [
@@ -308,7 +338,11 @@
         "https://811.novascotia.ca/",
         "https://www.princeedwardisland.ca/sites/default/files/publications/811_brochure.pdf",
         "https://www.gov.nl.ca/hcs/findhealthservices/helplines/",
-        "https://www.hss.gov.nt.ca/en/services/811"
+        "https://www.hss.gov.nt.ca/en/services/811",
+        "https://www.manitoba.ca/health/contact.html",
+        "https://yukon.ca/en/811",
+        "https://yukonhospitals.ca/en/watson-lake-community-hospital/programs-and-services/emergency-services-wlch",
+        "https://www.nunavuthelpline.ca/"
       ]
     },
     {
@@ -418,6 +452,22 @@
           "hours": "Mon–Thu 10 am–9 pm, Fri 10 am–7 pm",
           "kind": "general",
           "sources": ["https://www.parentline.ie/", "https://www2.hse.ie/conditions/postnatal-depression/getting-help/"]
+        },
+        {
+          "name": "Aware Support Line",
+          "description": "Not a crisis line. Free, confidential support and information about depression, anxiety or bipolar disorder, for you or someone you care about. Also by email: Support Mail on their website.",
+          "phone": "1800 80 48 48",
+          "url": "https://www.aware.ie/support/support-line/",
+          "hours": "Every day 10 am–10 pm",
+          "kind": "general",
+          "sources": ["https://www.aware.ie/support/support-line/", "https://www.aware.ie/support/support-mail/"]
+        },
+        {
+          "name": "Cuidiú",
+          "description": "Not a crisis line. Volunteer breastfeeding counsellors and parent support groups around Ireland. Find your local counsellor's number on their website; if they can't answer, leave a message and they'll call you back.",
+          "url": "https://www.cuidiu.ie",
+          "kind": "perinatal",
+          "sources": ["https://www2.hse.ie/services/breastfeeding-support/cuidiu-wexford-breastfeeding-group/"]
         }
       ],
       "sources": [
@@ -425,7 +475,10 @@
         "https://www2.hse.ie/mental-health/services-support/supports-services/",
         "https://www2.hse.ie/mental-health/services-support/your-mental-health-information-line/",
         "https://www.parentline.ie/",
-        "https://www2.hse.ie/conditions/postnatal-depression/getting-help/"
+        "https://www2.hse.ie/conditions/postnatal-depression/getting-help/",
+        "https://www.aware.ie/support/support-line/",
+        "https://www.aware.ie/support/support-mail/",
+        "https://www2.hse.ie/services/breastfeeding-support/cuidiu-wexford-breastfeeding-group/"
       ]
     },
     {
@@ -514,6 +567,25 @@
           "sources": ["https://1737.org.nz/"]
         },
         {
+          "name": "Lifeline Aotearoa",
+          "description": "Someone to talk to, from trained staff and volunteers. Call 0800 LIFELINE, or text HELP (4357). Not open midnight to 7 am; call or text 1737 then.",
+          "phone": "0800 543 354",
+          "sms": { "number": "4357" },
+          "url": "https://lifeline.org.nz",
+          "hours": "Every day 7 am–midnight",
+          "kind": "crisis",
+          "sources": ["https://lifeline.org.nz/", "https://lifeline.org.nz/services/lifeline-helpline", "https://lifeline.org.nz/about-us/news/lifeline-aotearoa-reduces-operating-hours-due-to-funding-constraints"]
+        },
+        {
+          "name": "Suicide Crisis Helpline",
+          "description": "For anyone thinking about suicide. Free, nationwide: 0508 TAUTOKO. Not open midnight to 7 am; call or text 1737 then.",
+          "phone": "0508 828 865",
+          "url": "https://lifeline.org.nz/services/suicide-crisis-helpline",
+          "hours": "Every day 7 am–midnight",
+          "kind": "crisis",
+          "sources": ["https://lifeline.org.nz/services/suicide-crisis-helpline", "https://lifeline.org.nz/about-us/news/lifeline-aotearoa-reduces-operating-hours-due-to-funding-constraints"]
+        },
+        {
           "name": "PlunketLine",
           "description": "Parenting and child health advice from a registered Plunket nurse, free for every family. Ask for an interpreter if you need one.",
           "phone": "0800 933 922",
@@ -534,6 +606,10 @@
       ],
       "sources": [
         "https://1737.org.nz/",
+        "https://lifeline.org.nz/",
+        "https://lifeline.org.nz/services/lifeline-helpline",
+        "https://lifeline.org.nz/services/suicide-crisis-helpline",
+        "https://lifeline.org.nz/about-us/news/lifeline-aotearoa-reduces-operating-hours-due-to-funding-constraints",
         "https://www.plunket.org.nz/plunket/what-we-offer/plunketline/",
         "https://www.healthnz.govt.nz/services-support/health-and-disability-providers/healthline"
       ]
@@ -583,6 +659,16 @@
           "sources": ["https://3114.fr/"]
         },
         {
+          "name": "SOS Amitié",
+          "description": "Someone to listen, for anyone in distress and the people close to them. Free and anonymous, from trained volunteers. Chat every day 1 pm–3 am on their website. In English: 01 46 21 46 46, 3–11 pm.",
+          "phone": "09 72 39 40 50",
+          "url": "https://www.sos-amitie.com",
+          "hours": "24/7",
+          "languages": ["French"],
+          "kind": "crisis",
+          "sources": ["https://www.sante.fr/trouver-aide-sante-mentale/selon-votre-profil/lignes-ecoute"]
+        },
+        {
           "name": "Allô Parents Bébé",
           "featured": true,
           "description": "Free, anonymous listening and support for parents, from pregnancy until a child is 3. Run by Enfance & Partage.",
@@ -596,6 +682,7 @@
       "sources": [
         "https://www.service-public.gouv.fr/particuliers/vosdroits/F33954",
         "https://3114.fr/",
+        "https://www.sante.fr/trouver-aide-sante-mentale/selon-votre-profil/lignes-ecoute",
         "https://www.paris.fr/pages/accompagnement-des-parents-211/"
       ]
     },
@@ -743,6 +830,385 @@
         "https://www.westerncape.gov.za/know-who-you-can-call-emergency",
         "https://www.sadag.org/",
         "https://www.sadag.org/index.php?option=com_content&view=article&id=1904&Itemid=151"
+      ]
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "Línea 024, suicide prevention",
+          "featured": true,
+          "description": "Free, confidential national line from the Ministry of Health, for anyone thinking about suicide and the people close to them. Also by chat, and in sign language by video, on their website.",
+          "phone": "024",
+          "url": "https://www.sanidad.gob.es/linea024/home.htm",
+          "hours": "24/7",
+          "languages": ["Spanish"],
+          "kind": "crisis",
+          "sources": ["https://www.sanidad.gob.es/linea024/home.htm"]
+        }
+      ],
+      "sources": [
+        "https://www.sanidad.gob.es/linea024/home.htm"
+      ]
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" },
+        { "number": "118", "label": "ambulance" }
+      ],
+      "resources": [
+        {
+          "name": "Telefono Amico Italia",
+          "featured": true,
+          "description": "Someone to listen, for anyone going through an emotional crisis. Also on WhatsApp at 324 011 7252, every day 6–9 pm.",
+          "phone": "02 2327 2327",
+          "url": "https://www.telefonoamico.it",
+          "hours": "24/7",
+          "languages": ["Italian"],
+          "kind": "crisis",
+          "sources": ["https://www.telefonoamico.it/"]
+        }
+      ],
+      "sources": [
+        "https://sdg.interno.gov.it/en/f5-single-european-emergency-number-112",
+        "https://www.telefonoamico.it/"
+      ]
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "911" }
+      ],
+      "resources": [
+        {
+          "name": "Línea de la Vida",
+          "featured": true,
+          "description": "Free support from a mental health professional, for suicidal thoughts, addictions, violence or any mental health worry. Run by the national mental health commission (CONASAMA).",
+          "phone": "800 911 2000",
+          "url": "https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000",
+          "hours": "24/7",
+          "languages": ["Spanish"],
+          "kind": "crisis",
+          "sources": ["https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000"]
+        }
+      ],
+      "sources": [
+        "https://www.gob.mx/911/articulos/numero-unico-de-emergencias-9-1-1?idiom=es",
+        "https://www.gob.mx/911/articulos/servicio-de-atencion-de-llamadas-de-emergencias-9-1-1",
+        "https://www.gob.mx/conasama/articulos/linea-de-la-vida-800-911-2000"
+      ]
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "192", "label": "SAMU" }
+      ],
+      "resources": [
+        {
+          "name": "CVV, Centro de Valorização da Vida",
+          "featured": true,
+          "description": "Free emotional support and suicide prevention from trained volunteers, anywhere in Brazil. Also by chat and email on their website.",
+          "phone": "188",
+          "url": "https://cvv.org.br",
+          "hours": "24/7",
+          "languages": ["Portuguese"],
+          "kind": "crisis",
+          "sources": ["https://cvv.org.br/", "https://www.cvv.org.br/ligue-188/"]
+        }
+      ],
+      "sources": [
+        "https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/s/samu-192",
+        "https://cvv.org.br/",
+        "https://www.cvv.org.br/ligue-188/"
+      ]
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112", "label": "ambulance and fire" },
+        { "number": "101", "label": "police" }
+      ],
+      "resources": [
+        {
+          "name": "Zelfmoordlijn 1813",
+          "description": "Free, anonymous support for anyone thinking about suicide, or worried about someone. Chat every day 5 pm–midnight (from noon on Wednesdays).",
+          "phone": "1813",
+          "url": "https://www.zelfmoord1813.be",
+          "hours": "24/7",
+          "languages": ["Dutch"],
+          "kind": "crisis",
+          "sources": ["https://www.zelfmoord1813.be/"]
+        },
+        {
+          "name": "Centre de Prévention du Suicide",
+          "description": "A listening line for anyone thinking about suicide, or worried about someone.",
+          "phone": "0800 32 123",
+          "url": "https://www.preventionsuicide.be",
+          "languages": ["French"],
+          "kind": "crisis",
+          "sources": ["https://www.preventionsuicide.be/"]
+        }
+      ],
+      "sources": [
+        "https://www.112.be/",
+        "https://www.zelfmoord1813.be/",
+        "https://www.preventionsuicide.be/"
+      ]
+    },
+    {
+      "code": "CH",
+      "name": "Switzerland",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "144", "label": "ambulance" },
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "Die Dargebotene Hand / La Main Tendue / Telefono Amico",
+          "featured": true,
+          "description": "Someone to talk to, personally, anonymously and confidentially. A call costs up to CHF 0.20. Also by chat and email on their website. In English: 0800 143 000, 6–11 pm.",
+          "phone": "143",
+          "url": "https://www.143.ch",
+          "hours": "24/7",
+          "languages": ["German", "French", "Italian"],
+          "kind": "crisis",
+          "sources": ["https://www.143.ch/", "https://www.bakom.admin.ch/en/other-numbers-free-of-charge-or-not"]
+        }
+      ],
+      "sources": [
+        "https://www.bakom.admin.ch/en/other-numbers-free-of-charge-or-not",
+        "https://www.143.ch/"
+      ]
+    },
+    {
+      "code": "SE",
+      "name": "Sweden",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "Självmordslinjen (Mind)",
+          "description": "Support for anyone thinking about suicide or in a mental health crisis, and the people close to them. Also by chat at mind.se.",
+          "phone": "90101",
+          "url": "https://mind.se",
+          "hours": "24/7",
+          "languages": ["Swedish"],
+          "kind": "crisis",
+          "sources": ["https://ki.se/nasp/information-och-stod/hjalplinjer-och-stod"]
+        },
+        {
+          "name": "Föräldralinjen (Mind)",
+          "featured": true,
+          "description": "Not a crisis line. Someone to talk to about being a parent and anything that worries you.",
+          "phone": "020-85 20 00",
+          "url": "https://mind.se",
+          "hours": "Weekdays 10 am–3 pm, Thursdays also 7–9 pm",
+          "languages": ["Swedish"],
+          "kind": "general",
+          "sources": ["https://ki.se/nasp/information-och-stod/hjalplinjer-och-stod"]
+        },
+        {
+          "name": "1177",
+          "description": "Health advice by phone, day and night.",
+          "phone": "1177",
+          "url": "https://www.1177.se",
+          "hours": "24/7",
+          "kind": "healthLine",
+          "sources": ["https://www.1177.se/"]
+        }
+      ],
+      "sources": [
+        "https://ki.se/nasp/information-och-stod/hjalplinjer-och-stod",
+        "https://www.1177.se/"
+      ]
+    },
+    {
+      "code": "NO",
+      "name": "Norway",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "113", "label": "medical emergency" }
+      ],
+      "resources": [
+        {
+          "name": "Mental Helse Hjelpetelefonen",
+          "featured": true,
+          "description": "Free, anonymous line for anyone who needs someone to talk to, answered by staff and volunteers.",
+          "phone": "116 123",
+          "url": "https://mentalhelse.no/fa-hjelp/hjelpetelefonen",
+          "hours": "24/7",
+          "languages": ["Norwegian"],
+          "kind": "crisis",
+          "sources": ["https://mentalhelse.no/fa-hjelp/hjelpetelefonen", "https://www.helsenorge.no/en/psykisk-helse/do-you-need-someone-to-talk-to/"]
+        },
+        {
+          "name": "Kirkens SOS",
+          "description": "Someone to talk to in a crisis, every day and night, holidays too. Also by chat at soschat.no.",
+          "phone": "22 40 00 40",
+          "url": "https://www.kirkens-sos.no",
+          "hours": "24/7",
+          "languages": ["Norwegian"],
+          "kind": "crisis",
+          "sources": ["https://www.kirkens-sos.no/", "https://www.helsenorge.no/en/psykisk-helse/do-you-need-someone-to-talk-to/"]
+        },
+        {
+          "name": "Legevakt (out-of-hours medical centre)",
+          "description": "When it's urgent but not life or death.",
+          "phone": "116 117",
+          "url": "https://www.helsenorge.no/en/psykisk-helse/mental-healthcare-for-adults-in-norway/",
+          "kind": "healthLine",
+          "sources": ["https://www.helsenorge.no/en/psykisk-helse/mental-healthcare-for-adults-in-norway/"]
+        }
+      ],
+      "sources": [
+        "https://www.helsenorge.no/en/psykisk-helse/mental-healthcare-for-adults-in-norway/",
+        "https://www.helsenorge.no/en/psykisk-helse/do-you-need-someone-to-talk-to/",
+        "https://mentalhelse.no/fa-hjelp/hjelpetelefonen",
+        "https://www.kirkens-sos.no/"
+      ]
+    },
+    {
+      "code": "DK",
+      "name": "Denmark",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "112" }
+      ],
+      "resources": [
+        {
+          "name": "Livslinien",
+          "featured": true,
+          "description": "Anonymous support for anyone thinking about suicide, or worried about someone. Chat on weekdays 5–9 pm and weekends 1–5 pm.",
+          "phone": "70 201 201",
+          "url": "https://www.livslinien.dk",
+          "hours": "Every day 9 am–5 am",
+          "languages": ["Danish"],
+          "kind": "crisis",
+          "sources": ["https://www.livslinien.dk/"]
+        }
+      ],
+      "sources": [
+        "https://lifeindenmark.borger.dk/healthcare/Emergencies",
+        "https://www.livslinien.dk/"
+      ]
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "995", "label": "ambulance" }
+      ],
+      "resources": [
+        {
+          "name": "Samaritans of Singapore (SOS)",
+          "featured": true,
+          "description": "Support for anyone in crisis, thinking about suicide, or worried about someone. Also by WhatsApp with CareText: 9151 1767.",
+          "phone": "1767",
+          "url": "https://www.sos.org.sg",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www.sos.org.sg/"]
+        }
+      ],
+      "sources": [
+        "https://www.scdf.gov.sg/home/about-scdf/emergency-medical-services",
+        "https://www.sos.org.sg/"
+      ]
+    },
+    {
+      "code": "HK",
+      "name": "Hong Kong",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "999" }
+      ],
+      "resources": [
+        {
+          "name": "18111 Mental Health Support Hotline",
+          "featured": true,
+          "description": "The government's one-stop line for mental health support and referral, for anyone in Hong Kong. Also on WhatsApp at 18111.",
+          "phone": "18111",
+          "url": "https://www.shallwetalk.hk/en/get-help/mental-health-support-hotline-18111/",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www.shallwetalk.hk/en/get-help/mental-health-support-hotline-18111/", "https://www.shallwetalk.hk/en/get-help/emergency-helplines/"]
+        },
+        {
+          "name": "The Samaritans",
+          "description": "Multilingual suicide prevention hotline.",
+          "phone": "2896 0000",
+          "url": "https://www.samaritans.org.hk",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://www.shallwetalk.hk/en/get-help/emergency-helplines/"]
+        },
+        {
+          "name": "The Samaritan Befrienders Hong Kong",
+          "description": "Emotional support hotline. English line: 2389 2223.",
+          "phone": "2389 2222",
+          "url": "https://sbhk.org.hk",
+          "hours": "24/7",
+          "kind": "crisis",
+          "sources": ["https://sbhk.org.hk/", "https://www.shallwetalk.hk/en/get-help/emergency-helplines/"]
+        }
+      ],
+      "sources": [
+        "https://www.shallwetalk.hk/en/get-help/emergency-helplines/",
+        "https://www.shallwetalk.hk/en/get-help/mental-health-support-hotline-18111/",
+        "https://sbhk.org.hk/"
+      ]
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "lastVerified": "2026-10-25",
+      "emergency": [
+        { "number": "119", "label": "ambulance and fire" }
+      ],
+      "resources": [
+        {
+          "name": "Yorisoi Hotline (よりそいホットライン)",
+          "featured": true,
+          "description": "Free support for any worry, from anyone, at any time. From Fukushima Prefecture: 0120-279-226. From an IP phone: 050-3655-0279.",
+          "phone": "0120-279-338",
+          "url": "https://www.since2011.net/yorisoi/",
+          "hours": "24/7",
+          "languages": ["Japanese"],
+          "kind": "crisis",
+          "sources": ["https://www.since2011.net/yorisoi/", "https://www.mhlw.go.jp/mamorouyokokoro/soudan/tel/"]
+        },
+        {
+          "name": "Inochi no Denwa (いのちの電話)",
+          "description": "Free line every day 4–9 pm, and from 8 am on the 10th of each month for 24 hours. Navi Dial 0570-783-556 is open 10 am–10 pm (call charges apply).",
+          "phone": "0120-783-556",
+          "hours": "Every day 4–9 pm",
+          "languages": ["Japanese"],
+          "kind": "crisis",
+          "sources": ["https://www.mhlw.go.jp/mamorouyokokoro/soudan/tel/"]
+        }
+      ],
+      "sources": [
+        "https://www.fdma.go.jp/mission/enrichment/kyukyumusen_kinkyutuhou/119.html",
+        "https://www.mhlw.go.jp/mamorouyokokoro/soudan/tel/",
+        "https://www.since2011.net/yorisoi/"
       ]
     }
   ],

@@ -2,6 +2,9 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23231" systemVersion="24A335" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
     <entity name="Baby" representedClassName="Baby" syncable="YES">
         <attribute name="birthDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="gestationDaysNumber" optional="YES" attributeType="Integer 16" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="gestationWeeksNumber" optional="YES" attributeType="Integer 16" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="hasBirthTime" attributeType="Boolean" defaultValueString="NO" allowsCloudEncryption="YES" usesScalarValueType="YES"/>
         <attribute name="createdAt" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
         <attribute name="nightPlanData" optional="YES" attributeType="Binary" allowsCloudEncryption="YES"/>
@@ -47,6 +50,7 @@
         <attribute name="symptomsRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="isApproximate" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="allergensRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="importBatchID" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="activities" inverseEntity="Baby"/>
     </entity>
     <entity name="Vaccine" representedClassName="Vaccine" syncable="YES">
@@ -57,13 +61,28 @@
         <attribute name="name" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
         <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
         <attribute name="provider" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="doseAmountNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="doseUnit" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="expiryDate" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="productName" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="providerAddress" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="providerLatitude" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="providerLongitude" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="providerPhone" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="importBatchID" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="vaccines" inverseEntity="Baby"/>
     </entity>
     <entity name="Appointment" representedClassName="Appointment" syncable="YES">
+        <attribute name="cancelledAt" optional="YES" attributeType="Date" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
         <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
         <attribute name="headCircumferenceCmNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="isCancelled" attributeType="Boolean" allowsCloudEncryption="YES" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="location" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
+        <attribute name="locationAddress" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
+        <attribute name="locationLatitude" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="locationLongitude" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="locationPhone" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
         <attribute name="provider" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
         <attribute name="questionAnswers" optional="YES" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
@@ -77,10 +96,12 @@
     </entity>
     <entity name="GrowthEntry" representedClassName="GrowthEntry" syncable="YES">
         <attribute name="date" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
+        <attribute name="headCircumferenceCmNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
         <attribute name="lengthCmNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
         <attribute name="notes" attributeType="String" allowsCloudEncryption="YES" defaultValueString=""/>
         <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
         <attribute name="weightKgNumber" optional="YES" attributeType="Double" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="importBatchID" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="growthEntries" inverseEntity="Baby"/>
     </entity>
     <entity name="MilkBag" representedClassName="MilkBag" syncable="YES">
@@ -137,6 +158,7 @@
         <attribute name="reasonRaw" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <attribute name="start" attributeType="Date" allowsCloudEncryption="YES" defaultDateTimeInterval="0" usesScalarValueType="NO"/>
         <attribute name="uuid" optional="YES" attributeType="UUID" allowsCloudEncryption="YES" usesScalarValueType="NO"/>
+        <attribute name="importBatchID" optional="YES" attributeType="String" allowsCloudEncryption="YES"/>
         <relationship name="baby" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Baby" inverseName="trackingPeriods" inverseEntity="Baby"/>
     </entity>
     <entity name="AlertInbox" representedClassName="AlertInbox" syncable="YES">

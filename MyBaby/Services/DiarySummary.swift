@@ -50,25 +50,49 @@ struct DiarySummary {
     /// Nothing at all was tracked: no feeds, diapers or sleep to speak of.
     var hasNoLog: Bool { daysLogged == 0 && !days.contains { $0.hasData } }
 
-    /// "Logged 5 of 7 days", "Logged all 30 days", "Logged 3 of 4 days so far".
+    /// "Logged 5 of 7 days", "Logged all 30 days", "Logged 3 of 4 days so far". One whole phrase for
+    /// each case, so each language can word it its own way.
     var coverageText: String {
-        if daysSoFar == 0 { return isInProgress ? "Just started" : "Nothing logged" }
-        let soFar = isInProgress ? " so far" : ""
-        if daysLogged == 0 { return "No days logged\(soFar)" }
+        if daysSoFar == 0 {
+            return isInProgress
+                ? String(localized: "Just started", comment: "A week or month of the diary that began today")
+                : String(localized: "Nothing logged")
+        }
+        if daysLogged == 0 {
+            return isInProgress ? String(localized: "No days logged so far") : String(localized: "No days logged")
+        }
         if daysLogged == daysSoFar, daysPartlyLogged == 0 {
-            return daysSoFar == 1 ? "Logged the whole day\(soFar)" : "Logged all \(daysSoFar) days\(soFar)"
+            if daysSoFar == 1 {
+                return isInProgress ? String(localized: "Logged the whole day so far") : String(localized: "Logged the whole day")
+            }
+            return isInProgress
+                ? String(localized: "Logged all \(daysSoFar) days so far")
+                : String(localized: "Logged all \(daysSoFar) days")
         }
-        var text = "Logged \(daysLogged) of \(Format.plural(daysSoFar, "day"))\(soFar)"
-        if daysPartlyLogged > 0 {
-            text += " (\(daysPartlyLogged) only partly)"
+        return partlyLoggedText
+    }
+
+    /// "Logged 5 of 7 days (2 only partly)", with "so far" while the period goes on.
+    private var partlyLoggedText: String {
+        let logged = daysLogged
+        let total = daysSoFar
+        let partly = daysPartlyLogged
+        switch (total == 1, isInProgress, partly > 0) {
+        case (true, false, false): return String(localized: "Logged \(logged) of 1 day")
+        case (true, true, false): return String(localized: "Logged \(logged) of 1 day so far")
+        case (true, false, true): return String(localized: "Logged \(logged) of 1 day (\(partly) only partly)")
+        case (true, true, true): return String(localized: "Logged \(logged) of 1 day so far (\(partly) only partly)")
+        case (false, false, false): return String(localized: "Logged \(logged) of \(total) days")
+        case (false, true, false): return String(localized: "Logged \(logged) of \(total) days so far")
+        case (false, false, true): return String(localized: "Logged \(logged) of \(total) days (\(partly) only partly)")
+        case (false, true, true): return String(localized: "Logged \(logged) of \(total) days so far (\(partly) only partly)")
         }
-        return text
     }
 
     /// Under the numbers when some days weren't logged, so totals aren't read as the whole story.
     var coverageNote: String? {
         guard daysLogged > 0, daysLogged < daysSoFar || daysPartlyLogged > 0 else { return nil }
-        return "Totals only count what was logged. Days that weren't logged aren't counted as zero, and averages use fully logged days."
+        return String(localized: "Totals only count what was logged. Days that weren't logged aren't counted as zero, and averages use fully logged days.")
     }
 }
 
@@ -93,8 +117,9 @@ enum DiarySummaryBuilder {
             .reversed()
         let vaccines = fetch(baby.entries(Vaccine.fetchAll()), in: context)
             .filter { $0.isGiven && period.contains($0.date) }
+        // A cancelled visit didn't happen, so it isn't part of the week's story.
         let appointments = fetch(baby.entries(Appointment.fetchAll()), in: context)
-            .filter { period.contains($0.date) }
+            .filter { period.contains($0.date) && !$0.isCancelled }
         let entries = fetch(baby.entries(DiaryEntry.between(period.start, period.end)), in: context)
         let notes = fetch(baby.entries(DiaryEntry.periodNotes()), in: context)
             .filter { $0.periodID == period.id }
@@ -182,7 +207,7 @@ extension DiarySummary {
         guard let latest = growth.last(where: { $0.weightKg != nil }), let kg = latest.weightKg else { return nil }
         var line = units.formatWeight(kg: kg)
         if let change = change(\.weightKg, latest: latest) {
-            line += " (\(units.formatWeightChange(kg: change.amount)) since \(change.since.formatted(.dateTime.month(.abbreviated).day())))"
+            line = Self.withChange(line, change: units.formatWeightChange(kg: change.amount), since: change.since)
         }
         if let percentile = baby.growthPercentile(.weight, value: kg, on: latest.date) {
             line += " · \(percentile.text)"
@@ -195,12 +220,18 @@ extension DiarySummary {
         guard let latest = growth.last(where: { $0.lengthCm != nil }), let cm = latest.lengthCm else { return nil }
         var line = units.formatLength(cm: cm)
         if let change = change(\.lengthCm, latest: latest) {
-            line += " (\(units.formatLengthChange(cm: change.amount)) since \(change.since.formatted(.dateTime.month(.abbreviated).day())))"
+            line = Self.withChange(line, change: units.formatLengthChange(cm: change.amount), since: change.since)
         }
         if let percentile = baby.growthPercentile(.length, value: cm, on: latest.date) {
             line += " · \(percentile.text)"
         }
         return line
+    }
+
+    /// "5.2 kg (+600 g since Oct 3)".
+    private static func withChange(_ value: String, change: String, since: Date) -> String {
+        let date = since.formatted(.dateTime.month(.abbreviated).day())
+        return String(localized: "\(value) (\(change) since \(date))", comment: "A measurement, the change from the one before, and that one's date, e.g. 5.2 kg (+600 g since Oct 3)")
     }
 
     /// The change from the measurement before: the previous one in the period, or the last one before it.

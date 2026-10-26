@@ -26,9 +26,11 @@ enum MilestoneImages {
     static func storableJPEG(from data: Data) -> Data? {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         // Lower the quality step by step; if even that's too big, shrink the picture and try again.
+        // It starts at 0.75: at 1600 px that hardly differs from 0.8 on a phone or on paper, and each
+        // photo takes roughly a tenth less space on the iPhone, in iCloud and in the partner's copy.
         for size in [maxPixelSize, 1200, 900] {
             guard let image = downsample(source, maxPixelSize: size) else { return nil }
-            for quality in [0.8, 0.7, 0.6, 0.5, 0.4, 0.3] {
+            for quality in [0.75, 0.7, 0.6, 0.5, 0.4, 0.3] {
                 if let encoded = jpeg(image, quality: quality), encoded.count <= maxBytes {
                     return encoded
                 }
@@ -75,12 +77,25 @@ enum MilestoneImages {
         return CGImageSourceCreateThumbnailAtIndex(source, 0, options)
     }
 
-    /// Recently shown thumbnails, so scrolling back doesn't decode them again.
+    /// Recently shown thumbnails, so scrolling back doesn't decode them again. Limited by the memory
+    /// the decoded pixels take as well as by count: a grid thumbnail on a 3× screen is about 420 px
+    /// square, some 700 KB, so 300 of them alone could hold 200 MB.
     private static let cache: NSCache<NSString, UIImage> = {
         let cache = NSCache<NSString, UIImage>()
         cache.countLimit = 300
+        cache.totalCostLimit = 48 * 1024 * 1024
         return cache
     }()
+
+    /// What a decoded image costs in the cache: the bytes of its pixels.
+    private static func cost(of image: CGImage) -> Int {
+        image.bytesPerRow * image.height
+    }
+
+    /// Forgets every cached thumbnail, after Delete all MyBaby data.
+    static func removeCachedImages() {
+        cache.removeAllObjects()
+    }
 
     /// The photo with `id`, decoded at `maxPixelSize` on a background context. Thumbnails are
     /// cached; full-size pictures (for the viewer and sharing) aren't, since they're large.
@@ -100,7 +115,9 @@ enum MilestoneImages {
             context.reset()
             return UIImage(cgImage: cgImage)
         }
-        if caches, let decoded { cache.setObject(decoded, forKey: key) }
+        if caches, let decoded {
+            cache.setObject(decoded, forKey: key, cost: decoded.cgImage.map(cost(of:)) ?? 0)
+        }
         return decoded
     }
 

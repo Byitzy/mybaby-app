@@ -79,11 +79,13 @@ extension TrackingPeriod {
         guard kind == .notTracked else { return "" }
         switch reason {
         case .caregiver:
-            return note.isEmpty ? "with a caregiver" : "with \(note)"
+            return note.isEmpty
+                ? String(localized: "with a caregiver", comment: "Why time wasn't tracked, after “Not tracked · ”")
+                : String(localized: "with \(note)", comment: "Why time wasn't tracked: who the baby was with, e.g. “with grandma”, after “Not tracked · ”")
         case .daycare:
-            return "at daycare"
+            return String(localized: "at daycare", comment: "Why time wasn't tracked, after “Not tracked · ”")
         case .forgot:
-            return "forgot to log"
+            return String(localized: "forgot to log", comment: "Why time wasn't tracked, after “Not tracked · ”")
         case .other, nil:
             return note
         }
@@ -124,6 +126,16 @@ enum TrackingPeriodKind: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
+        case .notTracked: return String(localized: "Not tracked", comment: "A stretch of time nobody logged")
+        case .nothingHappened: return String(localized: "Nothing happened", comment: "A stretch of time with nothing to log")
+        case .caughtUp: return String(localized: "Caught up", comment: "A stretch of time whose entries were added afterwards")
+        }
+    }
+
+    /// The marked times CSV export's Kind column, which the importer reads back.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
+        switch self {
         case .notTracked: return "Not tracked"
         case .nothingHappened: return "Nothing happened"
         case .caughtUp: return "Caught up"
@@ -150,6 +162,17 @@ enum TrackingPeriodReason: String, CaseIterable, Identifiable, Codable {
     var id: String { rawValue }
 
     var title: String {
+        switch self {
+        case .caregiver: return String(localized: "With a caregiver", comment: "Why time wasn't tracked")
+        case .daycare: return String(localized: "At daycare", comment: "Why time wasn't tracked")
+        case .forgot: return String(localized: "Forgot to log", comment: "Why time wasn't tracked")
+        case .other: return String(localized: "Other")
+        }
+    }
+
+    /// The marked times CSV export's Reason column, which the importer reads back.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
         switch self {
         case .caregiver: return "With a caregiver"
         case .daycare: return "At daycare"

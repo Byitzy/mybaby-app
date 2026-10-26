@@ -12,11 +12,13 @@ enum CareReminders {
     static let maxMedicineReminders = 10
     static let maxMilkReminders = 10
 
-    /// Both kinds of reminder. Call when the log changes on the other phone.
+    /// Every kind of reminder here, and the one after vaccines (`VaccineFollowUp`). Call when the log
+    /// changes on the other phone.
     @MainActor
     static func refresh(context: NSManagedObjectContext) {
         refreshMedicine(context: context)
         refreshMilkStash(context: context)
+        VaccineFollowUp.refresh(context: context)
     }
 
     // MARK: Medicine
@@ -43,10 +45,15 @@ enum CareReminders {
         // The soonest ones only, within iOS's limit of 64 pending notifications.
         for (schedule, baby, id, next) in due.sorted(by: { $0.next < $1.next }).prefix(maxMedicineReminders) {
             let content = UNMutableNotificationContent()
+            let medicine = schedule.name
+            let name = baby.displayName
             content.title = babies > 1
-                ? "💊 \(schedule.name) for \(baby.displayName)"
-                : "💊 \(schedule.name)"
-            content.body = "The dose timing you entered allows the next dose now. Only give it if it's still needed, as your pediatrician directed."
+                ? String(localized: "💊 \(medicine) for \(name)", comment: "Medicine reminder title, with twins or siblings; the medicine, then the baby's name")
+                : "💊 \(medicine)"
+            content.body = String(
+                localized: "The dose timing you entered allows the next dose now. Only give it if it's still needed, as your pediatrician directed.",
+                comment: "Medicine reminder. Medical: keep the meaning exact"
+            )
             content.sound = .default
 
             let identifier = medicinePrefix + id
@@ -84,14 +91,8 @@ enum CareReminders {
             let due = byFireDate[fire] ?? []
             let total = due.compactMap(\.amountML).reduce(0, +)
             let content = UNMutableNotificationContent()
-            content.title = "🫙 Milk to use today"
-            let bagsText = Format.plural(due.count, "bag")
-            content.body = total > 0
-                ? "\(bagsText) of milk (\(unit.format(ml: total))) in the stash reach their use-by date today."
-                : "\(bagsText) of milk in the stash reach their use-by date today."
-            if due.count == 1 {
-                content.body = content.body.replacingOccurrences(of: "reach their", with: "reaches its")
-            }
+            content.title = String(localized: "🫙 Milk to use today", comment: "Milk stash reminder title")
+            content.body = Self.milkBody(bags: due.count, amount: total > 0 ? unit.format(ml: total) : nil)
             content.sound = .default
 
             let identifier = milkPrefix + "\(Int(fire.timeIntervalSince1970))"
@@ -99,6 +100,20 @@ enum CareReminders {
             keep.insert(identifier)
         }
         removePending(prefix: milkPrefix, except: keep)
+    }
+
+    /// "2 bags of milk (240 ml) in the stash reach their use-by date today."
+    private static func milkBody(bags: Int, amount: String?) -> String {
+        switch (bags == 1, amount) {
+        case (true, let amount?):
+            return String(localized: "1 bag of milk (\(amount)) in the stash reaches its use-by date today.", comment: "Milk stash reminder; an amount like 120 ml")
+        case (true, nil):
+            return String(localized: "1 bag of milk in the stash reaches its use-by date today.", comment: "Milk stash reminder")
+        case (false, let amount?):
+            return String(localized: "\(bags) bags of milk (\(amount)) in the stash reach their use-by date today.", comment: "Milk stash reminder; the number of bags, then an amount like 240 ml")
+        case (false, nil):
+            return String(localized: "\(bags) bags of milk in the stash reach their use-by date today.", comment: "Milk stash reminder; the number of bags")
+        }
     }
 
     // MARK: Helpers

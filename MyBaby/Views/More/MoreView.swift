@@ -16,8 +16,8 @@ struct MoreView: View {
             List {
                 Section {
                     NavigationLink(value: MoreRoute.babies) {
-                        MoreRow(title: "Babies", systemImage: "figure.and.child.holdinghands", tint: Palette.baby) {
-                            Text(babies.count > 1 ? "\(baby.displayName) · \(babies.count) babies" : baby.displayName)
+                        MoreRow(title: String(localized: "Babies"), systemImage: "figure.and.child.holdinghands", tint: Palette.baby) {
+                            Text(babies.count > 1 ? String(localized: "\(baby.displayName) · \(babies.count) babies", comment: "Always 2 or more babies") : baby.displayName)
                         }
                     }
                 }
@@ -28,13 +28,16 @@ struct MoreView: View {
 
                 Section {
                     NavigationLink(value: MoreRoute.settings) {
-                        MoreRow(title: "Settings", systemImage: "gearshape", tint: Palette.settings)
+                        MoreRow(title: String(localized: "Settings"), systemImage: "gearshape", tint: Palette.settings)
                     }
                 }
             }
+            // A readable column in the middle of a wide iPad window, for More and every screen it opens.
+            .readableContentWidth()
             .navigationTitle("More")
             .navigationDestination(for: MoreRoute.self) { route in
                 destination(for: route)
+                    .readableContentWidth()
             }
         }
         .onAppear {
@@ -49,23 +52,23 @@ struct MoreView: View {
     @ViewBuilder
     private var featureRows: some View {
         NavigationLink(value: MoreRoute.nightShifts) {
-            MoreRow(title: "Night shifts", systemImage: "moon.stars", tint: Palette.nightShift) {
-                Text(nightPlan.isEnabled ? nightPlan.mode.title : "Off")
+            MoreRow(title: String(localized: "Night shifts"), systemImage: "moon.stars", tint: Palette.nightShift) {
+                Text(nightPlan.isEnabled ? nightPlan.mode.title : String(localized: "Off"))
             }
         }
         NavigationLink(value: MoreRoute.cryAlerts) {
-            MoreRow(title: "Cry alerts", systemImage: "ear", tint: Palette.cryAlerts) {
+            MoreRow(title: String(localized: "Cry alerts"), systemImage: "ear", tint: Palette.cryAlerts) {
                 Text(CryMonitor.shared.isListening ? "Listening" : "Off")
             }
         }
         NavigationLink(value: MoreRoute.milkStash) {
-            MoreRow(title: "Milk stash", systemImage: "refrigerator", tint: Palette.milkStash)
+            MoreRow(title: String(localized: "Milk stash"), systemImage: "refrigerator", tint: Palette.milkStash)
         }
         NavigationLink(value: MoreRoute.milestones) {
-            MoreRow(title: "Milestones", systemImage: "star.circle", tint: Palette.milestone)
+            MoreRow(title: String(localized: "Milestones"), systemImage: "star.circle", tint: Palette.milestone)
         }
         NavigationLink(value: MoreRoute.diary) {
-            MoreRow(title: "Diary", systemImage: "book.closed", tint: Palette.diary)
+            MoreRow(title: String(localized: "Diary"), systemImage: "book.closed", tint: Palette.diary)
         }
         NavigationLink(value: MoreRoute.momCare) {
             MoreRow(title: CareTitle.title(plan: NightPlan(data: nightPlanData)), systemImage: "heart.circle", tint: Palette.momCare)

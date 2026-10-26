@@ -105,21 +105,23 @@ struct CalendarSyncSection: View {
     }
 
     private var accessAlertTitle: String {
-        calendarSync.access == .restricted ? "Calendar access is restricted" : "Calendar access is off"
+        calendarSync.access == .restricted
+            ? String(localized: "Calendar access is restricted")
+            : String(localized: "Calendar access is off")
     }
 
     private var accessAlertMessage: String {
         if calendarSync.access == .restricted {
-            return "This iPhone doesn't allow calendar access, for example because of Screen Time or a work profile. You can still add an appointment with Add to Calendar when you open it."
+            return String(localized: "This iPhone doesn't allow calendar access, for example because of Screen Time or a work profile. You can still add an appointment with Add to Calendar when you open it.")
         }
-        return "To keep appointments in your calendar, MyBaby needs full access so it can update and remove the events it adds. Turn on Full Access in Settings › MyBaby › Calendars. You can still add an appointment with Add to Calendar without it."
+        return String(localized: "To keep appointments in your calendar, MyBaby needs full access so it can update and remove the events it adds. Turn on Full Access in Settings › MyBaby › Calendars. You can still add an appointment with Add to Calendar without it.")
     }
 
     // MARK: Text
 
     private var defaultTitle: String {
-        if let name = calendarSync.defaultCalendarTitle { return "Default (\(name))" }
-        return "Default calendar"
+        if let name = calendarSync.defaultCalendarTitle { return String(localized: "Default (\(name))", comment: "The default calendar, with its name") }
+        return String(localized: "Default calendar")
     }
 
     /// "Family · iCloud", so calendars with the same name in two accounts can be told apart.
@@ -129,9 +131,9 @@ struct CalendarSyncSection: View {
     }
 
     private var footer: String {
-        var text = "Adds upcoming appointments to your calendar on this iPhone and keeps them up to date when they change or are deleted. Events have no alerts, since MyBaby already sends the reminder you choose on each appointment."
+        var text = String(localized: "Adds upcoming appointments to your calendar on this iPhone and keeps them up to date when they change or are deleted. Events have no alerts, since MyBaby already sends the reminder you choose on each appointment.")
         text += " " + AddToCalendarSection.privacyNote
-        text += " If you and your partner share a family calendar, turn this on only on one phone."
+        text += " " + String(localized: "If you and your partner share a family calendar, turn this on only on one phone.")
         return text
     }
 }

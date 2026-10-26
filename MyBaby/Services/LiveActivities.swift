@@ -12,6 +12,11 @@ import Foundation
 enum LiveActivities {
     private typealias FeedingActivity = ActivityKit.Activity<FeedingActivityAttributes>
     private typealias SleepActivity = ActivityKit.Activity<SleepActivityAttributes>
+    private typealias ListeningActivity = ActivityKit.Activity<ListeningActivityAttributes>
+
+    /// When the listening a Live Activity was last started for began, so one the parent swiped away
+    /// isn't started again for the same night. In memory only: listening never outlives the app.
+    private static var listeningActivityStart: Date?
 
     private static var areEnabled: Bool {
         ActivityAuthorizationInfo().areActivitiesEnabled
@@ -47,6 +52,88 @@ enum LiveActivities {
                 Task { await activity.update(content) }
             }
         }
+    }
+
+    /// Ends every MyBaby Live Activity at once, for Delete all MyBaby data (see `DataWipe`).
+    static func endAll() async {
+        for activity in FeedingActivity.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
+        }
+        for activity in SleepActivity.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
+        }
+        for activity in ListeningActivity.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
+        }
+    }
+
+    // MARK: Cry alerts
+
+    /// Matches the listening Live Activity to cry alerts on this iPhone (`CryMonitor.listeningSummary`):
+    /// started when listening starts, updated when a cry starts or ends or the stop time changes, and
+    /// ended, right away, when listening stops (`nil`). Any other listening's activity, such as one left
+    /// behind when iOS closed the app, is ended too.
+    ///
+    /// Each listening gets one Live Activity at most: if the parent swipes it away, it stays away until
+    /// they start listening again. Starting one can fail while the app is in the background (when
+    /// listening starts again by itself after a call); `WidgetSnapshotWriter` tries again when the app
+    /// opens. A parent who turned off Live Activities for MyBaby isn't shown one.
+    ///
+    /// Not on a nursery monitor: `listeningSummary` is `nil` there. The monitor has its own full-screen,
+    /// dim screen that stays on by the crib, and Stop monitor asks first; a Lock Screen Stop button
+    /// would stop it with one tap, and nobody is by it to see the activity anyway. The parents' phones
+    /// already show whether it's listening.
+    static func syncListening(_ listening: WidgetSnapshot.Listening?) {
+        let running = ListeningActivity.activities
+        for activity in running where !isSameListening(activity, as: listening) {
+            Task { await activity.end(nil, dismissalPolicy: .immediate) }
+        }
+        guard let listening else { return }
+
+        let state = ListeningActivityAttributes.ContentState(cryingSince: listening.cryingSince, stopsAt: listening.stopsAt)
+        // Marked out of date at the stop time, in case the app is gone by then and can't end it.
+        let content = ActivityContent(state: state, staleDate: listening.stopsAt)
+        if let current = running.first(where: { isSameListening($0, as: listening) }) {
+            if current.content.state != state {
+                Task { await current.update(content) }
+            }
+            return
+        }
+
+        if let started = listeningActivityStart, abs(started.timeIntervalSince(listening.since)) < 1 { return }
+        guard areEnabled else { return }
+        do {
+            _ = try ListeningActivity.request(
+                attributes: ListeningActivityAttributes(since: listening.since),
+                content: content,
+                pushType: nil
+            )
+            listeningActivityStart = listening.since
+        } catch {
+            // Usually because the app is in the background. Tried again when it opens.
+        }
+    }
+
+    /// Ends the listening Live Activity before iOS closes the app (`applicationWillTerminate`), waiting
+    /// a moment for it: once the app is gone, nothing would end it.
+    nonisolated static func endListeningBeforeExit() {
+        let running = ListeningActivity.activities
+        guard !running.isEmpty else { return }
+        let done = DispatchSemaphore(value: 0)
+        Task.detached {
+            for activity in running {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+            done.signal()
+        }
+        _ = done.wait(timeout: .now() + 2)
+    }
+
+    /// Whether `activity` is for `listening`. Compared to the second: the start time goes through
+    /// ActivityKit's encoding.
+    private static func isSameListening(_ activity: ListeningActivity, as listening: WidgetSnapshot.Listening?) -> Bool {
+        guard let listening else { return false }
+        return abs(activity.attributes.since.timeIntervalSince(listening.since)) < 1
     }
 
     // MARK: Sleep

@@ -11,9 +11,11 @@ import UserNotifications
 /// - Parent care's check-in: 1 (repeating)
 /// - "Haven't logged in a while": 1, for the baby shown (`GapReminder`)
 /// - the diary's "month birthday" nudge: 1, the next one only (`DiaryReminder`)
+/// - "What to look out for" after a vaccine: 1, the next one only, off by default (`VaccineFollowUp`)
 /// - feed & diaper reminders: at most 2 per baby, only the next feed and the next diaper check
 ///   (`SmartReminders`; "Snooze 15 min" replaces its own reminder rather than adding one)
-/// That's 58 plus two per baby (62 with twins, 64 with triplets). Cry alerts are delivered at once, so they're never pending.
+/// That's 59 plus two per baby (63 with twins; with triplets and every optional reminder on, iOS keeps
+/// the soonest 64). Cry alerts are delivered at once, so they're never pending.
 /// Alerts from a nursery monitor don't count either: they're CloudKit pushes, not local
 /// notifications (see `AlertInboxes`).
 enum NotificationManager {
@@ -35,16 +37,21 @@ enum NotificationManager {
     static func scheduleReminder(for appointment: Appointment) {
         let identifier = appointment.notificationID
         cancel(identifier)
-        guard let minutes = appointment.reminderMinutes else { return }
+        // A cancelled appointment keeps its reminder setting for when it's restored, but sends nothing.
+        guard !appointment.isCancelled, let minutes = appointment.reminderMinutes else { return }
 
         let fireDate = appointment.date.addingTimeInterval(-Double(minutes) * 60)
         guard fireDate > .now else { return }
 
         let content = UNMutableNotificationContent()
-        content.title = appointment.title.isEmpty ? "Appointment" : appointment.title
+        content.title = appointment.title.isEmpty
+            ? String(localized: "Appointment", comment: "Shown for an appointment with no title")
+            : appointment.title
         let time = appointment.date.formatted(date: minutes >= 1440 ? .abbreviated : .omitted, time: .shortened)
         let place = [appointment.provider, appointment.location].filter { !$0.isEmpty }.joined(separator: " · ")
-        content.body = minutes == 0 ? "Starting now" : "Starts at \(time)"
+        content.body = minutes == 0
+            ? String(localized: "Starting now", comment: "Appointment reminder: the appointment starts now")
+            : String(localized: "Starts at \(time)", comment: "Appointment reminder; the time, or the date and time")
         if !place.isEmpty { content.body += " · \(place)" }
         content.sound = .default
 
@@ -58,12 +65,12 @@ enum NotificationManager {
         request.predicate = NSPredicate(format: "date > %@", Date.now as NSDate)
         // Only the soonest ones, to stay within iOS's 64 pending notifications (see above).
         let upcoming = ((try? context.fetch(request)) ?? [])
-            .filter { $0.reminderMinutes != nil }
+            .filter { $0.reminderMinutes != nil && !$0.isCancelled }
             .sorted { reminderDate(for: $0) < reminderDate(for: $1) }
             .prefix(maxAppointmentReminders)
         let keep = Set(upcoming.map(\.notificationID))
 
-        // Drop reminders for appointments that were deleted on the other phone.
+        // Drop reminders for appointments that were deleted or cancelled on the other phone.
         center.getPendingNotificationRequests { requests in
             let stale = requests.map(\.identifier).filter { $0.hasPrefix("appointment-") && !keep.contains($0) }
             center.removePendingNotificationRequests(withIdentifiers: stale)
@@ -109,7 +116,11 @@ enum NotificationManager {
 
     /// Adds the "I'm up" button to wake-up reminders. Dismissing one counts as an answer too.
     static func registerCategories() {
-        let imUp = UNNotificationAction(identifier: imUpAction, title: "I'm up", options: [])
+        let imUp = UNNotificationAction(
+            identifier: imUpAction,
+            title: String(localized: "I'm up", comment: "Notification button: the parent woke up for their night shift"),
+            options: []
+        )
         let wakeUp = UNNotificationCategory(
             identifier: wakeUpCategory,
             actions: [imUp],
@@ -145,10 +156,8 @@ enum NotificationManager {
             // Heads-up at the start of the night: who's on, and when the handoff is.
             if plan.bedtimeHeadsUp, first.start > now {
                 let content = UNMutableNotificationContent()
-                content.title = "🌙 Tonight's shifts"
-                content.body = night
-                    .map { "\(plan.name(of: $0.parent)) \(timeRange($0))" }
-                    .joined(separator: ", then ")
+                content.title = String(localized: "🌙 Tonight's shifts", comment: "Notification title at the start of the night")
+                content.body = Self.shiftsText(night, plan: plan)
                 content.sound = sound
                 await add(nightShiftPrefix + "bedtime-\(Int(first.start.timeIntervalSince1970))", content, at: first.start)
             }
@@ -159,8 +168,14 @@ enum NotificationManager {
             for (previous, shift) in zip(night, night.dropFirst())
             where shift.start > now && plan.alarmOwner.includes(shift.parent) {
                 let content = UNMutableNotificationContent()
-                content.title = "⏰ Your turn, \(plan.name(of: shift.parent))"
-                content.body = "Take over from \(plan.name(of: previous.parent)). You're on until \(shift.end.formatted(date: .omitted, time: .shortened))."
+                let parent = plan.name(of: shift.parent)
+                let other = plan.name(of: previous.parent)
+                let until = shift.end.formatted(date: .omitted, time: .shortened)
+                content.title = String(localized: "⏰ Your turn, \(parent)", comment: "Night shift wake-up; the parent's name")
+                content.body = String(
+                    localized: "Take over from \(other). You're on until \(until).",
+                    comment: "Night shift wake-up; the other parent's name, then the time the shift ends"
+                )
                 content.sound = sound
                 content.interruptionLevel = .timeSensitive
                 content.categoryIdentifier = wakeUpCategory
@@ -229,6 +244,21 @@ enum NotificationManager {
         case .vibrate: return UNNotificationSound(named: UNNotificationSoundName("silence.wav"))
         case .sound: return .default
         }
+    }
+
+    /// "Sam 10:00 PM–2:00 AM, then Alex 2:00–6:00 AM": each shift is one sentence part, joined by a
+    /// localized "then", so the word order can change in other languages.
+    private static func shiftsText(_ night: [NightShift], plan: NightPlan) -> String {
+        let parts = night.map { shift in
+            let name = plan.name(of: shift.parent)
+            let range = timeRange(shift)
+            return String(localized: "\(name) \(range)", comment: "Tonight's shifts: a parent's name, then the times of their shift")
+        }
+        guard var text = parts.first else { return "" }
+        for next in parts.dropFirst() {
+            text = String(localized: "\(text), then \(next)", comment: "Tonight's shifts: one shift, then the next one")
+        }
+        return text
     }
 
     private static func timeRange(_ shift: NightShift) -> String {

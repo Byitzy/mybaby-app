@@ -74,7 +74,7 @@ struct MilkStashView: View {
                 Toggle("Remind me on the use-by day", isOn: $reminderEnabled)
             } footer: {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("A notification at 8 AM on the day milk in the fridge or freezer reaches its use-by date.")
+                    Text("A notification at \(Format.clockHour(8)) on the day milk in the fridge or freezer reaches its use-by date.")
                     Text(MilkStorageGuide.summary)
                 }
             }
@@ -136,11 +136,19 @@ struct MilkStashView: View {
                     )
                 }
             }
-            Text("\(Format.plural(bags.count, "bag")) · \(unit.format(ml: total(in: Array(bags)))) in all")
+            Text(totalLine)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, Spacing.xs)
         }
+    }
+
+    /// "3 bags · 360 ml in all".
+    private var totalLine: String {
+        let amount = unit.format(ml: total(in: Array(bags)))
+        return bags.count == 1
+            ? String(localized: "1 bag · \(amount) in all", comment: "Bags of breast milk in the stash")
+            : String(localized: "\(bags.count) bags · \(amount) in all", comment: "Bags of breast milk in the stash")
     }
 
     private func total(in bags: [MilkBag]) -> Double {
@@ -155,8 +163,8 @@ struct MilkStashView: View {
 
     /// "Use and log a 120 ml bottle".
     private func logTitle(_ bag: MilkBag) -> String {
-        guard let ml = bag.amountML, ml > 0 else { return "Use and log a bottle" }
-        return "Use and log a \(unit.format(ml: ml)) bottle"
+        guard let ml = bag.amountML, ml > 0 else { return String(localized: "Use and log a bottle") }
+        return String(localized: "Use and log a \(unit.format(ml: ml)) bottle", comment: "e.g. “Use and log a 120 ml bottle”")
     }
 
     private func use(_ bag: MilkBag, logFeeding: Bool) {
@@ -168,7 +176,7 @@ struct MilkStashView: View {
         }
         CareReminders.refreshMilkStash(context: context)
 
-        let message = logFeeding ? "🍼 Bottle logged from the stash" : "🫙 Bag used"
+        let message = logFeeding ? String(localized: "🍼 Bottle logged from the stash") : String(localized: "🫙 Bag used")
         toast = Toast(message: message) { [context] in
             bag.usedDate = nil
             if let feeding { context.delete(feeding) }
@@ -202,19 +210,31 @@ struct MilkStashView: View {
 
     private func moveTitle(_ bag: MilkBag, to destination: MilkStorage) -> String {
         switch destination {
-        case .freezer: return "Freeze"
-        case .fridge: return bag.storage == .freezer ? "Thaw" : "To fridge"
-        case .room: return "To room"
+        case .freezer: return String(localized: "Freeze", comment: "Swipe action: move the bag to the freezer")
+        case .fridge:
+            return bag.storage == .freezer
+                ? String(localized: "Thaw", comment: "Swipe action: move a frozen bag to the fridge")
+                : String(localized: "To fridge", comment: "Swipe action: move the bag to the fridge")
+        case .room: return String(localized: "To room", comment: "Swipe action: move the bag to room temperature")
         }
     }
 
     private func move(_ bag: MilkBag, to destination: MilkStorage) {
         let before = (storage: bag.storage, frozen: bag.frozenDate, thawed: bag.thawedDate)
-        let title = moveTitle(bag, to: destination)
+        let isThawing = destination == .fridge && bag.storage == .freezer
         bag.move(to: destination)
         context.saveIfChanged()
         CareReminders.refreshMilkStash(context: context)
-        let message = title == "Thaw" ? "Thawing in the fridge · use within 24 hours" : "Moved to the \(destination.shortTitle.lowercased())"
+        let message: String
+        if isThawing {
+            message = String(localized: "Thawing in the fridge · use within 24 hours")
+        } else {
+            switch destination {
+            case .fridge: message = String(localized: "Moved to the fridge")
+            case .freezer: message = String(localized: "Moved to the freezer")
+            case .room: message = String(localized: "Moved to the room", comment: "The bag was moved to room temperature")
+            }
+        }
         toast = Toast(message: message) { [context] in
             bag.storage = before.storage
             bag.frozenDate = before.frozen
@@ -249,7 +269,7 @@ private struct MilkBagRow: View {
                     HStack(spacing: Spacing.m) {
                         EmojiBadge(emoji: "🫙", tint: Palette.milkStash)
                         VStack(alignment: .leading, spacing: Spacing.xxs) {
-                            Text(bag.amountML.map { unit.format(ml: $0) } ?? "Amount not set")
+                            Text(bag.amountML.map { unit.format(ml: $0) } ?? String(localized: "Amount not set"))
                                 .font(.body.weight(.medium))
                             Text(pumpedText)
                                 .font(.subheadline)
@@ -283,13 +303,14 @@ private struct MilkBagRow: View {
 
     /// "Pumped Oct 24, 9:14 AM", plus when it was frozen or thawed.
     private var pumpedText: String {
-        var text = "Pumped \(bag.pumpedDate.formatted(.dateTime.month(.abbreviated).day().hour().minute()))"
+        let pumped = bag.pumpedDate.formatted(.dateTime.month(.abbreviated).day().hour().minute())
         if let thawed = bag.thawedDate {
-            text += " · thawed \(thawed.formatted(.dateTime.month(.abbreviated).day().hour().minute())), don't refreeze"
+            let day = thawed.formatted(.dateTime.month(.abbreviated).day().hour().minute())
+            return String(localized: "Pumped \(pumped) · thawed \(day), don't refreeze")
         } else if bag.storage == .freezer, let frozen = bag.frozenDate {
-            text += " · frozen \(frozen.formatted(.dateTime.month(.abbreviated).day()))"
+            return String(localized: "Pumped \(pumped) · frozen \(frozen.formatted(.dateTime.month(.abbreviated).day()))")
         }
-        return text
+        return String(localized: "Pumped \(pumped)")
     }
 
     private func freshnessLabel(now: Date) -> some View {
@@ -415,10 +436,10 @@ struct MilkBagEditor: View {
 
     private var storageFooter: String {
         if bag?.isThawed == true {
-            return "Thawed milk keeps up to 24 hours in the fridge. Never refreeze it (CDC)."
+            return String(localized: "Thawed milk keeps up to 24 hours in the fridge. Never refreeze it (CDC).")
         }
         if bag?.storage == .freezer && storage == .fridge {
-            return "Moving frozen milk to the fridge thaws it: use it within 24 hours, and don't refreeze it (CDC)."
+            return String(localized: "Moving frozen milk to the fridge thaws it: use it within 24 hours, and don't refreeze it (CDC).")
         }
         return MilkStorageGuide.summary
     }

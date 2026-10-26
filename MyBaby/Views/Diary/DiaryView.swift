@@ -29,9 +29,9 @@ struct DiaryView: View {
 
         var title: String {
             switch self {
-            case .entries: return "Diary"
-            case .summaries: return "Summaries"
-            case .letters: return "Letters"
+            case .entries: return String(localized: "Diary")
+            case .summaries: return String(localized: "Summaries", comment: "Diary tab: the week and month summaries")
+            case .letters: return String(localized: "Letters", comment: "Diary tab: the letters for later")
             }
         }
     }
@@ -120,28 +120,32 @@ struct DiaryView: View {
 
 /// Every entry, grouped by the baby's months ("Month 3 · 12 Jan – 11 Feb"), newest first, with search
 /// and a filter by kind. Before a birthday is set, they're grouped by calendar month.
+///
+/// It reads the last 3 months to start with, and Show earlier reaches back 3 more, so a diary kept for
+/// years isn't read and grouped in full each time it changes. A filter reads only that kind, and reaches
+/// back by itself when the months shown have none. A search looks through the whole diary.
 private struct DiaryEntriesList: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.canEditLog) private var canEditLog
     @ObservedObject var baby: Baby
     let write: (DiaryEditorTarget) -> Void
 
-    @FetchRequest private var entries: FetchedResults<DiaryEntry>
+    /// Whether there's anything in the diary at all, for the first empty state.
+    @FetchRequest private var anyEntries: FetchedResults<DiaryEntry>
     @State private var search = ""
     @State private var filter: DiaryKind?
+    /// How far back the list reads: from the start of the month this day is in.
+    @State private var reach = DiaryWindow.initialReach()
     /// Waiting for "Delete" after a swipe.
     @State private var deleting: DiaryEntry?
 
     init(baby: Baby, write: @escaping (DiaryEditorTarget) -> Void) {
         self.baby = baby
         self.write = write
-        _entries = FetchRequest(fetchRequest: baby.entries(DiaryEntry.fetchAll()))
-    }
-
-    private struct EntryGroup: Identifiable {
-        let id: String
-        let title: String
-        var entries: [DiaryEntry]
+        let everything = baby.entries(DiaryEntry.fetchAll())
+        // Only the first is ever read. Not a fetch limit: the list wouldn't refill when that one is deleted.
+        everything.fetchBatchSize = 1
+        _anyEntries = FetchRequest(fetchRequest: everything)
     }
 
     var body: some View {
@@ -150,12 +154,13 @@ private struct DiaryEntriesList: View {
                 Section { ViewOnlyBanner(message: "You can read the diary, but only the parents can write in it.") }
             }
 
-            if entries.isEmpty {
+            if anyEntries.isEmpty {
+                // String(localized:) since the message is a String: the call takes its String version.
                 EmptyStateView(
-                    "Nothing written yet",
+                    String(localized: "Nothing written yet"),
                     systemImage: "book.closed",
-                    message: "Write down the little things: what made you smile, something new \(baby.subjectPronoun) learned, a first, or a letter for \(baby.objectPronoun) to read one day.",
-                    actionTitle: "Write the first entry",
+                    message: emptyMessage,
+                    actionTitle: String(localized: "Write the first entry"),
                     isDisabled: !canEditLog
                 ) {
                     write(.new())
@@ -168,38 +173,23 @@ private struct DiaryEntriesList: View {
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 .listRowBackground(Color.clear)
 
-                let groups = self.groups
-                if groups.isEmpty {
-                    EmptyStateView(
-                        "No entries found",
-                        systemImage: "magnifyingglass",
-                        message: search.isEmpty ? "No entries of this kind yet." : "Nothing in the diary matches \"\(search)\"."
-                    )
-                    .listRowBackground(Color.clear)
-                }
-                ForEach(groups) { group in
-                    Section(group.title) {
-                        ForEach(group.entries) { entry in
-                            NavigationLink {
-                                DiaryEntryDetailView(entry: entry, baby: baby)
-                            } label: {
-                                DiaryEntryRow(entry: entry, baby: baby)
-                            }
-                            .swipeActions {
-                                if canEditLog {
-                                    // Not `.destructive`, which would remove the row before the answer.
-                                    Button("Delete", systemImage: "trash") {
-                                        deleting = entry
-                                    }
-                                    .tint(.red)
-                                }
-                            }
-                        }
-                    }
-                }
+                let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+                DiaryEntrySections(
+                    baby: baby,
+                    query: query,
+                    filter: filter,
+                    // A search looks through everything.
+                    since: query.isEmpty ? DiaryWindow.groupStart(containing: reach, birthDate: baby.birthDate) : nil,
+                    showEarlier: { reach = $0 },
+                    deleting: $deleting
+                )
             }
         }
         .searchable(text: $search, prompt: "Search the diary")
+        .onChange(of: filter) {
+            // Back to the last few months, so going back to All doesn't read every month a filter reached.
+            reach = DiaryWindow.initialReach()
+        }
         .confirmDelete(
             "Delete this entry?",
             item: $deleting,
@@ -211,10 +201,26 @@ private struct DiaryEntriesList: View {
         }
     }
 
+    /// What the diary says before anything is written. A sentence for each, since the pronouns change
+    /// the whole sentence in other languages.
+    private var emptyMessage: String {
+        let name = baby.displayName
+        return DiaryText.bySex(
+            baby,
+            female: String(localized: "Write down the little things: what made you smile, something new she learned, a first, or a letter for her to read one day."),
+            male: String(localized: "Write down the little things: what made you smile, something new he learned, a first, or a letter for him to read one day."),
+            unknown: String(localized: "Write down the little things: what made you smile, something new \(name) learned, a first, or a letter for \(name) to read one day.")
+        )
+    }
+
     private var filterChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                chip(title: "All", spokenTitle: "All entries", isSelected: filter == nil) { filter = nil }
+                chip(
+                    title: String(localized: "All", comment: "Diary filter: every kind of entry"),
+                    spokenTitle: String(localized: "All entries"),
+                    isSelected: filter == nil
+                ) { filter = nil }
                 ForEach(DiaryKind.allCases) { kind in
                     chip(title: "\(kind.emoji) \(kind.shortTitle)", spokenTitle: kind.title, isSelected: filter == kind) {
                         filter = filter == kind ? nil : kind
@@ -238,12 +244,186 @@ private struct DiaryEntriesList: View {
         .accessibilityLabel(spokenTitle)
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
+}
+
+/// How far back the diary reads: whole months of the baby's life (or calendar months before a
+/// birthday is set), 3 at a time, so a month is never cut in half.
+private enum DiaryWindow {
+    static let months = 3
+
+    /// A day 2 months ago: its month and the 2 after it are shown.
+    static func initialReach(now: Date = .now, calendar: Calendar = .current) -> Date {
+        calendar.date(byAdding: .month, value: -(months - 1), to: now) ?? now
+    }
+
+    /// The first day of the month `date` is in, as the list groups them, or `nil` when it's before the
+    /// birth: everything from before is one group, so it's read whole, and so is the rest of the diary.
+    static func groupStart(containing date: Date, birthDate: Date?, calendar: Calendar = .current) -> Date? {
+        if let birthDate {
+            guard date >= calendar.startOfDay(for: birthDate) else { return nil }
+            if let month = DiaryPeriod.month(containing: date, birthDate: birthDate, calendar: calendar) {
+                return month.start
+            }
+        }
+        return calendar.dateInterval(of: .month, for: date)?.start ?? calendar.startOfDay(for: date)
+    }
+
+    /// 3 months before `start`, or further back to `newestOlder` (the newest entry before `start`) when
+    /// nothing was written for longer than that, so each step shows something new.
+    static func reach(before start: Date, newestOlder: Date, calendar: Calendar = .current) -> Date {
+        let stepped = calendar.date(byAdding: .month, value: -months, to: start) ?? start
+        return min(stepped, newestOlder)
+    }
+}
+
+/// The diary's month sections, read from `since` on (all of it when `nil`). Its fetches are made from
+/// the search, the filter and `since`, so changing any of them reads only what's shown.
+private struct DiaryEntrySections: View {
+    @Environment(\.canEditLog) private var canEditLog
+    @ObservedObject var baby: Baby
+    /// Trimmed; empty when not searching.
+    let query: String
+    let filter: DiaryKind?
+    let since: Date?
+    let showEarlier: (Date) -> Void
+    @Binding var deleting: DiaryEntry?
+
+    @FetchRequest private var entries: FetchedResults<DiaryEntry>
+    /// The entries before `since` that match, newest first: whether there's more, and how far back.
+    @FetchRequest private var olderEntries: FetchedResults<DiaryEntry>
+
+    private struct EntryGroup: Identifiable {
+        let id: String
+        let title: String
+        var entries: [DiaryEntry]
+    }
+
+    init(
+        baby: Baby,
+        query: String,
+        filter: DiaryKind?,
+        since: Date?,
+        showEarlier: @escaping (Date) -> Void,
+        deleting: Binding<DiaryEntry?>
+    ) {
+        self.baby = baby
+        self.query = query
+        self.filter = filter
+        self.since = since
+        self.showEarlier = showEarlier
+        _deleting = deleting
+
+        var conditions = [NSPredicate(format: "baby == %@", baby)]
+        if let filter { conditions.append(Self.kindPredicate([filter])) }
+        if !query.isEmpty { conditions.append(Self.mightMatch(query)) }
+
+        let shown = DiaryEntry.fetchAll()
+        if let since {
+            shown.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: conditions + [NSPredicate(format: "date >= %@", since as NSDate)])
+        } else {
+            shown.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: conditions)
+        }
+        shown.fetchBatchSize = 30
+        _entries = FetchRequest(fetchRequest: shown)
+
+        let older = DiaryEntry.fetchAll()
+        if let since {
+            older.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: conditions + [NSPredicate(format: "date < %@", since as NSDate)])
+        } else {
+            older.predicate = NSPredicate(value: false)
+        }
+        // Only the first is read. Not a fetch limit, which wouldn't refill when that one is deleted.
+        older.fetchBatchSize = 1
+        _olderEntries = FetchRequest(fetchRequest: older)
+    }
+
+    /// Entries of these kinds. One whose kind this version doesn't know reads as a moment
+    /// (`DiaryEntry.kind`), so it's found with the moments, as it always was.
+    private static func kindPredicate(_ kinds: [DiaryKind]) -> NSPredicate {
+        var alternatives = [NSPredicate(format: "kindRaw IN %@", kinds.map(\.rawValue))]
+        if kinds.contains(.moment) {
+            alternatives.append(NSPredicate(format: "NOT (kindRaw IN %@)", DiaryKind.allCases.map(\.rawValue)))
+        }
+        return NSCompoundPredicate(orPredicateWithSubpredicates: alternatives)
+    }
+
+    /// Every entry a search might find, so the rest aren't read: the words in the title, the text or
+    /// who wrote it, a kind whose name matches, and every letter, since a sealed one is found by its
+    /// envelope, which is worked out from the baby's name and birthday. `matching` then checks each one
+    /// exactly as before.
+    private static func mightMatch(_ query: String) -> NSPredicate {
+        var alternatives = ["title", "text", "authorName"].map { NSPredicate(format: "%K CONTAINS[cd] %@", $0, query) }
+        alternatives.append(kindPredicate([.letter]))
+        let kinds = DiaryKind.allCases.filter { $0.title.localizedCaseInsensitiveContains(query) }
+        if !kinds.isEmpty { alternatives.append(kindPredicate(kinds)) }
+        return NSCompoundPredicate(orPredicateWithSubpredicates: alternatives)
+    }
+
+    var body: some View {
+        let groups = self.groups
+        let earlier = self.earlierReach
+
+        if groups.isEmpty {
+            if let earlier {
+                // Nothing in the months shown, but there's more before them: reach back to it.
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .listRowBackground(Color.clear)
+                    .accessibilityLabel("Loading earlier entries")
+                    .onAppear { showEarlier(earlier) }
+            } else {
+                EmptyStateView(
+                    "No entries found",
+                    systemImage: "magnifyingglass",
+                    message: query.isEmpty ? "No entries of this kind yet." : "Nothing in the diary matches \"\(query)\"."
+                )
+                .listRowBackground(Color.clear)
+            }
+        }
+        ForEach(groups) { group in
+            Section(group.title) {
+                ForEach(group.entries) { entry in
+                    NavigationLink {
+                        DiaryEntryDetailView(entry: entry, baby: baby)
+                    } label: {
+                        DiaryEntryRow(entry: entry, baby: baby)
+                    }
+                    .swipeActions {
+                        if canEditLog {
+                            // Not `.destructive`, which would remove the row before the answer.
+                            Button("Delete", systemImage: "trash") {
+                                deleting = entry
+                            }
+                            .tint(.red)
+                        }
+                    }
+                }
+            }
+        }
+        if !groups.isEmpty, let earlier, let since {
+            Section {
+                Button {
+                    showEarlier(earlier)
+                } label: {
+                    Label("Show earlier", systemImage: "clock.arrow.circlepath")
+                }
+                .accessibilityHint("Shows earlier months of the diary")
+            } footer: {
+                Text("Showing entries from \(since.formatted(.dateTime.day().month(.abbreviated).year())).")
+            }
+        }
+    }
+
+    /// Where Show earlier reaches back to, or `nil` when everything is already shown.
+    private var earlierReach: Date? {
+        guard let since, let newestOlder = olderEntries.first?.date, newestOlder < since else { return nil }
+        return DiaryWindow.reach(before: since, newestOlder: newestOlder)
+    }
 
     /// The entries that match the filter and the search. A sealed letter is only found by its
     /// envelope and who wrote it, so searching never gives its words away.
     private var matching: [DiaryEntry] {
-        let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
-        return entries.filter { entry in
+        entries.filter { entry in
             guard !entry.isDeleted, entry.managedObjectContext != nil else { return false }
             if let filter, entry.kind != filter { return false }
             guard !query.isEmpty else { return true }
@@ -277,7 +457,7 @@ private struct DiaryEntriesList: View {
         let calendar = Calendar.current
         if let birthDate = baby.birthDate {
             if entry.date < calendar.startOfDay(for: birthDate) {
-                return ("before-birth", "Before \(baby.displayName) was born")
+                return ("before-birth", String(localized: "Before \(baby.displayName) was born"))
             }
             if let month = DiaryPeriod.month(containing: entry.date, birthDate: birthDate, calendar: calendar) {
                 return (month.id.key, month.fullTitle(calendar: calendar))
@@ -414,10 +594,25 @@ struct DiarySettingsView: View {
     }
 
     private var footer: String {
-        let example = "\"\(baby.displayName) is 3 months today. Write something \(baby.sex == nil ? "\(baby.displayName) will" : "\(baby.subjectPronoun)'ll") love to read one day?\""
-        var text = "A gentle note at 10 AM each time \(baby.displayName) turns another month old: \(example) Only on this iPhone."
+        let name = baby.displayName
+        // The reminder's own words (`DiaryReminder`), a sentence for each, since the pronoun changes it.
+        let example = DiaryText.bySex(
+            baby,
+            female: String(localized: "\"\(name) is 3 months today. Write something she'll love to read one day?\""),
+            male: String(localized: "\"\(name) is 3 months today. Write something he'll love to read one day?\""),
+            unknown: String(localized: "\"\(name) is 3 months today. Write something \(name) will love to read one day?\"")
+        )
+        var text = String(
+            localized: "A gentle note at \(Format.clockHour(10)) each time \(name) turns another month old: \(example) Only on this iPhone.",
+            comment: "The third value is the reminder's words, in quotes"
+        )
         if baby.birthDate == nil {
-            text += " Add \(baby.possessivePronoun) birthday in the profile first."
+            text += " " + DiaryText.bySex(
+                baby,
+                female: String(localized: "Add her birthday in the profile first."),
+                male: String(localized: "Add his birthday in the profile first."),
+                unknown: String(localized: "Add \(name)'s birthday in the profile first.")
+            )
         }
         return text
     }

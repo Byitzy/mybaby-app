@@ -15,15 +15,15 @@ enum ICloudProblem: Equatable {
     var message: String {
         switch self {
         case .noAccount:
-            return "Sign in to iCloud in the Settings app (tap your name at the top) to sync MyBaby."
+            return String(localized: "Sign in to iCloud in the Settings app (tap your name at the top) to sync MyBaby.")
         case .restricted:
-            return "iCloud is restricted on this iPhone (for example by Screen Time or a work profile)."
+            return String(localized: "iCloud is restricted on this iPhone (for example by Screen Time or a work profile).")
         case .temporarilyUnavailable:
-            return "iCloud isn't available right now. Check that iCloud is set up in Settings and try again."
+            return String(localized: "iCloud isn't available right now. Check that iCloud is set up in Settings and try again.")
         case .couldNotDetermine:
-            return "Couldn't reach iCloud. Check your connection and try again."
+            return String(localized: "Couldn't reach iCloud. Check your connection and try again.")
         case .accountChanged:
-            return "This iPhone is signed in to a different iCloud account now. Sign back in to the one you used before to keep syncing this log."
+            return String(localized: "This iPhone is signed in to a different iCloud account now. Sign back in to the one you used before to keep syncing this log.")
         }
     }
 }
@@ -67,7 +67,7 @@ extension PersistenceController {
 
         let cloudStatus = CloudStatus.shared
         let previousMessage = cloudStatus.reloadingMessage
-        cloudStatus.reloadingMessage = "Connecting to iCloud…"
+        cloudStatus.reloadingMessage = String(localized: "Connecting to iCloud…")
         defer { cloudStatus.reloadingMessage = previousMessage }
         let deadline = ContinuousClock.now.advanced(by: timeout)
         while !syncStatus.hasFinishedSetup(of: store), ContinuousClock.now < deadline {
@@ -87,17 +87,48 @@ extension PersistenceController {
     /// records to the signed-in account. Returns what happened, for an alert.
     @MainActor
     func createCloudKitSchema() async -> String {
-        guard Self.isSyncEnabled else {
-            return "Turn on Sync with iCloud first. The schema is created through the synced stores."
-        }
-        let container = self.container
+        // The same model object as the app's stores: loading the model a second time would give
+        // every class two entity descriptions.
+        let model = container.managedObjectModel
         do {
             // Talks to iCloud and takes a while, so off the main thread.
-            try await Task.detached { try container.initializeCloudKitSchema(options: []) }.value
-            return "The iCloud schema was created in the Development environment. Now open the CloudKit Console and deploy the schema changes to Production."
+            try await Task.detached { try Self.initializeSchema(model: model) }.value
+            // The nursery monitor's alerts are plain CloudKit records outside Core Data.
+            try await AlertInboxes.shared.createSchemaForDeployment()
+            return "The iCloud schema was created in the Development environment, including the nursery monitor's CryAlert and CryAlertTest. Now open the CloudKit Console and deploy the schema changes to Production."
         } catch {
-            return "Couldn't create the iCloud schema.\n\n\(CloudErrors.details(for: error))"
+            let nsError = error as NSError
+            return "Couldn't create the iCloud schema.\n\n\(CloudErrors.details(for: error))\n\n\(String(describing: nsError.userInfo).prefix(1500))"
         }
+    }
+
+    /// Runs `initializeCloudKitSchema` on a temporary, empty store of its own that syncs with the
+    /// private database only. Core Data's schema tool doesn't work on the app's own container,
+    /// which also has the store for logs shared by a partner, and an empty store means only
+    /// Core Data's sample records are uploaded (and then deleted again).
+    private static func initializeSchema(model: NSManagedObjectModel) throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("SchemaSetup-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+
+        let description = NSPersistentStoreDescription(url: folder.appendingPathComponent("Schema.sqlite"))
+        description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(containerIdentifier: cloudKitContainerIdentifier)
+        description.setOption(true as NSNumber, forKey: NSPersistentHistoryTrackingKey)
+        description.shouldAddStoreAsynchronously = false
+
+        let schemaContainer = NSPersistentCloudKitContainer(name: "MyBabySchema", managedObjectModel: model)
+        schemaContainer.persistentStoreDescriptions = [description]
+        var loadError: Error?
+        schemaContainer.loadPersistentStores { _, error in loadError = error }
+        if let loadError { throw loadError }
+
+        defer {
+            for store in schemaContainer.persistentStoreCoordinator.persistentStores {
+                try? schemaContainer.persistentStoreCoordinator.remove(store)
+            }
+        }
+        try schemaContainer.initializeCloudKitSchema(options: [])
     }
     #endif
 }

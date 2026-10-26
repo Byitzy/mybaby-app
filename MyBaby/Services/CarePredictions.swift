@@ -150,54 +150,71 @@ enum CarePredictions {
     }
 
     /// "Usually every 2 h 50 min in the daytime, about 3 h 30 min at night, from the last 3 days."
+    /// One whole sentence for each case, so each language can word it its own way.
     static func usualSentence(_ gaps: [Gap], days: Int, minBucket: Int) -> String {
         let day = gaps.filter { !$0.isNight }
         let night = gaps.filter(\.isNight)
         let dayMedian = day.count >= minBucket ? weightedQuantile(day, 0.5) : nil
         let nightMedian = night.count >= minBucket ? weightedQuantile(night, 0.5) : nil
-        let span = lastDays(days)
+        let oneDay = days == 1
         switch (dayMedian, nightMedian) {
         case let (dayGap?, nightGap?):
-            return "Usually every \(describe(dayGap)) in the daytime, about \(describe(nightGap)) at night, from \(span)."
+            let dayText = describe(dayGap)
+            let nightText = describe(nightGap)
+            return oneDay
+                ? String(localized: "Usually every \(dayText) in the daytime, about \(nightText) at night, from the last day.")
+                : String(localized: "Usually every \(dayText) in the daytime, about \(nightText) at night, from the last \(days) days.")
         case let (dayGap?, nil):
-            return "Usually every \(describe(dayGap)) in the daytime, from \(span)."
+            let dayText = describe(dayGap)
+            return oneDay
+                ? String(localized: "Usually every \(dayText) in the daytime, from the last day.")
+                : String(localized: "Usually every \(dayText) in the daytime, from the last \(days) days.")
         case let (nil, nightGap?):
-            return "Usually every \(describe(nightGap)) at night, from \(span)."
+            let nightText = describe(nightGap)
+            return oneDay
+                ? String(localized: "Usually every \(nightText) at night, from the last day.")
+                : String(localized: "Usually every \(nightText) at night, from the last \(days) days.")
         case (nil, nil):
-            return "Usually every \(describe(weightedQuantile(gaps, 0.5) ?? 0)), from \(span)."
+            let gapText = describe(weightedQuantile(gaps, 0.5) ?? 0)
+            return oneDay
+                ? String(localized: "Usually every \(gapText), from the last day.")
+                : String(localized: "Usually every \(gapText), from the last \(days) days.")
         }
-    }
-
-    /// "the last day" or "the last 3 days".
-    static func lastDays(_ days: Int) -> String {
-        days == 1 ? "the last day" : "the last \(days) days"
     }
 
     // MARK: Wording
 
     /// "2 h 50 min", "45 min" or "3 h", rounded to 5 minutes from an hour up, the way a person would say it.
+    /// French and Spanish write it the same way; `spoken` relies on the "h" and "min".
     static func describe(_ seconds: TimeInterval) -> String {
         let minutes = max(0, Int((seconds / 60).rounded()))
         let rounded = minutes >= 60 ? Int((Double(minutes) / 5).rounded()) * 5 : minutes
         let hours = rounded / 60
         let rest = rounded % 60
-        if hours == 0 { return "\(rest) min" }
-        if rest == 0 { return "\(hours) h" }
-        return "\(hours) h \(rest) min"
+        if hours == 0 { return String(localized: "\(rest) min", comment: "A length of time in minutes, abbreviated. Keep \"min\" if the language uses it: VoiceOver reads it out in full.") }
+        if rest == 0 { return String(localized: "\(hours) h", comment: "A length of time in hours, abbreviated. Keep \"h\" if the language uses it: VoiceOver reads it out in full.") }
+        return String(localized: "\(hours) h \(rest) min", comment: "A length of time in hours and minutes, abbreviated, e.g. 2 h 50 min. Keep \"h\" and \"min\" if the language uses them: VoiceOver reads them out in full.")
     }
 
-    /// `text` with "2 h 50 min" written out as "2 hours 50 minutes", for VoiceOver.
+    /// `text` with "2 h 50 min" written out as "2 hours 50 minutes", for VoiceOver. The words come
+    /// from the system's duration formatter, so they're in the app's language.
     static func spoken(_ text: String) -> String {
         var result = text
-        for (pattern, unit) in [("(\\d+) h\\b", "hour"), ("(\\d+) min\\b", "minute")] {
+        let units: [(pattern: String, unit: Duration.UnitsFormatStyle.Unit, seconds: Int64)] = [
+            // Any space, so a translation with a non-breaking one ("2 h") is read out too.
+            ("(\\d+)\\s+h\\b", .hours, 3600),
+            ("(\\d+)\\s+min\\b", .minutes, 60),
+        ]
+        for (pattern, unit, seconds) in units {
             guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
             let matches = regex.matches(in: result, range: NSRange(result.startIndex..., in: result))
             for match in matches.reversed() {
                 guard let whole = Range(match.range, in: result),
                       let digits = Range(match.range(at: 1), in: result),
-                      let number = Int(result[digits])
+                      let number = Int64(result[digits])
                 else { continue }
-                result.replaceSubrange(whole, with: Format.plural(number, unit))
+                let words = Duration.seconds(number * seconds).formatted(.units(allowed: [unit], width: .wide))
+                result.replaceSubrange(whole, with: words)
             }
         }
         return result
@@ -295,9 +312,9 @@ struct CarePrediction: Equatable, Identifiable {
 
         var title: String {
             switch self {
-            case .low: return "Rough guess: not much logged yet"
-            case .medium: return "Fairly steady pattern"
-            case .high: return "Steady pattern"
+            case .low: return String(localized: "Rough guess: not much logged yet")
+            case .medium: return String(localized: "Fairly steady pattern")
+            case .high: return String(localized: "Steady pattern")
             }
         }
 
@@ -343,27 +360,73 @@ struct CarePrediction: Equatable, Identifiable {
 
     /// "From 24 feeds in the last 3 days; 2 missing stretches skipped."
     var dataSummary: String {
-        let things = Format.plural(basis.events, kind == .feed ? "feed" : "change")
-        var text = "From \(things) in \(CarePredictions.lastDays(basis.days))"
-        switch basis.skippedStretches {
-        case 0: break
-        case 1: text += "; 1 missing stretch skipped"
-        default: text += "; \(basis.skippedStretches) missing stretches skipped"
-        }
-        text += "."
-        if confidence == .low {
-            let between = kind == .feed ? "feeds" : "changes"
-            text += " That's \(Format.plural(basis.usableGaps, "usable gap")) between \(between); about \(basis.gapsNeeded) are needed to learn a pattern."
-        }
-        return text
+        let text = Self.fromSentence(things: countText, days: basis.days, skipped: basis.skippedStretches)
+        guard confidence == .low else { return text }
+        return text + " " + gapsSentence
     }
 
-    /// For the reminder: "usually every 2 h 50 min", "your 3 h limit" or "3 h since the last feed".
+    /// "24 feeds" or "1 change".
+    private var countText: String {
+        let count = basis.events
+        switch kind {
+        case .feed:
+            return count == 1
+                ? String(localized: "1 feed")
+                : String(localized: "\(count) feeds", comment: "A number of feeds (bottles or breastfeeds); can be 0")
+        case .diaper:
+            return count == 1
+                ? String(localized: "1 change", comment: "One diaper change")
+                : String(localized: "\(count) changes", comment: "A number of diaper changes; can be 0")
+        }
+    }
+
+    /// "From 24 feeds in the last 3 days; 2 missing stretches skipped." `things` is `countText`.
+    private static func fromSentence(things: String, days: Int, skipped: Int) -> String {
+        let oneDay = days == 1
+        switch skipped {
+        case 0:
+            return oneDay
+                ? String(localized: "From \(things) in the last day.", comment: "The argument is a number of feeds or diaper changes, e.g. 24 feeds")
+                : String(localized: "From \(things) in the last \(days) days.", comment: "The first argument is a number of feeds or diaper changes, e.g. 24 feeds")
+        case 1:
+            return oneDay
+                ? String(localized: "From \(things) in the last day; 1 missing stretch skipped.", comment: "The argument is a number of feeds or diaper changes, e.g. 24 feeds. A missing stretch is time nobody logged.")
+                : String(localized: "From \(things) in the last \(days) days; 1 missing stretch skipped.", comment: "The first argument is a number of feeds or diaper changes, e.g. 24 feeds. A missing stretch is time nobody logged.")
+        default:
+            return oneDay
+                ? String(localized: "From \(things) in the last day; \(skipped) missing stretches skipped.", comment: "The first argument is a number of feeds or diaper changes, e.g. 24 feeds. A missing stretch is time nobody logged.")
+                : String(localized: "From \(things) in the last \(days) days; \(skipped) missing stretches skipped.", comment: "The first argument is a number of feeds or diaper changes, e.g. 24 feeds. A missing stretch is time nobody logged.")
+        }
+    }
+
+    /// "That's 3 usable gaps between feeds; about 8 are needed to learn a pattern."
+    private var gapsSentence: String {
+        let gaps = basis.usableGaps
+        let needed = basis.gapsNeeded
+        switch (kind, gaps == 1) {
+        case (.feed, true):
+            return String(localized: "That's 1 usable gap between feeds; about \(needed) are needed to learn a pattern.")
+        case (.feed, false):
+            return String(localized: "That's \(gaps) usable gaps between feeds; about \(needed) are needed to learn a pattern.", comment: "The first number can be 0")
+        case (.diaper, true):
+            return String(localized: "That's 1 usable gap between changes; about \(needed) are needed to learn a pattern.", comment: "Diaper changes")
+        case (.diaper, false):
+            return String(localized: "That's \(gaps) usable gaps between changes; about \(needed) are needed to learn a pattern.", comment: "Diaper changes. The first number can be 0")
+        }
+    }
+
+    /// For the reminder, in brackets after the time: "usually every 2 h 50 min", "your 3 h limit" or
+    /// "3 h since the last feed".
     var reminderReason: String {
         let since = CarePredictions.describe(expected.timeIntervalSince(lastEvent))
-        if wasCapped { return "your \(since) limit" }
-        if let usualInterval, confidence > .low { return "usually every \(CarePredictions.describe(usualInterval))" }
-        return "\(since) since the last feed"
+        if wasCapped {
+            return String(localized: "your \(since) limit", comment: "In brackets after a feed reminder's time: the parent's own longest time between feeds, e.g. your 3 h limit")
+        }
+        if let usualInterval, confidence > .low {
+            let usual = CarePredictions.describe(usualInterval)
+            return String(localized: "usually every \(usual)", comment: "In brackets after a feed reminder's time, e.g. usually every 2 h 50 min")
+        }
+        return String(localized: "\(since) since the last feed", comment: "In brackets after a feed reminder's time, e.g. 3 h since the last feed")
     }
 }
 
@@ -481,7 +544,7 @@ enum FeedPredictor {
         let usual = min(median, cap)
         var explanation = CarePredictions.usualSentence(gaps.usable, days: days, minBucket: minBucket)
         if capped {
-            explanation += " That's longer than your \(CarePredictions.describe(cap)) limit, so this uses the limit."
+            explanation += " " + Self.longerThanLimit(cap)
         }
         return CarePrediction(
             kind: .feed,
@@ -509,12 +572,12 @@ enum FeedPredictor {
         let wanted = settings.fixedInterval ?? typicalGap(birthDate: log.birthDate, now: now)
         let interval = min(wanted, cap)
         let expected = start.addingTimeInterval(interval)
-        let source = settings.fixedInterval != nil
-            ? "your \(CarePredictions.describe(wanted)) reminder setting"
-            : "about \(CarePredictions.describe(wanted)), a common gap at this age"
-        var explanation = "Not enough feeds logged in the last few days to learn a pattern yet, so this uses \(source)."
+        let wantedText = CarePredictions.describe(wanted)
+        var explanation = settings.fixedInterval != nil
+            ? String(localized: "Not enough feeds logged in the last few days to learn a pattern yet, so this uses your \(wantedText) reminder setting.")
+            : String(localized: "Not enough feeds logged in the last few days to learn a pattern yet, so this uses about \(wantedText), a common gap at this age.")
         if wanted > cap {
-            explanation += " That's longer than your \(CarePredictions.describe(cap)) limit, so this uses the limit."
+            explanation += " " + longerThanLimit(cap)
         }
         return CarePrediction(
             kind: .feed,
@@ -528,6 +591,12 @@ enum FeedPredictor {
             basis: basis,
             wasCapped: wanted > cap
         )
+    }
+
+    /// "That's longer than your 3 h limit, so this uses the limit."
+    private static func longerThanLimit(_ cap: TimeInterval) -> String {
+        let limit = CarePredictions.describe(cap)
+        return String(localized: "That's longer than your \(limit) limit, so this uses the limit.", comment: "The parent's own longest time between feeds, e.g. 3 h")
     }
 }
 
@@ -613,8 +682,8 @@ enum DiaperPredictor {
         let sessions = FeedPredictor.sessions(log.feeds.filter { $0.start <= now })
         let link = feedLink(changes: recent.filter { !$0.isApproximate }, sessions: sessions)
         if recent.count >= minIntervals, link.share >= followShare, let delay = link.delay {
-            let percent = Int((link.share * 100).rounded())
-            let linked = "About \(percent)% of changes come within \(CarePredictions.describe(followWindow)) after a feed"
+            let percent = (Double(Int((link.share * 100).rounded())) / 100).formatted(.percent.precision(.fractionLength(0)))
+            let window = CarePredictions.describe(followWindow)
             // A feed going on or just finished, with no change since: soon after it.
             if let feed = sessions.last, feed.start > last.date, now <= feed.end.addingTimeInterval(followWindow) {
                 let expected = feed.start.addingTimeInterval(delay)
@@ -624,7 +693,8 @@ enum DiaperPredictor {
                     earliest: min(feed.end, expected),
                     latest: max(feed.end.addingTimeInterval(followWindow), expected),
                     confidence: .medium,
-                    explanation: linked + ", so one is probably due soon after this feed." + usualSentence,
+                    explanation: String(localized: "About \(percent) of changes come within \(window) after a feed, so one is probably due soon after this feed.", comment: "Diaper changes. The first argument is a percentage, e.g. 80%; the second a length of time, e.g. 30 min")
+                        + usualSentence,
                     usualInterval: nil,
                     lastEvent: last.date,
                     basis: basis,
@@ -640,7 +710,8 @@ enum DiaperPredictor {
                     earliest: nextFeed.earliest.addingTimeInterval(delay),
                     latest: nextFeed.latest.addingTimeInterval(delay),
                     confidence: confidence,
-                    explanation: linked + ", so the next one will probably be after the next feed." + usualSentence,
+                    explanation: String(localized: "About \(percent) of changes come within \(window) after a feed, so the next one will probably be after the next feed.", comment: "Diaper changes. The first argument is a percentage, e.g. 80%; the second a length of time, e.g. 30 min")
+                        + usualSentence,
                     usualInterval: nil,
                     lastEvent: last.date,
                     basis: basis,
@@ -664,7 +735,7 @@ enum DiaperPredictor {
                 earliest: expected.addingTimeInterval(-roughSpread),
                 latest: expected.addingTimeInterval(roughSpread),
                 confidence: .low,
-                explanation: "Not enough changes logged in the last few days to learn a pattern yet, so this uses \(CarePredictions.describe(roughGap)) after the last change.",
+                explanation: String(localized: "Not enough changes logged in the last few days to learn a pattern yet, so this uses \(CarePredictions.describe(roughGap)) after the last change.", comment: "Diaper changes. The argument is a length of time, e.g. 3 h"),
                 usualInterval: nil,
                 lastEvent: last.date,
                 basis: basis

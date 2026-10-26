@@ -186,29 +186,41 @@ final class DiaryPhoto: NSManagedObject, Identifiable {
 }
 
 /// What a diary entry is.
-enum DiaryKind: String, CaseIterable, Identifiable {
+enum DiaryKind: String, CaseIterable, Identifiable, Sendable {
     case moment, learned, first, funny, letter
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .moment: return "Moment"
-        case .learned: return "Learned something new"
-        case .first: return "A first"
-        case .funny: return "Funny"
-        case .letter: return "Letter for later"
+        case .moment: return String(localized: "Moment", comment: "Kind of diary entry")
+        case .learned: return String(localized: "Learned something new", comment: "Kind of diary entry: the baby learned something new")
+        case .first: return String(localized: "A first", comment: "Kind of diary entry: a first time, like a first smile")
+        case .funny: return String(localized: "Funny", comment: "Kind of diary entry: something funny the baby did")
+        case .letter: return String(localized: "Letter for later", comment: "Kind of diary entry: a letter for the child to read when older")
         }
     }
 
     /// For chips and filters, where space is short.
     var shortTitle: String {
         switch self {
+        case .moment: return String(localized: "Moment", comment: "Kind of diary entry")
+        case .learned: return String(localized: "Learned", comment: "Short kind of diary entry: the baby learned something new")
+        case .first: return String(localized: "A first", comment: "Kind of diary entry: a first time, like a first smile")
+        case .funny: return String(localized: "Funny", comment: "Kind of diary entry: something funny the baby did")
+        case .letter: return String(localized: "Letter", comment: "Short kind of diary entry: a letter for later")
+        }
+    }
+
+    /// The diary CSV export's Kind column.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
+        switch self {
         case .moment: return "Moment"
-        case .learned: return "Learned"
+        case .learned: return "Learned something new"
         case .first: return "A first"
         case .funny: return "Funny"
-        case .letter: return "Letter"
+        case .letter: return "Letter for later"
         }
     }
 
@@ -223,41 +235,64 @@ enum DiaryKind: String, CaseIterable, Identifiable {
     }
 
     /// A few gentle questions to start from, using the baby's name and, when it's set, their pronouns.
+    /// Each question is written out for "she", "he" and the name, since pronouns change the rest of
+    /// the sentence in other languages.
     func prompts(for baby: Baby) -> [String] {
         let name = baby.displayName
-        let they = baby.subjectPronoun
-        let them = baby.objectPronoun
-        let their = baby.possessivePronoun
+        let sex = baby.sex
+        func pick(female: String, male: String, named: String) -> String {
+            switch sex {
+            case .female: return female
+            case .male: return male
+            case nil: return named
+            }
+        }
         switch self {
         case .moment:
             return [
-                "What made you smile this week?",
-                "What does \(name) love right now?",
-                "A little moment you don't want to forget",
+                String(localized: "What made you smile this week?", comment: "Diary prompt"),
+                String(localized: "What does \(name) love right now?", comment: "Diary prompt"),
+                String(localized: "A little moment you don't want to forget", comment: "Diary prompt"),
             ]
         case .learned:
             return [
-                "What did \(they) learn?",
-                "Something new \(they) can do",
-                "How \(they) figured it out",
+                pick(female: String(localized: "What did she learn?", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "What did he learn?", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "What did \(name) learn?", comment: "Diary prompt, with the baby's name")),
+                pick(female: String(localized: "Something new she can do", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "Something new he can do", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "Something new \(name) can do", comment: "Diary prompt, with the baby's name")),
+                pick(female: String(localized: "How she figured it out", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "How he figured it out", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "How \(name) figured it out", comment: "Diary prompt, with the baby's name")),
             ]
         case .first:
             return [
-                "A first today",
-                "Where were you, and who was there?",
-                "How \(they) reacted",
+                String(localized: "A first today", comment: "Diary prompt"),
+                String(localized: "Where were you, and who was there?", comment: "Diary prompt"),
+                pick(female: String(localized: "How she reacted", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "How he reacted", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "How \(name) reacted", comment: "Diary prompt, with the baby's name")),
             ]
         case .funny:
             return [
-                "What made you laugh?",
-                "The funniest face \(they) made",
-                "Something \(they) did that nobody expected",
+                String(localized: "What made you laugh?", comment: "Diary prompt"),
+                pick(female: String(localized: "The funniest face she made", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "The funniest face he made", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "The funniest face \(name) made", comment: "Diary prompt, with the baby's name")),
+                pick(female: String(localized: "Something she did that nobody expected", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "Something he did that nobody expected", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "Something \(name) did that nobody expected", comment: "Diary prompt, with the baby's name")),
             ]
         case .letter:
             return [
-                "What do you want \(name) to know?",
-                "What were you dreaming of for \(them)?",
-                "What \(their) days are like right now",
+                String(localized: "What do you want \(name) to know?", comment: "Diary prompt"),
+                pick(female: String(localized: "What were you dreaming of for her?", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "What were you dreaming of for him?", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "What were you dreaming of for \(name)?", comment: "Diary prompt, with the baby's name")),
+                pick(female: String(localized: "What her days are like right now", comment: "Diary prompt about a baby girl"),
+                     male: String(localized: "What his days are like right now", comment: "Diary prompt about a baby boy"),
+                     named: String(localized: "What \(name)'s days are like right now", comment: "Diary prompt, with the baby's name")),
             ]
         }
     }
@@ -266,20 +301,17 @@ enum DiaryKind: String, CaseIterable, Identifiable {
 // MARK: - Letters for later
 
 extension DiaryEntry {
-    /// "to open at 18", "to open on Feb 12, 2040", or "for one day" when there's no target.
-    var openWhenText: String {
+    /// "For Mavie, to open at 18", "For Mavie, to open on Feb 12, 2040", or "For Mavie, for one day"
+    /// when there's no target: the line on a sealed envelope.
+    func envelopeLine(babyName: String) -> String {
         if let openOnDate {
-            return "to open on \(openOnDate.formatted(date: .abbreviated, time: .omitted))"
+            let day = openOnDate.formatted(date: .abbreviated, time: .omitted)
+            return String(localized: "For \(babyName), to open on \(day)", comment: "A letter for later, on its envelope: the child's name and the day to open it")
         }
         if let age = openAtAge {
-            return "to open at \(age)"
+            return String(localized: "For \(babyName), to open at \(age)", comment: "A letter for later, on its envelope: the child's name and the birthday (age in years) to open it")
         }
-        return "for one day"
-    }
-
-    /// "For Mavie, to open at 18", the line on a sealed envelope.
-    func envelopeLine(babyName: String) -> String {
-        "For \(babyName), \(openWhenText)"
+        return String(localized: "For \(babyName), for one day", comment: "A letter for later with no day to open it, on its envelope")
     }
 }
 
@@ -290,10 +322,14 @@ extension Baby {
     @NSManaged var diaryEntries: NSSet?
 
     /// "she", "he", or the baby's name when their sex isn't set, so nothing is assumed.
+    ///
+    /// The words are translated, but they only fit English sentences: in other languages a pronoun
+    /// changes the rest of the sentence, so a localized sentence is better written out for "she",
+    /// "he" and the name (see `DiaryKind.prompts(for:)`).
     var subjectPronoun: String {
         switch sex {
-        case .female: return "she"
-        case .male: return "he"
+        case .female: return String(localized: "she", comment: "Pronoun for a baby girl, as the subject of a sentence")
+        case .male: return String(localized: "he", comment: "Pronoun for a baby boy, as the subject of a sentence")
         case nil: return displayName
         }
     }
@@ -301,8 +337,8 @@ extension Baby {
     /// "her", "him", or the name.
     var objectPronoun: String {
         switch sex {
-        case .female: return "her"
-        case .male: return "him"
+        case .female: return String(localized: "her", comment: "Pronoun for a baby girl, as the object of a sentence (“for her”)")
+        case .male: return String(localized: "him", comment: "Pronoun for a baby boy, as the object of a sentence (“for him”)")
         case nil: return displayName
         }
     }
@@ -310,9 +346,9 @@ extension Baby {
     /// "her", "his", or "Mavie's".
     var possessivePronoun: String {
         switch sex {
-        case .female: return "her"
-        case .male: return "his"
-        case nil: return "\(displayName)'s"
+        case .female: return String(localized: "pronoun.possessive.her", defaultValue: "her", comment: "Possessive for a baby girl (“her birthday”)")
+        case .male: return String(localized: "his", comment: "Possessive for a baby boy (“his birthday”)")
+        case nil: return String(localized: "\(displayName)'s", comment: "Possessive with the baby's name (“Mavie's birthday”)")
         }
     }
 }

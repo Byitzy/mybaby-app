@@ -16,6 +16,8 @@ struct AppointmentsList: View {
     @State private var toast: Toast?
     /// Waiting for "Delete" after a swipe.
     @State private var deleting: Appointment?
+    /// Waiting for "Cancel appointment" from a row's menu.
+    @State private var cancelling: Appointment?
     /// "Add to Calendar" from a row's menu.
     @State private var calendarDraft: CalendarEventDraft?
     @ObservedObject private var calendarSync = CalendarSync.shared
@@ -31,16 +33,18 @@ struct AppointmentsList: View {
     /// Appointments from an hour ago on still count as upcoming.
     private var upcomingCutoff: Date { Date.now.addingTimeInterval(-3600) }
 
-    /// Where a quick question goes: the next appointment, if there is one.
+    /// Where a quick question goes: the next appointment that isn't cancelled, if there is one.
     private var nextAppointment: Appointment? {
         let cutoff = upcomingCutoff
-        return appointments.first { $0.date >= cutoff }
+        return appointments.first { $0.date >= cutoff && !$0.isCancelled }
     }
 
     var body: some View {
         let cutoff = upcomingCutoff
-        let upcoming = appointments.filter { $0.date >= cutoff }
-        let past = appointments.filter { $0.date < cutoff }.reversed()
+        let upcoming = appointments.filter { $0.date >= cutoff && !$0.isCancelled }
+        let past = appointments.filter { $0.date < cutoff && !$0.isCancelled }.reversed()
+        // Newest first, like Past. Kept so they can be restored.
+        let cancelled = appointments.filter(\.isCancelled).reversed()
         let pending = baby.pendingQuestionList
 
         List {
@@ -95,6 +99,15 @@ struct AppointmentsList: View {
                     }
                 }
             }
+            if !cancelled.isEmpty {
+                Section {
+                    ForEach(Array(cancelled)) { row($0) }
+                } header: {
+                    Text("Cancelled")
+                } footer: {
+                    Text("Cancelled appointments have no reminders. Swipe right on one, or open it, to restore it.")
+                }
+            }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -128,7 +141,11 @@ struct AppointmentsList: View {
             context.delete(appointment)
             context.saveIfChanged()
         }
-        .addToCalendarSheet($calendarDraft) { toast = Toast(message: "Added to your calendar") }
+        .cancelAppointmentDialog(item: $cancelling) { appointment in
+            appointment.cancel(in: context)
+            toast = Toast(message: String(localized: "Appointment cancelled")) { appointment.restore(in: context) }
+        }
+        .addToCalendarSheet($calendarDraft) { toast = Toast(message: String(localized: "Added to your calendar")) }
         .sheet(item: $recapFor) { appointment in
             VisitRecapView(appointment: appointment)
         }
@@ -137,10 +154,13 @@ struct AppointmentsList: View {
 
     private var questionDestination: String {
         guard let next = nextAppointment else {
-            return "No appointment is scheduled, so it's kept here until you add one."
+            return String(localized: "No appointment is scheduled, so it's kept here until you add one.")
         }
         let when = next.date.formatted(.dateTime.month(.abbreviated).day())
-        return "It's added to \(next.title.isEmpty ? "the appointment" : next.title) on \(when)."
+        if next.title.isEmpty {
+            return String(localized: "It's added to the appointment on \(when).")
+        }
+        return String(localized: "It's added to \(next.title) on \(when).", comment: "An appointment's title, then its date")
     }
 
     private func addQuestion() {
@@ -149,37 +169,46 @@ struct AppointmentsList: View {
         guard !question.isEmpty else { return }
         if let next = nextAppointment {
             next.questions = VisitQuestions.appending(question, to: next.questions)
-            toast = Toast(message: "Added to \(next.title.isEmpty ? "the next appointment" : next.title)")
+            toast = Toast(message: next.title.isEmpty
+                ? String(localized: "Added to the next appointment")
+                : String(localized: "Added to \(next.title)", comment: "An appointment's title"))
         } else {
             baby.pendingQuestions = VisitQuestions.appending(question, to: baby.pendingQuestions)
-            toast = Toast(message: "Saved for the next visit")
+            toast = Toast(message: String(localized: "Saved for the next visit"))
         }
         context.saveIfChanged()
     }
 
     private func row(_ appointment: Appointment) -> some View {
-        Button {
+        let isCancelled = appointment.isCancelled
+        let tint = isCancelled ? Color.secondary : Palette.appointment
+        return Button {
             editing = appointment
         } label: {
             HStack(spacing: 14) {
                 VStack(spacing: 0) {
                     Text(appointment.date, format: .dateTime.month(.abbreviated))
                         .font(.caption.weight(.bold))
-                        .foregroundStyle(Palette.appointment)
+                        .foregroundStyle(tint)
                         .textCase(.uppercase)
                     Text(appointment.date, format: .dateTime.day())
                         .font(.title2.weight(.semibold))
+                        .strikethrough(isCancelled)
+                        .foregroundStyle(isCancelled ? Color.secondary : Color.primary)
                 }
                 // Grows with the text instead of clipping it.
                 .padding(.vertical, Spacing.xs)
                 .frame(minWidth: 48, minHeight: 52)
-                .background(Palette.appointment.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.badge))
+                .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: Radius.badge))
 
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text(appointment.title.isEmpty ? "Appointment" : appointment.title)
+                    Text(appointment.title.isEmpty ? String(localized: "Appointment") : appointment.title)
                         .font(.body.weight(.medium))
+                        .strikethrough(isCancelled)
+                        .foregroundStyle(isCancelled ? Color.secondary : Color.primary)
                     Text(appointment.date, format: .dateTime.weekday(.wide).hour().minute())
                         .font(.subheadline)
+                        .strikethrough(isCancelled)
                         .foregroundStyle(.secondary)
                     let place = [appointment.provider, appointment.location].filter { !$0.isEmpty }.joined(separator: " · ")
                     if !place.isEmpty {
@@ -187,9 +216,21 @@ struct AppointmentsList: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    // A place picked from the search also has its address.
+                    if let address = appointment.addressBelowLocation {
+                        Text(address)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    // The strikethrough isn't read out, so this says it in words too.
+                    if isCancelled {
+                        Label(appointment.cancelledText, systemImage: "xmark.circle")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                     let toAsk = appointment.questionList.filter { !$0.isAsked }.count
-                    if toAsk > 0 && appointment.date >= upcomingCutoff {
-                        Label(Format.plural(toAsk, "question") + " to ask", systemImage: "questionmark.bubble")
+                    if toAsk > 0 && appointment.date >= upcomingCutoff && !isCancelled {
+                        Label("\(toAsk) questions to ask", systemImage: "questionmark.bubble")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -201,14 +242,15 @@ struct AppointmentsList: View {
                     }
                 }
                 Spacer()
-                if appointment.reminderMinutes != nil && appointment.date > .now {
+                if appointment.reminderMinutes != nil && appointment.date > .now && !isCancelled {
                     Image(systemName: "bell.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .accessibilityLabel("Reminder on")
                 }
             }
-            // "2-month checkup, Tuesday 9:30 AM, Dr. Lee, 2 questions to ask, reminder on".
+            // "2-month checkup, Tuesday 9:30 AM, Dr. Lee, 2 questions to ask, reminder on", or
+            // "…, Cancelled Oct 20".
             .accessibilityElement(children: .combine)
         }
         .buttonStyle(.plain)
@@ -222,24 +264,49 @@ struct AppointmentsList: View {
             }
         }
         .swipeActions(edge: .leading) {
-            Button("Visit summary", systemImage: "doc.text") {
-                summaryFor = appointment
+            if isCancelled {
+                if canEditLog {
+                    Button("Restore", systemImage: "arrow.uturn.backward") {
+                        appointment.restore(in: context)
+                        toast = Toast(message: String(localized: "Appointment restored"))
+                    }
+                    .tint(Palette.ok)
+                }
+            } else {
+                Button("Visit summary", systemImage: "doc.text") {
+                    summaryFor = appointment
+                }
+                .tint(.accentColor)
             }
-            .tint(.accentColor)
         }
         .contextMenu {
-            Button("Visit summary", systemImage: "doc.text") {
-                summaryFor = appointment
-            }
-            if appointment.date < .now, canEditLog || appointment.hasRecap {
-                Button(appointment.hasRecap ? "How it went" : "How did it go?", systemImage: "text.bubble") {
-                    recapFor = appointment
+            if isCancelled {
+                if canEditLog {
+                    Button("Restore appointment", systemImage: "arrow.uturn.backward") {
+                        appointment.restore(in: context)
+                        toast = Toast(message: String(localized: "Appointment restored"))
+                    }
                 }
-            }
-            // With calendar sync on, it's already there.
-            if !calendarSync.isEnabled {
-                Button("Add to Calendar", systemImage: "calendar.badge.plus") {
-                    calendarDraft = CalendarEventDraft(appointment: appointment)
+            } else {
+                Button("Visit summary", systemImage: "doc.text") {
+                    summaryFor = appointment
+                }
+                if appointment.date < .now, canEditLog || appointment.hasRecap {
+                    Button(appointment.hasRecap ? "How it went" : "How did it go?", systemImage: "text.bubble") {
+                        recapFor = appointment
+                    }
+                }
+                // With calendar sync on, it's already there.
+                if !calendarSync.isEnabled {
+                    Button("Add to Calendar", systemImage: "calendar.badge.plus") {
+                        calendarDraft = CalendarEventDraft(appointment: appointment)
+                    }
+                }
+                // Not once a recap says how it went.
+                if canEditLog, !appointment.hasRecap {
+                    Button("Cancel appointment", systemImage: "calendar.badge.minus") {
+                        cancelling = appointment
+                    }
                 }
             }
         }
@@ -248,7 +315,7 @@ struct AppointmentsList: View {
     /// A gentle "How did it go?" under a visit from the last two weeks that has no recap yet.
     /// Older ones can still be recapped from the appointment or its menu.
     private func showsRecapButton(_ appointment: Appointment) -> Bool {
-        canEditLog && !appointment.hasRecap
+        canEditLog && !appointment.hasRecap && !appointment.isCancelled
             && appointment.assumedEnd <= .now
             && appointment.assumedEnd > Date.now.addingTimeInterval(-14 * 24 * 3600)
     }
@@ -282,6 +349,13 @@ struct AppointmentEditor: View {
     @State private var date = Calendar.current.date(byAdding: .day, value: 1, to: .now) ?? .now
     @State private var provider = ""
     @State private var location = ""
+    /// The place picked from the search, or `nil` for a typed one. Typing in the field again makes it
+    /// a typed place, so a new name never keeps the old one's map.
+    @State private var place: AppointmentPlace?
+    /// Suggestions as the parent types. Sends nothing until they do.
+    @StateObject private var placeSearch = PlaceSearch()
+    /// Places already picked for other appointments and vaccines, for the menu by the field.
+    @State private var recentPlaces: [AppointmentPlace] = []
     @State private var notes = ""
     @State private var reminderMinutes: Int? = 60
     @State private var questions: [VisitQuestion] = []
@@ -290,6 +364,9 @@ struct AppointmentEditor: View {
     @State private var tookPendingQuestions = false
     @State private var didLoad = false
     @State private var confirmingDelete = false
+    @State private var confirmingCancel = false
+    /// Mirrors the appointment's, so restoring it here updates the form at once.
+    @State private var isCancelled = false
     @State private var recapping = false
 
     var body: some View {
@@ -297,6 +374,24 @@ struct AppointmentEditor: View {
             Form {
                 if !canEditLog {
                     Section { ViewOnlyBanner(message: "You can see this appointment, but only the parents can save changes.") }
+                }
+
+                if let appointment, isCancelled {
+                    Section {
+                        NoticeLabel(
+                            "\(appointment.cancelledText). It has no reminder until it's restored.",
+                            systemImage: "xmark.circle",
+                            tint: Palette.inactive
+                        )
+                        if canEditLog {
+                            Button {
+                                appointment.restore(in: context)
+                                isCancelled = false
+                            } label: {
+                                Label("Restore appointment", systemImage: "arrow.uturn.backward")
+                            }
+                        }
+                    }
                 }
 
                 Section {
@@ -317,8 +412,32 @@ struct AppointmentEditor: View {
                 Section {
                     TextField("Doctor or provider", text: $provider)
                         .textContentType(.name)
-                    TextField("Location", text: $location)
-                        .textContentType(.fullStreetAddress)
+                    HStack {
+                        TextField("Location", text: typedLocation)
+                            .textContentType(.location)
+                            .submitLabel(.done)
+                            // Keeps it as typed.
+                            .onSubmit { placeSearch.clear() }
+                        if !recentPlaces.isEmpty {
+                            RecentPlacesMenu(places: recentPlaces, accessibilityLabel: String(localized: "Places used before"), onPick: use)
+                        }
+                    }
+                    ForEach(placeSearch.suggestions) { suggestion in
+                        PlaceSuggestionRow(suggestion: suggestion) { pick(suggestion) }
+                    }
+                    if placeSearch.isLookingUp {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                            .accessibilityLabel("Finding the place")
+                    } else if placeSearch.lookupFailed {
+                        NoticeLabel("Couldn't find that place in Maps right now. It's kept as typed.", systemImage: "mappin.slash", tint: Palette.inactive)
+                            .font(.subheadline)
+                    }
+                    if let place {
+                        AppointmentPlaceCard(place: place)
+                    }
+                } footer: {
+                    Text(PlaceSearch.privacyNote)
                 }
 
                 Section {
@@ -329,18 +448,22 @@ struct AppointmentEditor: View {
                     }
                 }
 
-                AddToCalendarSection(
-                    makeDraft: {
-                        CalendarEventDraft(
-                            title: title,
-                            date: date,
-                            provider: provider,
-                            location: location,
-                            babyName: (appointment?.baby ?? Baby.current(in: context))?.displayName
-                        )
-                    },
-                    hasReminder: reminderMinutes != nil
-                )
+                if !isCancelled {
+                    AddToCalendarSection(
+                        makeDraft: {
+                            CalendarEventDraft(
+                                title: title,
+                                date: date,
+                                provider: provider,
+                                location: location,
+                                babyName: (appointment?.baby ?? Baby.current(in: context))?.displayName,
+                                address: place?.address ?? "",
+                                coordinate: place?.coordinate
+                            )
+                        },
+                        hasReminder: reminderMinutes != nil
+                    )
+                }
 
                 questionsSection
 
@@ -349,8 +472,8 @@ struct AppointmentEditor: View {
                         .lineLimit(3...8)
                 }
 
-                // View-only family can read a recap, but not start one.
-                if let appointment, appointment.date < .now, canEditLog || appointment.hasRecap {
+                // View-only family can read a recap, but not start one. A cancelled visit has none.
+                if let appointment, appointment.date < .now, !isCancelled, canEditLog || appointment.hasRecap {
                     Section {
                         Button {
                             recapping = true
@@ -359,7 +482,7 @@ struct AppointmentEditor: View {
                         }
                     } footer: {
                         Text(appointment.recapSummary(units: .current)
-                             ?? "Add what the doctor said, measurements or shots from the visit.")
+                             ?? String(localized: "Add what the doctor said, measurements or shots from the visit."))
                     }
                     .sheet(isPresented: $recapping, onDismiss: {
                         // The recap may have checked questions off; Save here shouldn't undo that.
@@ -369,7 +492,7 @@ struct AppointmentEditor: View {
                     }
                 }
 
-                if let appointment {
+                if let appointment, !isCancelled {
                     Section {
                         NavigationLink {
                             VisitSummaryView(appointment: appointment, questions: allQuestions)
@@ -378,6 +501,23 @@ struct AppointmentEditor: View {
                         }
                     } footer: {
                         Text("What's happened since the last appointment, to share with your pediatrician as a PDF.")
+                    }
+                }
+
+                // Separate from Delete: cancelling keeps it, struck through, to restore later.
+                if let appointment, canEditLog, !isCancelled, !appointment.hasRecap {
+                    Section {
+                        Button {
+                            confirmingCancel = true
+                        } label: {
+                            Label("Cancel appointment", systemImage: "calendar.badge.minus")
+                        }
+                        .cancelAppointmentDialog(isPresented: $confirmingCancel) {
+                            appointment.cancel(in: context)
+                            dismiss()
+                        }
+                    } footer: {
+                        Text("Keeps it in the list, struck through, with no reminder. You can restore it.")
                     }
                 }
 
@@ -411,6 +551,7 @@ struct AppointmentEditor: View {
                 }
             }
             .onAppear(perform: load)
+            .onDisappear { placeSearch.cancel() }
         }
         .threeAMSheet()
     }
@@ -474,11 +615,51 @@ struct AppointmentEditor: View {
         newQuestion = ""
     }
 
+    // MARK: Place
+
+    /// The location field. Only the parent's own edits search; filling it in here (opening the
+    /// appointment, picking a suggestion) never sends anything.
+    private var typedLocation: Binding<String> {
+        Binding(
+            get: { location },
+            set: { typed in
+                guard typed != location else { return }
+                location = typed
+                place = nil
+                placeSearch.update(query: typed)
+            }
+        )
+    }
+
+    /// Uses a suggestion: its name goes in the field right away, then its address, map and phone
+    /// once Apple Maps has them.
+    private func pick(_ suggestion: PlaceSearch.Suggestion) {
+        location = suggestion.title
+        place = nil
+        Task {
+            guard let found = await placeSearch.place(for: suggestion) else { return }
+            // Unless the parent typed something else meanwhile.
+            guard location == suggestion.title else { return }
+            location = found.name
+            place = found
+            placeSearch.bias(toward: found.coordinate)
+        }
+    }
+
+    /// Uses a place picked before, as it was saved; nothing is looked up again.
+    private func use(_ recent: AppointmentPlace) {
+        placeSearch.clear()
+        location = recent.name
+        place = recent
+        placeSearch.bias(toward: recent.coordinate)
+    }
+
     // MARK: Load & save
 
     private func load() {
         guard !didLoad else { return }
         didLoad = true
+        recentPlaces = AppointmentPlace.recent(in: context)
         guard let appointment else {
             if let baby = Baby.current(in: context), !baby.pendingQuestionList.isEmpty {
                 questions = baby.pendingQuestionList
@@ -488,17 +669,22 @@ struct AppointmentEditor: View {
                 title = Appointment.nextTitle(after: template.title)
                 provider = template.provider
                 location = template.location
+                place = template.place
                 reminderMinutes = template.reminderMinutes
             }
+            placeSearch.bias(toward: place?.coordinate ?? recentPlaces.first?.coordinate)
             return
         }
         title = appointment.title
         date = appointment.date
         provider = appointment.provider
         location = appointment.location
+        place = appointment.place
+        placeSearch.bias(toward: place?.coordinate ?? recentPlaces.first?.coordinate)
         notes = appointment.notes
         reminderMinutes = appointment.reminderMinutes
         questions = appointment.questionList
+        isCancelled = appointment.isCancelled
     }
 
     private func save() {
@@ -507,6 +693,7 @@ struct AppointmentEditor: View {
         target.date = date
         target.provider = provider.trimmingCharacters(in: .whitespaces)
         target.location = location.trimmingCharacters(in: .whitespaces)
+        target.setPlace(target.location.isEmpty ? nil : place)
         target.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         target.reminderMinutes = reminderMinutes
         target.questionList = allQuestions
@@ -518,4 +705,39 @@ struct AppointmentEditor: View {
         NotificationManager.scheduleReminder(for: target)
         dismiss()
     }
+}
+
+private extension View {
+    /// Asks before cancelling an appointment. The way out says "Keep it" rather than "Cancel", which
+    /// would read as the action itself.
+    func cancelAppointmentDialog(isPresented: Binding<Bool>, perform: @escaping () -> Void) -> some View {
+        confirmationDialog("Cancel this appointment?", isPresented: isPresented, titleVisibility: .visible) {
+            Button("Cancel appointment", role: .destructive, action: perform)
+            Button("Keep it", role: .cancel) {}
+        } message: {
+            Text(AppointmentEditor.cancelMessage)
+        }
+    }
+
+    /// The same, for an appointment picked from the list.
+    func cancelAppointmentDialog(item: Binding<Appointment?>, perform: @escaping (Appointment) -> Void) -> some View {
+        confirmationDialog(
+            "Cancel this appointment?",
+            isPresented: Binding(
+                get: { item.wrappedValue != nil },
+                set: { if !$0 { item.wrappedValue = nil } }
+            ),
+            titleVisibility: .visible,
+            presenting: item.wrappedValue
+        ) { appointment in
+            Button("Cancel appointment", role: .destructive) { perform(appointment) }
+            Button("Keep it", role: .cancel) {}
+        } message: { _ in
+            Text(AppointmentEditor.cancelMessage)
+        }
+    }
+}
+
+extension AppointmentEditor {
+    static let cancelMessage = String(localized: "Its reminder is turned off, and it's taken out of your calendar if MyBaby added it. It stays in the list, so you can restore it.")
 }

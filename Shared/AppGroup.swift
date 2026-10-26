@@ -3,8 +3,9 @@ import Foundation
 // Everything in Shared/ is compiled into both the app and the MyBabyWidgets extension, so it only uses
 // Foundation, SwiftUI, ActivityKit and AppIntents, never the app's Core Data model. App-only code inside
 // these files is wrapped in `#if !WIDGET_EXTENSION`. The Apple Watch targets (MyBabyWatch and its
-// complications) build it too, except ButtonIntents.swift, LiveActivityAttributes.swift and
-// BabyEntity.swift, which the project excludes for them; anything else added here must build on watchOS.
+// complications) build it too, except ButtonIntents.swift and LiveActivityAttributes.swift, and
+// BabyEntity.swift in the watch app (the complications use it), which the project excludes for them;
+// anything else added here must build on watchOS.
 
 /// The App Group the app shares its database and settings through, with widgets and the Apple Watch app.
 enum AppGroup {

@@ -37,13 +37,18 @@ struct DiaryPeriod: Identifiable, Hashable {
     /// "Week 6" or "Month 3".
     var title: String {
         switch kind {
-        case .week: return "Week \(index)"
-        case .month: return "Month \(index)"
+        case .week: return String(localized: "Week \(index)", comment: "A week of the baby's life, counted from the birthday")
+        case .month: return String(localized: "Month \(index)", comment: "A month of the baby's life, counted from the birthday")
         }
     }
 
-    /// "Your week" or "this month", for buttons like "Write about this month".
-    var noun: String { kind == .week ? "week" : "month" }
+    /// "Your week" or "this month", for buttons like "Write about this month". English word order
+    /// only: a sentence that names the period is better written whole for each `kind`.
+    var noun: String {
+        kind == .week
+            ? String(localized: "week", comment: "A week of the baby's life, as in this week")
+            : String(localized: "month", comment: "A month of the baby's life, as in this month")
+    }
 
     /// The last day, at midnight.
     func lastDay(calendar: Calendar = .current) -> Date {
@@ -70,10 +75,31 @@ struct DiaryPeriod: Identifiable, Hashable {
     var ageReached: String {
         switch kind {
         case .week:
-            return Format.plural(index, "week")
+            return Self.age(weeks: index)
         case .month:
-            return index % 12 == 0 ? Format.plural(index / 12, "year") : Format.plural(index, "month")
+            return index % 12 == 0 ? Self.age(years: index / 12) : Self.age(months: index)
         }
+    }
+
+    /// "1 week" or "6 weeks", a baby's age.
+    static func age(weeks count: Int) -> String {
+        count == 1
+            ? String(localized: "1 week", comment: "A baby's age")
+            : String(localized: "\(count) weeks", comment: "A baby's age")
+    }
+
+    /// "1 month" or "18 months", a baby's age.
+    static func age(months count: Int) -> String {
+        count == 1
+            ? String(localized: "1 month", comment: "A baby's age")
+            : String(localized: "\(count) months", comment: "A baby's age")
+    }
+
+    /// "1 year" or "2 years", a baby's age.
+    static func age(years count: Int) -> String {
+        count == 1
+            ? String(localized: "1 year", comment: "A baby's age")
+            : String(localized: "\(count) years", comment: "A baby's age")
     }
 
     func isFinished(now: Date = .now) -> Bool { now >= end }

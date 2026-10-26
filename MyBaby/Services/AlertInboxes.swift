@@ -150,6 +150,25 @@ final class AlertInboxes {
         refreshSoon(force: true)
     }
 
+    /// After Delete all MyBaby data: forgets the inboxes this device joined and everything it learned
+    /// while setting up its own, so nothing from before is used again. `DataWipe` deletes the zones
+    /// and subscriptions in iCloud; with sync off, `refresh` does nothing until it's turned on again.
+    func forgetEverything() {
+        pendingRefresh?.cancel()
+        pendingRefresh = nil
+        pendingSettingsCheck?.cancel()
+        pendingSettingsCheck = nil
+        userRecordName = nil
+        failedAccepts = [:]
+        joined = [:]
+        lastRefresh = nil
+        cleanedUpThisLaunch = false
+        savedSubscriptionsThisLaunch = false
+        UserDefaults.standard.removeObject(forKey: Key.joined)
+        lastSignature = settingsSignature
+        setStatus(nil, ready: false)
+    }
+
     // MARK: Setting up
 
     /// Makes sure this phone's inbox, its subscription and its share exist, publishes it to the family,
@@ -158,13 +177,22 @@ final class AlertInboxes {
     func refresh(force: Bool = false) async {
         guard PersistenceController.isSyncEnabled, CloudStatus.shared.reloadingMessage == nil, !isRefreshing else { return }
         if !force, let lastRefresh, Date.now.timeIntervalSince(lastRefresh) < Self.refreshInterval { return }
+        guard !CrashGuard.isPaused(.alertInboxes) else {
+            setStatus(String(localized: "Alerts from a nursery monitor are paused on this iPhone after a problem. They try again tomorrow."), ready: false)
+            return
+        }
         isRefreshing = true
-        defer { isRefreshing = false }
+        // If the app ends in here, the next launches skip it for a day instead of crashing again.
+        CrashGuard.begin(.alertInboxes)
+        defer {
+            isRefreshing = false
+            CrashGuard.end(.alertInboxes)
+        }
 
         let container = Self.container
         do {
             guard try await container.accountStatus() == .available else {
-                setStatus("Sign in to iCloud on this iPhone to get alerts from a nursery monitor.", ready: false)
+                setStatus(String(localized: "Sign in to iCloud on this iPhone to get alerts from a nursery monitor."), ready: false)
                 return
             }
             let me = try await currentUserRecordName()
@@ -189,9 +217,42 @@ final class AlertInboxes {
             await joinFamilyInboxes(container: container, me: me)
             lastRefresh = .now
         } catch {
-            setStatus("This iPhone couldn't get ready for alerts from a nursery monitor. It tries again the next time MyBaby opens. (\(error.localizedDescription))", ready: false)
+            setStatus(Self.notReadyMessage(for: error), ready: false)
         }
     }
+
+    /// Plain words for why this phone can't get monitor alerts yet. Cry alerts on the phone itself
+    /// don't depend on this. The technical reason is added in debug builds only.
+    private static func notReadyMessage(for error: Error) -> String {
+        var message: String
+        if CloudErrors.isSchemaError(error) {
+            message = String(localized: "Alerts from a nursery monitor aren't available in this version yet. Cry alerts on this iPhone still work.")
+        } else {
+            message = String(localized: "This iPhone couldn't get ready for alerts from a nursery monitor. It tries again the next time MyBaby opens.")
+        }
+        #if DEBUG
+        if CloudErrors.isSchemaError(error) {
+            message += "\n\n" + CloudErrors.developerSchemaNote
+        }
+        message += "\n\n" + CloudErrors.details(for: error)
+        #endif
+        return message
+    }
+
+    #if DEBUG
+    /// Debug builds only, for Settings › Create iCloud schema: makes the `CryAlert` and `CryAlertTest`
+    /// record types in CloudKit's Development environment, so they can be deployed to Production
+    /// with the rest of the schema. They're plain CloudKit records, so Core Data's
+    /// `initializeCloudKitSchema` doesn't know about them.
+    func createSchemaForDeployment() async throws {
+        let database = Self.container.privateCloudDatabase
+        let (zoneResults, _) = try await database.modifyRecordZones(saving: [CKRecordZone(zoneID: Self.ownZoneID)], deleting: [])
+        for result in zoneResults.values {
+            _ = try result.get()
+        }
+        try await createRecordTypes(in: database)
+    }
+    #endif
 
     /// The iCloud user this device is signed in as, e.g. "_4c3f…". Kept until the account changes.
     func currentUserRecordName() async throws -> String {
@@ -205,10 +266,10 @@ final class AlertInboxes {
         let plan = NightPlan.load()
         switch plan.alarmOwner {
         case .both:
-            return "This iPhone gets alerts from a nursery monitor for every shift."
+            return String(localized: "This iPhone gets alerts from a nursery monitor for every shift.")
         case .parent1, .parent2:
             let parent: Parent = plan.alarmOwner == .parent1 ? .parent1 : .parent2
-            return "This iPhone gets alerts from a nursery monitor on \(plan.name(of: parent))'s shifts."
+            return String(localized: "This iPhone gets alerts from a nursery monitor on \(plan.name(of: parent))'s shifts.")
         }
     }
 
@@ -229,7 +290,8 @@ final class AlertInboxes {
     }
 
     /// One subscription for cry alerts and one for tests, firing when a record is created in this inbox.
-    /// Saved again when the alert style changes, since the sound is part of it.
+    /// Saved again when the alert style changes, since the sound is part of it. Its words are in this
+    /// phone's language: the subscription is this phone's own, and only it shows them.
     private func saveSubscriptions(in database: CKDatabase) async throws {
         let style = NightPlan.load().alarmStyle
         let signature = "1|\(style.rawValue)"
@@ -239,18 +301,23 @@ final class AlertInboxes {
         let subscriptions = [
             Self.subscription(
                 id: Self.crySubscriptionID, recordType: Self.cryRecordType,
-                title: "👶 Your baby is crying", body: "Heard just now.", style: style
+                title: String(localized: "👶 Your baby is crying"),
+                body: String(localized: "Heard just now.", comment: "Cry alert body: the crying was heard a moment ago"),
+                style: style
             ),
             Self.subscription(
                 id: Self.testSubscriptionID, recordType: Self.testRecordType,
-                title: "🔔 Test from the nursery monitor", body: "Alerts from the monitor will look like this.", style: style
+                title: String(localized: "🔔 Test from the nursery monitor"),
+                body: String(localized: "Alerts from the monitor will look like this."),
+                style: style
             ),
         ]
         do {
             try await save(subscriptions, in: database)
-        } catch let error as CKError where error.code == .unknownItem || error.code == .invalidArguments {
+        } catch where CloudErrors.isSchemaError(error) || (error as? CKError)?.code == .invalidArguments {
             // In CloudKit's development environment a record type only exists once a record of it has
-            // been saved, and a subscription to a type that doesn't exist yet is refused.
+            // been saved, and a subscription to a type that doesn't exist yet is refused. In Production
+            // (TestFlight and the App Store) types can't be made this way: the schema has to be deployed.
             try await createRecordTypes(in: database)
             try await save(subscriptions, in: database)
         }
@@ -294,7 +361,7 @@ final class AlertInboxes {
         let info = CKSubscription.NotificationInfo()
         // Both a title and a body, so it's always shown as an alert, never delivered silently.
         info.title = title
-        info.subtitle = "Nursery monitor"
+        info.subtitle = String(localized: "Nursery monitor", comment: "Subtitle of a cry alert sent by a spare device left by the baby")
         info.alertBody = body
         info.soundName = style == .vibrate ? "silence.wav" : "default"
         info.shouldBadge = false
@@ -320,7 +387,8 @@ final class AlertInboxes {
             share.publicPermission = .none
             changed = true
         }
-        let title = "Nursery monitor alerts"
+        // Shown by iCloud to the family members the inbox is shared with.
+        let title = String(localized: "Nursery monitor alerts", comment: "Name of the iCloud share that carries cry alerts")
         if share[CKShare.SystemFieldKey.title] as? String != title {
             share[CKShare.SystemFieldKey.title] = title
             changed = true
@@ -463,8 +531,8 @@ final class AlertInboxes {
     static func phoneName(plan: NightPlan) -> String {
         let model = UIDevice.current.model
         switch plan.alarmOwner {
-        case .parent1: return "\(plan.name(of: .parent1))'s \(model)"
-        case .parent2: return "\(plan.name(of: .parent2))'s \(model)"
+        case .parent1: return String(localized: "\(plan.name(of: .parent1))'s \(model)", comment: "A parent's device, e.g. Sam's iPhone")
+        case .parent2: return String(localized: "\(plan.name(of: .parent2))'s \(model)", comment: "A parent's device, e.g. Sam's iPhone")
         case .both: return model
         }
     }

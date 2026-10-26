@@ -1,0 +1,134 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MyBaby"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MyBaby"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "my baby" : {
+      "shouldTranslate" : false
+    },
+    "My Baby" : {
+      "shouldTranslate" : false
+    },
+    "NSCalendarsFullAccessUsageDescription" : {
+      "comment" : "Shown when Keep appointments in my calendar is turned on and the app asks for calendar access.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MyBaby adds your baby's appointments to the calendar you choose, and keeps them up to date when they change."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby agrega las citas de tu bebé al calendario que elijas y las mantiene al día cuando cambian."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby ajoute les rendez-vous de votre bébé au calendrier de votre choix, et les met à jour quand ils changent."
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription" : {
+      "comment" : "Shown when the app first asks for the camera (Take photo on a milestone, diary entry or reaction).",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MyBaby uses the camera only when you tap Take photo, to add a picture to a milestone, a diary entry or an allergic reaction. Photos stay in your log on this iPhone, or in your own iCloud, end-to-end encrypted."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby usa la cámara solo cuando tocas Tomar foto, para agregar una imagen a un hito, a una entrada del diario o a una reacción alérgica. Las fotos se quedan en tu registro en este iPhone, o en tu propio iCloud, con cifrado de extremo a extremo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby utilise l'appareil photo seulement quand vous touchez Prendre une photo, pour ajouter une image à une étape, à une entrée du carnet ou à une réaction allergique. Les photos restent dans votre journal sur cet iPhone, ou dans votre propre iCloud, chiffrées de bout en bout."
+          }
+        }
+      }
+    },
+    "NSFaceIDUsageDescription" : {
+      "comment" : "Shown when the app first asks to use Face ID, to lock the private parent care page.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MyBaby uses Face ID to keep your private care page locked."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby usa Face ID para mantener bloqueada tu página privada de cuidado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby utilise Face ID pour garder votre page de soins privée verrouillée."
+          }
+        }
+      }
+    },
+    "NSMicrophoneUsageDescription" : {
+      "comment" : "Shown when the app first asks for the microphone, for cry alerts.",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "MyBaby listens for your baby crying so it can buzz the parent who's on duty. Audio is analyzed on this iPhone and never recorded or saved."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby escucha el llanto de tu bebé para avisar al padre o madre de turno. El audio se analiza en este iPhone y nunca se graba ni se guarda."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MyBaby écoute les pleurs de votre bébé pour pouvoir avertir le parent de garde. Le son est analysé sur cet iPhone et n'est jamais enregistré ni conservé."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

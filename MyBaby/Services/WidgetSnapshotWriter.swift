@@ -9,7 +9,8 @@ import WidgetKit
 /// - saves in this app (`didSaveObjectsNotification`), from any screen, Siri or a widget button;
 /// - changes from the partner's phone or iCloud (`NSPersistentStoreRemoteChange`);
 /// - settings changes, such as switching babies, ml/oz or the night plan (`UserDefaults.didChangeNotification`);
-/// - the app opening, to catch up on anything that couldn't be done in the background.
+/// - the app opening, to catch up on anything that couldn't be done in the background;
+/// - cry alerts listening, from `CryMonitor` (`listeningChanged(immediately:)`).
 /// Then it rebuilds the snapshot, and only if anything changed, writes it and reloads the widgets.
 @MainActor
 final class WidgetSnapshotWriter {
@@ -20,6 +21,13 @@ final class WidgetSnapshotWriter {
     /// What was last written, so unchanged snapshots don't reload the widgets.
     private var lastWritten: WidgetSnapshot?
     private var hasWritten = false
+    /// A reload for cry alerts' listening, waiting for `listeningReloadInterval` to pass.
+    private var pendingListening: Task<Void, Never>?
+    private var lastListeningReload = Date.distantPast
+    /// A cry starting or ending reloads the widgets at most this often. While cry alerts listen, the
+    /// app has an active audio session, so WidgetKit doesn't count its reloads against the daily
+    /// budget, but a night of short cries still shouldn't reload them every few seconds.
+    private static let listeningReloadInterval: TimeInterval = 60
 
     private init() {}
 
@@ -42,7 +50,11 @@ final class WidgetSnapshotWriter {
                 self?.refreshNow(force: true)
             }
         })
-        refreshNow(force: true)
+        // Shortly rather than right away, so launching doesn't wait for it before the first screen;
+        // opening the app also refreshes on `didBecomeActive`, which then makes this one unneeded.
+        // The first refresh always writes and reloads the widgets, forced or not (nothing was written
+        // yet), and still runs when iOS launches the app in the background.
+        scheduleRefresh()
     }
 
     /// Refreshes shortly, so a burst of changes (e.g. an iCloud import) writes once.
@@ -68,14 +80,20 @@ final class WidgetSnapshotWriter {
         LiveActivities.syncSleep(
             start: snapshot?.sleepStart,
             sleepID: snapshot?.sleepID,
-            babyName: snapshot?.babyName ?? "Baby"
+            babyName: snapshot?.babyName ?? String(localized: "Baby", comment: "Stands in for the baby's name when there's none")
         )
+        // Catches up after launch and when the app opens: ends a listening Live Activity left behind
+        // by an earlier run, and starts one that couldn't start in the background (after a call).
+        LiveActivities.syncListening(CryMonitor.shared.listeningSummary)
         // The Apple Watch gets the same summary, plus a few things of its own (see `WatchBridge`).
         WatchBridge.shared.send(snapshot, force: force)
         // "Haven't logged in a while" counts from the latest entry, so it moves with every change.
         GapReminder.refresh(context: context)
         // Only the next "month birthday" diary reminder is pending, so keep it rolling forward.
         DiaryReminder.refresh(context: context)
+        // Only the next "what to look out for" after a vaccine is pending; this also picks up vaccines
+        // marked given anywhere in the app.
+        VaccineFollowUp.refresh(context: context)
 
         if !force, hasWritten {
             switch (snapshot, lastWritten) {
@@ -87,6 +105,43 @@ final class WidgetSnapshotWriter {
         WidgetSnapshot.save(snapshot)
         lastWritten = snapshot
         hasWritten = true
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// Cry alerts started or stopped listening, or a cry started or ended (`CryMonitor`). Starting
+    /// and stopping (`immediately`) show at once; a cry at most once a minute, with the latest state.
+    func listeningChanged(immediately: Bool) {
+        pendingListening?.cancel()
+        pendingListening = nil
+        let wait = Self.listeningReloadInterval - Date.now.timeIntervalSince(lastListeningReload)
+        if immediately || wait <= 0 {
+            writeListening()
+            return
+        }
+        pendingListening = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(wait))
+            guard !Task.isCancelled else { return }
+            self?.writeListening()
+        }
+    }
+
+    /// Writes only the listening part into the last snapshot, without reading the log again: a cry
+    /// changes nothing else.
+    private func writeListening() {
+        pendingListening = nil
+        lastListeningReload = .now
+        guard hasWritten else {
+            refreshNow()
+            return
+        }
+        // No snapshot before there's a baby: the widgets only say to add one.
+        guard var snapshot = lastWritten else { return }
+        let listening = CryMonitor.shared.listeningSummary
+        guard snapshot.listening != listening else { return }
+        snapshot.listening = listening
+        snapshot.updatedAt = .now
+        WidgetSnapshot.save(snapshot)
+        lastWritten = snapshot
         WidgetCenter.shared.reloadAllTimelines()
     }
 }
@@ -129,6 +184,7 @@ extension WidgetSnapshot {
             }
         }
         snapshot.feedingTimer = FeedingTimer.shared.state
+        snapshot.listening = CryMonitor.shared.listeningSummary
         return snapshot
     }
 }
@@ -246,7 +302,7 @@ private struct WidgetBabyParts {
             part.lastFeed = WidgetSnapshot.Feed(
                 date: feed.startDate,
                 title: feed.title,
-                shortTitle: feed.feedingType?.shortTitle ?? "Feeding",
+                shortTitle: feed.feedingType?.shortTitle ?? String(localized: "Feeding", comment: "Widget: the last feed, when its type isn't known"),
                 emoji: feed.emoji,
                 detail: feed.detail(unit: unit, now: now)
             )
@@ -254,7 +310,7 @@ private struct WidgetBabyParts {
         if let diaper = lastDiaper[key] {
             part.lastDiaper = WidgetSnapshot.Diaper(
                 date: diaper.startDate,
-                title: diaper.diaperType?.quickTitle ?? "Diaper",
+                title: diaper.diaperType?.quickTitle ?? String(localized: "Diaper", comment: "Widget: the last diaper change, when its type isn't known"),
                 emoji: diaper.emoji
             )
         }
@@ -294,7 +350,13 @@ private struct WidgetBabyParts {
             if let rule = timed.matching(name)?.rule {
                 next = MedicineTiming.nextAllowed(rule: rule, doseDates: doses[MedicineSchedule.key(for: name)] ?? [], now: now)
             }
-            part.lastMedicine = Part.Medicine(name: name, dosage: dose.dosage ?? "", nextAllowed: next)
+            part.lastMedicine = Part.Medicine(
+                name: name,
+                dosage: dose.dosage ?? "",
+                nextAllowed: next,
+                // Read only for a baby with a medicine to show, so most snapshots skip the fetch.
+                allergyName: baby.medicineAllergies(matching: name).first?.displayName
+            )
         }
         part.nextDose = nextDose(schedules: timed, doses: doses)
         return part

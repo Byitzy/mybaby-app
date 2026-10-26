@@ -44,6 +44,22 @@ Before capturing:
 Good extras: the Visit summary (Health › Visits › swipe right on the 2-month checkup), Parent care (titled after the phone's owner, e.g. "Maya's care"), and the
 milk stash.
 
+### iPad (4 or more)
+
+MyBaby supports iPad, so App Store Connect asks for iPad screenshots as well. Use the same sample log, on an
+iPad Pro 13-inch simulator, in landscape unless noted. Hide the sidebar for the Today shot so the two
+columns show; show it in one other shot so the sidebar appears somewhere.
+
+| # | Screen | How to get there | Caption |
+|---|--------|------------------|---------|
+| 1 | **Today** | Today tab, landscape. The "time since" cards and the quick log side by side. | *Everything at a glance, one tap to log.* |
+| 2 | **Reports** | Reports tab, 14 days, with the sidebar showing. Charts two by two. | *The week at a glance, ready for your pediatrician.* |
+| 3 | **Nursery monitor** | On the iPad: More › Cry alerts › *Use this device as the baby monitor*, then turn on the night light. Landscape, with the big clock. The screenshot shows the screen as drawn, not dimmed. | *An old iPad becomes a nursery monitor.* |
+| 4 | **Health › Growth** | Health › Growth, portrait. | *Weight and length on the WHO growth charts.* |
+| 5 | **Split View** (optional) | MyBaby next to Calendar or Notes in Split View, showing the iPhone-style layout in the narrow side. | *Works beside your other apps.* |
+
+The status bar override (`xcrun simctl status_bar booted override …`) works on iPad simulators too.
+
 ## 3. Sizes App Store Connect needs
 
 iPhone (portrait), PNG or JPEG, no transparency:
@@ -54,6 +70,14 @@ iPhone (portrait), PNG or JPEG, no transparency:
 | **6.5"** | 1242 × 2688 (also accepted: 1284 × 2778) | iPhone 11 Pro Max, or iPhone 14 Plus for 1284 × 2778 |
 
 App Store Connect scales the 6.9" set down for smaller iPhones if you don't upload their own.
+
+iPad (portrait or landscape), PNG or JPEG, no transparency:
+
+| Display | Pixels | Simulator |
+|---------|--------|-----------|
+| **13"** (required) | 2064 × 2752 portrait, 2752 × 2064 landscape (also accepted: 2048 × 2732, 2732 × 2048) | iPad Pro 13-inch (M4), or iPad Pro (12.9-inch) for 2048 × 2732 |
+
+App Store Connect scales the 13" set down for smaller iPads if you don't upload their own.
 
 Apple Watch (any one size is used for all):
 

@@ -1,4 +1,6 @@
-/* Shared styles for the MyBaby website (privacy policy and support). No JavaScript. */
+/* Shared styles for the MyBaby website, in English, French (fr/) and Spanish (es/). The only JavaScript is
+   lang.js, which remembers the language picked in the switcher, and the first-visit language check on the
+   English home page. */
 
 :root {
   color-scheme: light dark;
@@ -97,6 +99,41 @@ body {
 .site-nav a[aria-current="page"] {
   color: var(--text);
   text-decoration: none;
+  font-weight: 600;
+}
+
+/* Language switcher: a small line at the top right of every page */
+
+.lang-switch {
+  font-size: 0.875rem;
+}
+
+.site-header .lang-switch {
+  order: -1;
+  flex-basis: 100%;
+}
+
+.lang-switch ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lang-switch li {
+  margin: 0;
+}
+
+.lang-switch li + li::before {
+  content: "\00b7";
+  margin: 0 8px;
+  color: var(--muted);
+}
+
+.lang-switch [aria-current] {
+  color: var(--text);
   font-weight: 600;
 }
 

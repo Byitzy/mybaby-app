@@ -70,9 +70,9 @@ struct DiaryEntryEditor: View {
 
         var title: String {
             switch self {
-            case .birthday: return "On a birthday"
-            case .date: return "On a date"
-            case .oneDay: return "One day"
+            case .birthday: return String(localized: "On a birthday", comment: "When to open a letter for later")
+            case .date: return String(localized: "On a date", comment: "When to open a letter for later")
+            case .oneDay: return String(localized: "One day", comment: "When to open a letter for later: some day, no date set")
             }
         }
     }
@@ -178,10 +178,10 @@ struct DiaryEntryEditor: View {
 
     private var navigationTitle: String {
         if let period = notePeriod {
-            return target.entry == nil ? "About \(period.title)" : "Edit note"
+            return target.entry == nil ? String(localized: "About \(period.title)", comment: "e.g. “About Month 3”") : String(localized: "Edit note")
         }
-        if target.entry != nil { return "Edit entry" }
-        return kind == .letter ? "Letter for later" : "New entry"
+        if target.entry != nil { return String(localized: "Edit entry") }
+        return kind == .letter ? String(localized: "Letter for later") : String(localized: "New entry")
     }
 
     private var kindChips: some View {
@@ -227,17 +227,24 @@ struct DiaryEntryEditor: View {
     }
 
     private var placeholder: String {
-        if kind == .letter { return "Dear \(baby.displayName), …" }
-        if let period = notePeriod { return "A few words about this \(period.noun), for \(baby.displayName) to read one day…" }
-        return "Write as much or as little as you like…"
+        if kind == .letter { return String(localized: "Dear \(baby.displayName), …", comment: "How a letter to the baby starts") }
+        if let period = notePeriod {
+            return period.kind == .week
+                ? String(localized: "A few words about this week, for \(baby.displayName) to read one day…")
+                : String(localized: "A few words about this month, for \(baby.displayName) to read one day…")
+        }
+        return String(localized: "Write as much or as little as you like…")
     }
 
     private var prompts: [String] {
         guard let period = notePeriod else { return kind.prompts(for: baby) }
+        let isWeek = period.kind == .week
         return [
-            "What made you smile this \(period.noun)?",
-            "What did \(baby.subjectPronoun) learn?",
-            "What do you want to remember about this \(period.noun)?",
+            isWeek ? String(localized: "What made you smile this week?") : String(localized: "What made you smile this month?"),
+            DiaryText.whatDidTheyLearn(baby),
+            isWeek
+                ? String(localized: "What do you want to remember about this week?")
+                : String(localized: "What do you want to remember about this month?"),
         ]
     }
 
@@ -276,9 +283,9 @@ struct DiaryEntryEditor: View {
             switch letterOpen {
             case .birthday:
                 Stepper(value: $openAtAge, in: 1...40) {
-                    LabeledContent("Birthday", value: "\(GrowthPercentile.ordinal(openAtAge))")
+                    LabeledContent("Birthday", value: DiaryText.ordinal(openAtAge))
                 }
-                .accessibilityValue("\(GrowthPercentile.ordinal(openAtAge)) birthday")
+                .accessibilityValue("\(DiaryText.ordinal(openAtAge)) birthday")
             case .date:
                 DateField("Open on", selection: $openOnDate, in: Date.now..., includesTime: false)
             case .oneDay:
@@ -293,9 +300,13 @@ struct DiaryEntryEditor: View {
 
     private var previewEnvelope: String {
         switch letterOpen {
-        case .birthday: return "For \(baby.displayName), to open at \(openAtAge)"
-        case .date: return "For \(baby.displayName), to open on \(openOnDate.formatted(date: .abbreviated, time: .omitted))"
-        case .oneDay: return "For \(baby.displayName), for one day"
+        case .birthday:
+            return String(localized: "For \(baby.displayName), to open at \(openAtAge)", comment: "On a sealed letter: to open at that age")
+        case .date:
+            let day = openOnDate.formatted(date: .abbreviated, time: .omitted)
+            return String(localized: "For \(baby.displayName), to open on \(day)", comment: "On a sealed letter")
+        case .oneDay:
+            return String(localized: "For \(baby.displayName), for one day", comment: "On a sealed letter with no date: for some day")
         }
     }
 
@@ -436,8 +447,8 @@ struct DiaryEntryEditor: View {
         }
         if failures > 0 {
             photoError = failures == 1
-                ? "One photo couldn't be read. If it's in iCloud Photos, check that you're online and try again."
-                : "\(failures) photos couldn't be read. If they're in iCloud Photos, check that you're online and try again."
+                ? String(localized: "One photo couldn't be read. If it's in iCloud Photos, check that you're online and try again.")
+                : String(localized: "\(failures) photos couldn't be read. If they're in iCloud Photos, check that you're online and try again.")
         }
     }
 
@@ -446,7 +457,7 @@ struct DiaryEntryEditor: View {
         if let photo = await Self.prepare({ MilestoneImages.storableJPEG(from: image) }) {
             newPhotos.append(photo)
         } else {
-            photoError = "The photo couldn't be saved. Please try again."
+            photoError = String(localized: "The photo couldn't be saved. Please try again.")
         }
         processing -= 1
     }

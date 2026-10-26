@@ -102,7 +102,7 @@ enum KeepsakeExporter {
             let before = all.filter { $0.date < birth }
             if !before.isEmpty {
                 chapters.append(KeepsakeChapter(
-                    title: "Before \(baby.displayName) was born", subtitle: "", summary: nil, notes: [], entries: before
+                    title: String(localized: "Before \(baby.displayName) was born"), subtitle: "", summary: nil, notes: [], entries: before
                 ))
             }
         }
@@ -126,10 +126,16 @@ enum KeepsakeExporter {
             if !keepsEmptyMonths, summary.hasNoLog, summary.notes.isEmpty, entries.isEmpty, summary.milestones.isEmpty {
                 continue
             }
-            let from = month.index == 1 ? "Newborn" : "\(DiaryPeriod.month(month.index - 1, birthDate: birthDate, calendar: calendar)?.ageReached ?? "") old"
+            let subtitle: String
+            if month.index == 1 {
+                subtitle = String(localized: "Newborn → 1 month old", comment: "The first month of the keepsake")
+            } else {
+                let before = DiaryPeriod.month(month.index - 1, birthDate: birthDate, calendar: calendar).map(DiaryText.ageOld) ?? ""
+                subtitle = "\(before) → \(DiaryText.ageOld(month))"
+            }
             chapters.append(KeepsakeChapter(
                 title: month.fullTitle(calendar: calendar),
-                subtitle: "\(from) → \(month.ageReached) old",
+                subtitle: subtitle,
                 summary: summary,
                 notes: summary.notes,
                 entries: entries
@@ -149,11 +155,11 @@ enum KeepsakeExporter {
             if let birthDate = baby.birthDate, let month = DiaryPeriod.month(index, birthDate: birthDate) {
                 return month.fullTitle()
             }
-            return "Month \(index)"
+            return String(localized: "Month \(index)", comment: "A month of the baby's life, e.g. “Month 3”")
         case .firstYear:
-            return "The first year"
+            return String(localized: "The first year", comment: "What goes in the keepsake PDF")
         case .everything:
-            return "Everything so far"
+            return String(localized: "Everything so far", comment: "On the keepsake's cover")
         }
     }
 
@@ -183,13 +189,17 @@ enum KeepsakeExporter {
     }
 
     /// Adds `page` to the PDF as one page, sized to fit it.
+    /// In its own autorelease pool, so what rendering a page leaves behind (its photos' drawing among
+    /// it) is freed after each page rather than only once the whole PDF is done.
     private static func draw<Page: View>(_ page: Page, into pdf: CGContext) {
-        let renderer = ImageRenderer(content: page.environment(\.colorScheme, .light))
-        renderer.render { size, render in
-            var box = CGRect(origin: .zero, size: size)
-            pdf.beginPage(mediaBox: &box)
-            render(pdf)
-            pdf.endPage()
+        autoreleasepool {
+            let renderer = ImageRenderer(content: page.environment(\.colorScheme, .light))
+            renderer.render { size, render in
+                var box = CGRect(origin: .zero, size: size)
+                pdf.beginPage(mediaBox: &box)
+                render(pdf)
+                pdf.endPage()
+            }
         }
     }
 }
@@ -238,8 +248,8 @@ private struct KeepsakeCover: View {
             Text(rangeTitle)
                 .font(KeepsakeStyle.serif(16))
                 .foregroundStyle(KeepsakeStyle.accent)
-            if let birthDate = baby.birthDate {
-                Text("Born \(birthDate.formatted(date: .long, time: .omitted))")
+            if let born = baby.birthText() {
+                Text("Born \(born)")
                     .font(KeepsakeStyle.serif(13))
                     .foregroundStyle(KeepsakeStyle.soft)
             }
@@ -284,7 +294,7 @@ private struct KeepsakeChapterPage: View {
 
             if !chapter.notes.isEmpty {
                 VStack(alignment: .leading, spacing: 12) {
-                    sectionTitle("From the parents")
+                    sectionTitle(String(localized: "From the parents"))
                     ForEach(chapter.notes) { note in
                         VStack(alignment: .leading, spacing: 6) {
                             if !note.title.isEmpty {
@@ -323,7 +333,7 @@ private struct KeepsakeChapterPage: View {
     @ViewBuilder
     private func summaryBlock(_ summary: DiarySummary) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            sectionTitle("The month in the log")
+            sectionTitle(String(localized: "The month in the log"))
             Text(summary.coverageText)
                 .font(.system(size: 10))
                 .foregroundStyle(KeepsakeStyle.soft)
@@ -331,29 +341,50 @@ private struct KeepsakeChapterPage: View {
                 Text("Nothing was logged this month.")
                     .font(KeepsakeStyle.serif(11))
             } else {
-                line("Feeds", "\(summary.feeds)" + (summary.averages.basedOnDays > 0 ? ", about \(decimal(summary.averages.feedings)) a day" : ""))
-                line("Sleep", Format.hours(summary.sleepSeconds) + (summary.longestSleep.map { ", longest stretch \(Format.duration($0))" } ?? ""))
-                line("Diapers", "\(summary.diapers)" + (summary.diapersPerDay.map { ", about \(decimal($0)) a day" } ?? ""))
+                line(String(localized: "Feeds"), feedsText(summary))
+                line(String(localized: "Sleep"), sleepText(summary))
+                line(String(localized: "Diapers"), diapersText(summary))
                 if let note = summary.coverageNote {
                     Text(note).font(.system(size: 9)).foregroundStyle(KeepsakeStyle.soft)
                 }
             }
             if let weight = summary.weightLine(units: growthUnits, baby: baby) {
-                line("Weight", weight)
+                line(String(localized: "Weight"), weight)
             }
             if let length = summary.lengthLine(units: growthUnits, baby: baby) {
-                line("Length", length)
+                line(String(localized: "Length"), length)
             }
             if !summary.milestones.isEmpty {
-                line("Milestones", summary.milestones.map { "\($0.displayEmoji) \($0.displayTitle) (\($0.date.formatted(.dateTime.day().month(.abbreviated))))" }.joined(separator: ", "))
+                line(String(localized: "Milestones"), summary.milestones.map { "\($0.displayEmoji) \($0.displayTitle) (\($0.date.formatted(.dateTime.day().month(.abbreviated))))" }.joined(separator: ", "))
             }
             if !summary.vaccines.isEmpty {
-                line("Vaccines", summary.vaccines.map(\.name).joined(separator: ", "))
+                line(String(localized: "Vaccines"), summary.vaccines.map(\.name).joined(separator: ", "))
             }
             if !summary.appointments.isEmpty {
-                line("Checkups", summary.appointments.map { "\($0.title.isEmpty ? "Appointment" : $0.title) (\($0.date.formatted(.dateTime.day().month(.abbreviated))))" }.joined(separator: ", "))
+                line(String(localized: "Checkups"), summary.appointments.map {
+                    "\($0.title.isEmpty ? String(localized: "Appointment") : $0.title) (\($0.date.formatted(.dateTime.day().month(.abbreviated))))"
+                }.joined(separator: ", "))
             }
         }
+    }
+
+    /// "142, about 8 a day".
+    private func feedsText(_ summary: DiarySummary) -> String {
+        guard summary.averages.basedOnDays > 0 else { return "\(summary.feeds)" }
+        return String(localized: "\(summary.feeds), about \(decimal(summary.averages.feedings)) a day", comment: "e.g. “142, about 8 a day”")
+    }
+
+    /// "310h, longest stretch 5h 40m".
+    private func sleepText(_ summary: DiarySummary) -> String {
+        let total = Format.hours(summary.sleepSeconds)
+        guard let longest = summary.longestSleep else { return total }
+        return String(localized: "\(total), longest stretch \(Format.duration(longest))", comment: "Sleep in a month, e.g. “310h, longest stretch 5h 40m”")
+    }
+
+    /// "180, about 6 a day".
+    private func diapersText(_ summary: DiarySummary) -> String {
+        guard let perDay = summary.diapersPerDay else { return "\(summary.diapers)" }
+        return String(localized: "\(summary.diapers), about \(decimal(perDay)) a day", comment: "e.g. “180, about 6 a day”")
     }
 
     private func line(_ title: String, _ value: String) -> some View {

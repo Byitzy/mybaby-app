@@ -190,7 +190,7 @@ struct MedicineList: View {
         if let next = MedicineTiming.nextAllowed(rule: rule, doseDates: dates) {
             lines.append("\(MedicineTiming.nextDoseText(next)).")
         }
-        lines.append("Check with your pediatrician if you're not sure.")
+        lines.append(String(localized: "Check with your pediatrician if you're not sure."))
         return lines.joined(separator: "\n\n")
     }
 
@@ -204,7 +204,7 @@ struct MedicineList: View {
     }
 
     private func lastGiven(_ dose: Activity, now: Date) -> String {
-        let ago = "Last given \(Format.timeAgo(dose.startDate, now: now).lowercased())"
+        let ago = String(localized: "Last given \(Format.timeAgo(dose.startDate, now: now).lowercased())", comment: "How long ago: Last given 2h 10m ago")
         guard let dosage = dose.dosage, !dosage.isEmpty else { return ago }
         return "\(dosage) · \(ago)"
     }
@@ -216,7 +216,7 @@ struct MedicineList: View {
         newDose.caregiver = NightPlan.load().shift(at: newDose.startDate)?.parent
         context.saveIfChanged()
         CareReminders.refreshMedicine(context: context)
-        toast = Toast(message: "💊 \(dose.title) logged") { [context] in
+        toast = Toast(message: String(localized: "💊 \(dose.title) logged", comment: "A medicine's name")) { [context] in
             context.delete(newDose)
             context.saveIfChanged()
             Task { @MainActor in CareReminders.refreshMedicine(context: context) }

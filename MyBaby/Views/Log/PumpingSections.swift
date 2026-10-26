@@ -50,13 +50,18 @@ struct PumpingSections: View {
         Section {
             DateField("Time", selection: $startDate)
             Stepper(value: $draft.minutes, in: 0...120) {
-                LabeledContent("Duration", value: draft.minutes > 0 ? "\(draft.minutes) min" : "Not set")
+                LabeledContent(
+                    "Duration",
+                    value: draft.minutes > 0
+                        ? String(localized: "\(draft.minutes) min", comment: "Minutes, abbreviated")
+                        : String(localized: "Not set")
+                )
             }
         }
 
         Section {
-            amountStepper("Left side", value: $draft.left)
-            amountStepper("Right side", value: $draft.right)
+            amountStepper(String(localized: "Left side"), value: $draft.left)
+            amountStepper(String(localized: "Right side"), value: $draft.right)
             LabeledContent("Total", value: unit.format(value: draft.total))
                 .font(.body.weight(.semibold))
                 .monospacedDigit()
@@ -83,7 +88,7 @@ struct PumpingSections: View {
                 }
             } footer: {
                 if draft.addToStash {
-                    Text(draft.total > 0 ? MilkStorageGuide.summary : "Add an amount to put it in the stash.")
+                    Text(draft.total > 0 ? MilkStorageGuide.summary : String(localized: "Add an amount to put it in the stash."))
                 }
             }
         }
@@ -91,9 +96,11 @@ struct PumpingSections: View {
 
     /// "1 bag" or "3 bags of 40 ml".
     private var bagsText: String {
-        let bags = Format.plural(draft.bagCount, "bag")
-        guard draft.bagCount > 1, draft.total > 0 else { return bags }
-        return "\(bags) of \(unit.format(value: draft.total / Double(draft.bagCount)))"
+        guard draft.bagCount > 1, draft.total > 0 else {
+            return String(localized: "\(draft.bagCount) bags", comment: "Bags of breast milk in the stash")
+        }
+        let each = unit.format(value: draft.total / Double(draft.bagCount))
+        return String(localized: "\(draft.bagCount) bags of \(each)", comment: "Always 2 or more bags of breast milk, e.g. “3 bags of 40 ml”")
     }
 
     private func amountStepper(_ title: String, value: Binding<Double>) -> some View {

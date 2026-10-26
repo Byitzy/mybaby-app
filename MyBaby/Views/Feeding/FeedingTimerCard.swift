@@ -55,7 +55,7 @@ struct FeedingTimerCard: View {
                     } label: {
                         Label("Switch", systemImage: "arrow.left.arrow.right")
                     }
-                    .accessibilityLabel("Switch to the \(state.side.other.title.lowercased()) side")
+                    .accessibilityLabel(state.side.other == .left ? "Switch to the left side" : "Switch to the right side")
                     Button {
                         timer.togglePause()
                     } label: {
@@ -82,12 +82,17 @@ struct FeedingTimerCard: View {
     private func spokenStatus(_ state: FeedingTimerState, now: Date) -> String {
         let side = Format.spokenDuration(state.seconds(on: state.side, at: now))
         let total = Format.spokenDuration(state.totalSeconds(at: now))
-        return "\(Format.spoken(title(state))), \(side). Total \(total)."
+        return String(
+            localized: "\(Format.spoken(title(state))), \(side). Total \(total).",
+            comment: "VoiceOver: e.g. “Breastfeeding, left side, 12 minutes. Total 20 minutes.”"
+        )
     }
 
     private func title(_ state: FeedingTimerState) -> String {
-        let side = "\(state.side.title) side"
-        let what = state.isRunning ? side : "Paused · \(side)"
-        return state.babyName == babyName ? "Breastfeeding · \(what)" : "\(state.babyName) · \(what)"
+        let side = state.side == .left ? String(localized: "Left side") : String(localized: "Right side")
+        let what = state.isRunning ? side : String(localized: "Paused · \(side)", comment: "e.g. “Paused · Left side”")
+        return state.babyName == babyName
+            ? String(localized: "Breastfeeding · \(what)", comment: "e.g. “Breastfeeding · Left side”")
+            : "\(state.babyName) · \(what)"
     }
 }

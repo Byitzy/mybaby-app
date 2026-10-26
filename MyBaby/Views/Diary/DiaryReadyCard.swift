@@ -45,12 +45,12 @@ struct DiaryReadyCard: View {
                 Text(title(period))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
-                Text("See \(baby.possessivePronoun) \(period.noun) and write something for \(baby.objectPronoun).")
+                Text(invitation(period))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(title(period, emoji: false)). See \(baby.possessivePronoun) \(period.noun) and write something for \(baby.objectPronoun).")
+            .accessibilityLabel("\(title(period, emoji: false)). \(invitation(period))")
             Spacer(minLength: 0)
             Button {
                 dismiss(period)
@@ -69,11 +69,44 @@ struct DiaryReadyCard: View {
     /// "Mavie is 3 months old today 🎉", or "Mavie turned 6 weeks on Tue, Oct 21" a day or two later.
     private func title(_ period: DiaryPeriod, emoji: Bool = true) -> String {
         let party = emoji && period.kind == .month ? " 🎉" : ""
+        let name = baby.displayName
+        let age = DiaryText.ageReached(period)
+        // A sentence for each unit, so each language has its own plurals and word order.
         if Calendar.current.isDate(period.end, inSameDayAs: now) {
-            return "\(baby.displayName) is \(period.ageReached) old today\(party)"
+            switch age.unit {
+            case .weeks: return String(localized: "\(name) is \(age.count) weeks old today") + party
+            case .months: return String(localized: "\(name) is \(age.count) months old today") + party
+            case .years: return String(localized: "\(name) is \(age.count) years old today") + party
+            }
         }
         let day = period.end.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
-        return "\(baby.displayName) turned \(period.ageReached) on \(day)\(party)"
+        switch age.unit {
+        case .weeks: return String(localized: "\(name) turned \(age.count) weeks on \(day)", comment: "e.g. “Mavie turned 6 weeks on Tue, Oct 21”") + party
+        case .months: return String(localized: "\(name) turned \(age.count) months on \(day)", comment: "e.g. “Mavie turned 3 months on Tue, Oct 21”") + party
+        case .years: return String(localized: "\(name) turned \(age.count) years on \(day)", comment: "e.g. “Mavie turned 1 year on Tue, Oct 21”") + party
+        }
+    }
+
+    /// "See her month and write something for her." A sentence for each, since the pronouns and the
+    /// period change it in other languages.
+    private func invitation(_ period: DiaryPeriod) -> String {
+        let name = baby.displayName
+        switch period.kind {
+        case .week:
+            return DiaryText.bySex(
+                baby,
+                female: String(localized: "See her week and write something for her."),
+                male: String(localized: "See his week and write something for him."),
+                unknown: String(localized: "See \(name)'s week and write something for \(name).")
+            )
+        case .month:
+            return DiaryText.bySex(
+                baby,
+                female: String(localized: "See her month and write something for her."),
+                male: String(localized: "See his month and write something for him."),
+                unknown: String(localized: "See \(name)'s month and write something for \(name).")
+            )
+        }
     }
 
     private var dismissedKeys: Set<String> {

@@ -31,7 +31,7 @@ private struct MonitorStatusRow: View {
             HStack(alignment: .top, spacing: Spacing.m) {
                 EmojiBadge(emoji: "📡", tint: device.isListening ? Palette.listening : Palette.inactive)
                 VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    Text("Nursery monitor (\(device.deviceName.isEmpty ? "spare device" : device.deviceName))")
+                    Text("Nursery monitor (\(deviceName))", comment: "The monitor's device name, like \"Noah's iPad\"")
                         .font(.body.weight(.medium))
                     Text(status(now: now))
                         .font(.subheadline)
@@ -49,25 +49,34 @@ private struct MonitorStatusRow: View {
         }
     }
 
+    private var deviceName: String {
+        device.deviceName.isEmpty ? String(localized: "spare device", comment: "In \"Nursery monitor (spare device)\"") : device.deviceName
+    }
+
     /// "Listening · white noise · checked 3 min ago", or "Off since 7:02 AM".
     private func status(now: Date) -> String {
         guard device.isListening else {
-            return "Off since \(device.lastSeen.formatted(date: .omitted, time: .shortened))"
+            let time = device.lastSeen.formatted(date: .omitted, time: .shortened)
+            return String(localized: "Off since \(time)", comment: "A nursery monitor that isn't listening")
         }
-        var parts = ["Listening"]
-        if device.noise != .off {
-            parts.append("\(device.noise.title.lowercased()) noise")
+        var parts = [String(localized: "Listening", comment: "A nursery monitor's status")]
+        switch device.noise {
+        case .off: break
+        case .white: parts.append(String(localized: "white noise", comment: "A nursery monitor's status"))
+        case .pink: parts.append(String(localized: "pink noise", comment: "A nursery monitor's status"))
+        case .brown: parts.append(String(localized: "brown noise", comment: "A nursery monitor's status"))
         }
-        parts.append("checked \(Self.ago(device.lastSeen, now: now))")
+        let ago = Self.ago(device.lastSeen, now: now)
+        parts.append(String(localized: "checked \(ago)", comment: "When a nursery monitor last checked in: \"3 min ago\" or \"just now\""))
         return parts.joined(separator: " · ")
     }
 
     /// "just now", "3 min ago", "1h 20m ago".
     private static func ago(_ date: Date, now: Date) -> String {
         let seconds = now.timeIntervalSince(date)
-        if seconds < 60 { return "just now" }
-        if seconds < 3600 { return "\(Int(seconds / 60)) min ago" }
-        return "\(Format.duration(seconds)) ago"
+        if seconds < 60 { return String(localized: "just now", comment: "After \"checked\"") }
+        if seconds < 3600 { return String(localized: "\(Int(seconds / 60)) min ago", comment: "After \"checked\"") }
+        return String(localized: "\(Format.duration(seconds)) ago", comment: "After \"checked\". How long, like \"1h 20m\"")
     }
 }
 
@@ -119,6 +128,13 @@ struct NurseryMonitorSection: View {
                     tint: inboxes.isReady ? Palette.ok : Palette.warning
                 )
                 .font(.subheadline)
+                // Paused after the app closed unexpectedly while setting this up (see `CrashGuard`).
+                if CrashGuard.isPaused(.alertInboxes) {
+                    Button("Try again now") {
+                        CrashGuard.resume(.alertInboxes)
+                        inboxes.refreshSoon(force: true)
+                    }
+                }
             }
         } header: {
             Text("Nursery monitor")

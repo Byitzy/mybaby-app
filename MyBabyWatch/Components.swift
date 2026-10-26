@@ -126,13 +126,14 @@ struct SyncStatusView: View {
     var body: some View {
         VStack(spacing: 2) {
             if store.pendingCount > 0 {
+                let count = store.pendingCount
                 Label(
-                    store.pendingCount == 1 ? "1 tap will sync to iPhone" : "\(store.pendingCount) taps will sync to iPhone",
+                    String(localized: "\(count) taps will sync to iPhone", comment: "Watch: taps waiting to reach the iPhone"),
                     systemImage: "arrow.triangle.2.circlepath"
                 )
             }
             if let sentAt = store.context?.sentAt, store.isStale(at: now) {
-                Text("Last synced ") + Text(sentAt, style: .relative) + Text(" ago")
+                Text("Last synced \(sentAt, style: .relative) ago", comment: "Watch: when the iPhone last sent news, counting up, e.g. Last synced 3 min ago")
             }
         }
         .font(.caption2)

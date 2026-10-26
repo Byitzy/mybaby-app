@@ -14,6 +14,10 @@ import WatchConnectivity
 ///   phone is reachable (and the system launches this app in the background for it if needed), or later
 ///   as a queued user info transfer. `handle(_:)` runs it through the same code as Siri and the widgets
 ///   (`QuickLog`, `FeedingTimer`) at the time it was tapped, and the reply is the fresh context.
+/// - **Medicine on the allergy list:** a medicine that matches the baby's allergy list is never logged
+///   from the watch. The context marks such medicines (the watch shows ⚠︎ and doesn't send them), and
+///   if one arrives anyway (the list changed while the watch was away) it isn't logged: the reply, and
+///   the contexts for a while after, carry a `WatchContext.Refusal` saying why, which the watch shows.
 ///
 /// Started once at launch (`MyBabyApp.init`), next to `WidgetSnapshotWriter`.
 @MainActor
@@ -42,9 +46,19 @@ final class WatchBridge: NSObject {
     /// Sends the context for `snapshot` to the watch, if there is one with MyBaby installed and the
     /// context changed since the last send (or `force`).
     func send(_ snapshot: WidgetSnapshot?, force: Bool = false) {
-        guard let session, session.activationState == .activated, session.isPaired, session.isWatchAppInstalled
-        else { return }
-        let context = Self.makeContext(snapshot: snapshot)
+        guard canSend else { return }
+        sendContext(Self.makeContext(snapshot: snapshot), force: force)
+    }
+
+    /// Whether there's a watch with MyBaby installed to send to.
+    private var canSend: Bool {
+        guard let session else { return false }
+        return session.activationState == .activated && session.isPaired && session.isWatchAppInstalled
+    }
+
+    /// Sends `context`, already made, if it changed since the last send (or `force`).
+    private func sendContext(_ context: WatchContext, force: Bool) {
+        guard let session, canSend else { return }
         if !force, let lastSent, context.hasSameContent(as: lastSent) { return }
         do {
             try session.updateApplicationContext(context.message)
@@ -53,6 +67,14 @@ final class WatchBridge: NSObject {
             // Not reachable right now in a way the system can't queue (e.g. mid-switch between watches).
             // The next change, or the session reactivating, sends it again.
         }
+    }
+
+    /// After Delete all MyBaby data: sends a context with no baby, which the watch shows as its empty
+    /// state ("Add your baby in MyBaby on your iPhone") in place of the deleted log, and its
+    /// complications as "Open MyBaby". Delivered when the watch is next in reach if it isn't now.
+    func sendEmpty() {
+        lastSent = nil
+        send(nil, force: true)
     }
 
     /// Rebuilds the context from the log and sends it.
@@ -67,18 +89,41 @@ final class WatchBridge: NSObject {
         let context = QuickLog.context
         let unit = VolumeUnit(rawValue: UserDefaults.shared.string(forKey: SettingsKey.volumeUnit) ?? "") ?? .ml
         var watch = WatchContext(snapshot: snapshot)
-        // The watch shows only the baby shown on the iPhone, so it gets only theirs (the top-level fields).
-        watch.snapshot?.babies = nil
+        // The watch app shows the baby shown on the iPhone (the top-level fields). Its complications can
+        // be set to any baby, so every baby's part goes too, trimmed to what they show: the application
+        // context has to stay small.
+        watch.snapshot?.babies = snapshot?.babies?.map(\.forWatchComplications)
+        // The watch shows nothing of cry alerts, and leaving it out keeps a cry from resending the context.
+        watch.snapshot?.listening = nil
         watch.volumeUnit = unit.rawValue
         watch.bottlePresets = unit.presets.map { value in
             WatchContext.BottlePreset(title: unit.format(value: value), ml: unit.toML(value))
         }
         guard snapshot != nil, let baby = Baby.current(in: context) else { return watch }
-        watch.medicines = QuickLog.recentMedicines(limit: 6).map { WatchContext.Medicine(name: $0.name, dosage: $0.dosage) }
+        // Fetched once for all the medicines.
+        let allergies = baby.allergyList()
+        watch.medicines = QuickLog.recentMedicines(for: baby, limit: 6).map { medicine in
+            let matches = AllergyMatch.medicineAllergies(matching: medicine.name, in: allergies).map(\.displayName)
+            return WatchContext.Medicine(
+                name: medicine.name,
+                dosage: medicine.dosage,
+                allergies: matches.isEmpty ? nil : matches
+            )
+        }
         watch.suggestedSide = FeedingTimer.suggestion(for: baby, in: context)?.side
         watch.lastBottle = lastBottle(for: baby)
+        watch.refusal = recentRefusal()
+        // Well under WatchConnectivity's limit even with several babies; should it ever grow past this,
+        // the complications set to a particular baby show the one shown on the iPhone instead.
+        if (watch.encoded()?.count ?? 0) > Self.maxContextBytes {
+            watch.snapshot?.babies = nil
+        }
         return watch
     }
+
+    /// Application contexts and replies have to stay small (WatchConnectivity's messages are limited to
+    /// about 64 KB). A typical context is a few KB.
+    private static let maxContextBytes = 48_000
 
     private static func lastBottle(for baby: Baby) -> WatchCommand.Bottle? {
         let request = baby.entries(Activity.fetch(
@@ -109,10 +154,15 @@ final class WatchBridge: NSObject {
             Self.saveHandledCommands(handled)
         }
         guard CloudStatus.shared.reloadingMessage == nil else { return [:] }
-        let snapshot = WidgetSnapshot.make(context: QuickLog.context)
-        // Keeps the application context in step too, for when this reply doesn't make it back.
-        send(snapshot)
-        return Self.makeContext(snapshot: snapshot).message
+        var context = Self.makeContext(snapshot: WidgetSnapshot.make(context: QuickLog.context))
+        // This tap's own refusal, also when it arrived twice, so the watch can show why.
+        if let record = handled.first(where: { $0.id == command.id }), let message = record.refusal {
+            context.refusal = WatchContext.Refusal(commandID: command.id, message: message)
+        }
+        // Keeps the application context in step too, for when this reply doesn't make it back. The
+        // same context as the reply, made once: making it reads the log.
+        sendContext(context, force: false)
+        return context.message
     }
 
     /// What a command did, so it isn't done twice and can be undone.
@@ -122,6 +172,23 @@ final class WatchBridge: NSObject {
         var activityID: String?
         /// True when it ended a sleep (undo reopens it) rather than adding an entry (undo deletes it).
         var endedSleep = false
+        /// Why it wasn't logged (a medicine on the baby's allergy list), for the watch to show.
+        var refusal: String? = nil
+        /// When that was, so later contexts carry it only for a while.
+        var refusedAt: Date? = nil
+    }
+
+    /// How long contexts keep carrying the latest refusal, for a watch that was out of reach.
+    private static let refusalLifetime: TimeInterval = 12 * 3600
+
+    /// The latest tap that wasn't logged, while it's recent.
+    private static func recentRefusal(now: Date = .now) -> WatchContext.Refusal? {
+        guard let record = handledCommands().last(where: { $0.refusal != nil }),
+              let message = record.refusal,
+              let refusedAt = record.refusedAt,
+              now.timeIntervalSince(refusedAt) < refusalLifetime
+        else { return nil }
+        return WatchContext.Refusal(commandID: record.id, message: message)
     }
 
     private func perform(_ command: WatchCommand) -> Handled {
@@ -145,6 +212,13 @@ final class WatchBridge: NSObject {
             case .logMedicine(let name):
                 let medicine = name.trimmingCharacters(in: .whitespaces)
                 guard !medicine.isEmpty else { break }
+                // Never from the wrist when it's on the baby's allergy list: that's for the iPhone, after
+                // checking with a doctor or pharmacist. The watch shows why (`WatchContext.Refusal`).
+                if let baby, let allergy = baby.medicineAllergies(matching: medicine).first {
+                    record.refusal = WatchContext.allergyMessage(babyName: baby.displayName, allergyName: allergy.displayName)
+                    record.refusedAt = .now
+                    break
+                }
                 // The spelling and dose logged before, as the Siri intent does. The watch shows that dose
                 // on the button, so the parent sees what's recorded; it never suggests one.
                 let previous = QuickLog.recentMedicines(limit: 50).first { $0.name.lowercased() == medicine.lowercased() }
@@ -311,6 +385,22 @@ extension WatchBridge: WCSessionDelegate {
                 _ = WatchBridge.shared.handle(command)
             }
         }
+    }
+}
+
+extension WidgetSnapshot.BabySnapshot {
+    /// Only what the watch face complications show (the last feed and diaper, asleep or awake, the
+    /// next medicine dose and today's diapers), to keep the application context small. The rest is for
+    /// the iPhone's Home Screen widgets and their buttons.
+    var forWatchComplications: Self {
+        var trimmed = self
+        trimmed.sleepID = nil
+        trimmed.lastPumping = nil
+        trimmed.stash = nil
+        trimmed.lastMedicine = nil
+        trimmed.usualBottle = nil
+        trimmed.nextFeedExpected = nil
+        return trimmed
     }
 }
 

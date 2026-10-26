@@ -6,9 +6,9 @@ import Foundation
 extension WatchCommand.Diaper {
     var buttonTitle: String {
         switch self {
-        case .wet: return "Wet"
-        case .dirty: return "Dirty"
-        case .both: return "Both"
+        case .wet: return String(localized: "Wet", comment: "Watch button: log a wet diaper")
+        case .dirty: return String(localized: "Dirty", comment: "Watch button: log a dirty diaper")
+        case .both: return String(localized: "Both", comment: "Watch button: log a wet and dirty diaper")
         }
     }
 
@@ -23,9 +23,9 @@ extension WatchCommand.Diaper {
     /// As the app shows it (`DiaperType.quickTitle` and `emoji`).
     var loggedTitle: String {
         switch self {
-        case .wet: return "Pee"
-        case .dirty: return "Poop"
-        case .both: return "Pee + poop"
+        case .wet: return String(localized: "Pee", comment: "A wet diaper, short")
+        case .dirty: return String(localized: "Poop", comment: "A dirty diaper, short")
+        case .both: return String(localized: "Pee + poop", comment: "A wet and dirty diaper, short")
         }
     }
 
@@ -35,17 +35,17 @@ extension WatchCommand.Diaper {
 
     var accessibilityLabel: String {
         switch self {
-        case .wet: return "Log a wet diaper"
-        case .dirty: return "Log a dirty diaper"
-        case .both: return "Log a wet and dirty diaper"
+        case .wet: return String(localized: "Log a wet diaper")
+        case .dirty: return String(localized: "Log a dirty diaper")
+        case .both: return String(localized: "Log a wet and dirty diaper")
         }
     }
 
     var confirmation: String {
         switch self {
-        case .wet: return "Wet diaper logged"
-        case .dirty: return "Dirty diaper logged"
-        case .both: return "Wet + dirty logged"
+        case .wet: return String(localized: "Wet diaper logged")
+        case .dirty: return String(localized: "Dirty diaper logged")
+        case .both: return String(localized: "Wet + dirty logged")
         }
     }
 }
@@ -53,11 +53,13 @@ extension WatchCommand.Diaper {
 extension WatchCommand.Bottle {
     /// As the app shows it (`FeedingType.title` and `shortTitle`).
     var title: String {
-        self == .formula ? "Bottle (formula)" : "Bottle (breast milk)"
+        self == .formula ? String(localized: "Bottle (formula)") : String(localized: "Bottle (breast milk)")
     }
 
     var shortTitle: String {
-        self == .formula ? "Formula" : "Breast milk"
+        self == .formula
+            ? String(localized: "Formula", comment: "A bottle of formula, short")
+            : String(localized: "Breast milk", comment: "A bottle of breast milk, short")
     }
 }
 
@@ -71,7 +73,8 @@ extension WatchContext {
         case .logDiaper(let diaper):
             snapshot.lastDiaper = WidgetSnapshot.Diaper(date: date, title: diaper.loggedTitle, emoji: diaper.loggedEmoji)
         case .logBottle(let type, let ml):
-            let amount = bottlePresets.first(where: { abs($0.ml - ml) < 0.5 })?.title ?? "\(Int(ml.rounded())) ml"
+            let amount = bottlePresets.first(where: { abs($0.ml - ml) < 0.5 })?.title
+                ?? String(localized: "\(Int(ml.rounded())) ml", comment: "An amount in milliliters")
             snapshot.lastFeed = WidgetSnapshot.Feed(
                 date: date,
                 title: type.title,
@@ -109,12 +112,15 @@ extension WatchContext {
             if let timer = snapshot.feedingTimer {
                 let sides = BreastSide.allCases.compactMap { side -> String? in
                     let minutes = timer.minutes(on: side, at: date)
-                    return minutes > 0 ? "\(side.title) \(minutes)m" : nil
+                    guard minutes > 0 else { return nil }
+                    return side == .left
+                        ? String(localized: "Left \(minutes)m", comment: "Minutes of breastfeeding on the left side, short")
+                        : String(localized: "Right \(minutes)m", comment: "Minutes of breastfeeding on the right side, short")
                 }
                 snapshot.lastFeed = WidgetSnapshot.Feed(
                     date: timer.startDate,
-                    title: "Breastfeeding",
-                    shortTitle: "Breast",
+                    title: String(localized: "Breastfeeding"),
+                    shortTitle: String(localized: "Breast", comment: "A breastfeeding, very short"),
                     emoji: "🤱",
                     detail: sides.joined(separator: " · ")
                 )
@@ -123,6 +129,32 @@ extension WatchContext {
         case .logMedicine, .sync, .undo, .acknowledgeWakeUp:
             break
         }
+        snapshot.mirrorShownBaby(after: command.action, at: date)
         self.snapshot = snapshot
+    }
+}
+
+extension WidgetSnapshot {
+    /// Copies the shown baby's fields (just changed by a tap) into their part of `babies`, which the
+    /// complications read, so they show the tap too while the iPhone is out of reach.
+    mutating func mirrorShownBaby(after action: WatchCommand.Action, at date: Date, calendar: Calendar = .current) {
+        guard let id = babyID, let index = babies?.firstIndex(where: { $0.id == id }), var baby = babies?[index]
+        else { return }
+        baby.lastFeed = lastFeed
+        baby.lastDiaper = lastDiaper
+        baby.sleepStart = sleepStart
+        baby.sleepID = sleepID
+        baby.lastWake = lastWake
+        if case .logDiaper = action {
+            if calendar.isDate(date, inSameDayAs: baby.countedDay) {
+                baby.diapersToday += 1
+            } else if date > baby.countedDay {
+                // The first one of a new day: the iPhone's next context counts the rest.
+                baby.countedDay = calendar.startOfDay(for: date)
+                baby.feedsToday = 0
+                baby.diapersToday = 1
+            }
+        }
+        babies?[index] = baby
     }
 }

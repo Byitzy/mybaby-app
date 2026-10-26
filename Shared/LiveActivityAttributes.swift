@@ -27,3 +27,24 @@ struct SleepActivityAttributes: ActivityAttributes {
     /// The sleep's `Activity.uuid`, so Woke up ends this sleep even if another baby is shown in the app.
     var sleepID: String
 }
+
+/// "Listening for crying" while cry alerts listen on this iPhone, with a Stop button, and "Crying for
+/// 1:20" during a cry.
+///
+/// `CryMonitor` starts one when listening starts, updates it when a cry starts or ends (it runs in the
+/// background with audio), and ends it when listening stops, however that happens. Not on a nursery
+/// monitor (see `LiveActivities.syncListening`). It says only that cry alerts are listening, and
+/// whether crying is heard now: nothing from the log, not even the baby's name.
+struct ListeningActivityAttributes: ActivityAttributes {
+    struct ContentState: Codable, Hashable {
+        /// When the crying going on now started, or `nil` while it's quiet.
+        var cryingSince: Date?
+        /// When listening stops by itself, for "until 7:00", or `nil` to listen until it's stopped.
+        var stopsAt: Date?
+
+        var isCrying: Bool { cryingSince != nil }
+    }
+
+    /// When listening started, which also tells one listening apart from the next.
+    var since: Date
+}

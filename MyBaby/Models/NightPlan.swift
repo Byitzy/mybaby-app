@@ -19,8 +19,8 @@ enum NightPlanMode: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .split: return "Split each night"
-        case .alternate: return "Take turns by night"
+        case .split: return String(localized: "Split each night", comment: "Night plan mode: each night is cut in two, one parent per half")
+        case .alternate: return String(localized: "Take turns by night", comment: "Night plan mode: one parent covers a whole night, then the other")
         }
     }
 }
@@ -60,8 +60,8 @@ enum AlarmStyle: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .vibrate: return "Vibrate only"
-        case .sound: return "Sound"
+        case .vibrate: return String(localized: "Vibrate only", comment: "How a night-shift reminder alerts")
+        case .sound: return String(localized: "Sound", comment: "How a night-shift reminder alerts")
         }
     }
 }
@@ -72,7 +72,15 @@ enum CrySensitivity: String, CaseIterable, Identifiable, Codable {
 
     var id: String { rawValue }
 
-    var title: String { rawValue.capitalized }
+    /// "Low", "Medium" and "High" have keys of their own: the same English words elsewhere (a low
+    /// mood) take other words or genders in French and Spanish.
+    var title: String {
+        switch self {
+        case .low: return String(localized: "crySensitivity.low", defaultValue: "Low", comment: "Cry alert sensitivity (feminine in French and Spanish)")
+        case .medium: return String(localized: "crySensitivity.medium", defaultValue: "Medium", comment: "Cry alert sensitivity (feminine in French and Spanish)")
+        case .high: return String(localized: "crySensitivity.high", defaultValue: "High", comment: "Cry alert sensitivity (feminine in French and Spanish)")
+        }
+    }
 
     /// Minimum classifier confidence (0–1) that counts as hearing a cry.
     var threshold: Double {
@@ -106,7 +114,8 @@ struct NightPlan: Codable, Equatable {
     var isEnabled = false
     var mode: NightPlanMode = .split
     /// Empty until the parents give their names (Settings › Parents); `name(of:)` says "Parent 1"
-    /// and "Parent 2" until then. Plans saved by older versions keep the names they were saved with.
+    /// and "Parent 2" until then, in the iPhone's language. Plans saved by older versions keep the
+    /// names they were saved with.
     var parent1Name = ""
     var parent2Name = ""
 
@@ -135,6 +144,17 @@ struct NightPlan: Codable, Equatable {
     var cryEscalationMinutes = 5
 
     func name(of parent: Parent) -> String {
+        let name = givenName(of: parent)
+        if !name.isEmpty { return name }
+        return parent == .parent1
+            ? String(localized: "Parent 1", comment: "The first parent, before they give their name")
+            : String(localized: "Parent 2", comment: "The second parent, before they give their name")
+    }
+
+    /// The name for the CSV export's Handled by column: the given name, or "Parent 1" and
+    /// "Parent 2" in English.
+    // Not localized: CSV value, read back by the importer
+    func exportName(of parent: Parent) -> String {
         let name = givenName(of: parent)
         if !name.isEmpty { return name }
         return parent == .parent1 ? "Parent 1" : "Parent 2"

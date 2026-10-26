@@ -129,7 +129,7 @@ extension Activity {
         case .feeding:
             return feedingType?.title ?? kind.title
         case .diaper:
-            return diaperType.map { "\($0.title) diaper" } ?? kind.title
+            return diaperType?.entryTitle ?? kind.title
         case .medication:
             let name = medicationName?.trimmingCharacters(in: .whitespaces) ?? ""
             return name.isEmpty ? kind.title : name
@@ -144,11 +144,18 @@ extension Activity {
         case .feeding:
             switch feedingType {
             case .breast:
-                if let left = leftMinutes, left > 0 { parts.append("Left \(left)m") }
-                if let right = rightMinutes, right > 0 { parts.append("Right \(right)m") }
+                if let left = leftMinutes, left > 0 {
+                    parts.append(String(localized: "Left \(left)m", comment: "Minutes breastfeeding on the left side"))
+                }
+                if let right = rightMinutes, right > 0 {
+                    parts.append(String(localized: "Right \(right)m", comment: "Minutes breastfeeding on the right side"))
+                }
             case .solids:
                 if let food = foodDescription, !food.isEmpty { parts.append(food) }
-                if !allergens.isEmpty { parts.append("Allergens: \(allergens.map(\.name).joined(separator: ", "))") }
+                if !allergens.isEmpty {
+                    let names = allergens.map(\.name).joined(separator: ", ")
+                    parts.append(String(localized: "Allergens: \(names)", comment: "The common allergens tagged on a solids log, e.g. “Allergens: Egg, Peanut”"))
+                }
                 if let amountML { parts.append(unit.format(ml: amountML)) }
             default:
                 if let amountML { parts.append(unit.format(ml: amountML)) }
@@ -160,7 +167,8 @@ extension Activity {
             }
         case .sleep:
             if let duration = duration(now: now) {
-                parts.append(isOngoing ? "Sleeping · \(Format.duration(duration))" : Format.duration(duration))
+                let length = Format.duration(duration)
+                parts.append(isOngoing ? String(localized: "Sleeping · \(length)", comment: "A sleep still going, and for how long so far") : length)
             }
         case .medication:
             if let dosage, !dosage.isEmpty { parts.append(dosage) }

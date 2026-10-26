@@ -18,8 +18,11 @@ extension SettingsKey {
 enum CareTitle {
     static func title(plan: NightPlan) -> String {
         // The stored name only: "Parent 1's care" would read oddly.
-        guard let owner = plan.alarmOwner.parent, !plan.givenName(of: owner).isEmpty else { return "My care" }
-        return "\(plan.name(of: owner))'s care"
+        guard let owner = plan.alarmOwner.parent, !plan.givenName(of: owner).isEmpty else {
+            return String(localized: "My care", comment: "Title of the parent's private care page")
+        }
+        let name = plan.name(of: owner)
+        return String(localized: "\(name)'s care", comment: "Title of the parent's private care page, after their name")
     }
 }
 
@@ -47,8 +50,8 @@ enum MomCareReminder {
         time.minute = minutes % 60
 
         let content = UNMutableNotificationContent()
-        content.title = "A moment for you 💛"
-        content.body = "How are you doing today? Your check-in takes less than a minute."
+        content.title = String(localized: "A moment for you 💛")
+        content.body = String(localized: "How are you doing today? Your check-in takes less than a minute.")
         content.sound = .default
 
         let trigger = UNCalendarNotificationTrigger(dateMatching: time, repeats: true)
@@ -71,6 +74,7 @@ enum CareLogExport {
     }
 
     static func csv(_ entries: [CareEntry]) -> String {
+        // Not localized: the headers stay English, like the baby's CSV export.
         var rows = [[
             "Type", "Date", "Mood (1-5)", "Mood", "Sleep (hours)", "Medicine", "Dose", "Pain (0-10)", "Bleeding", "Notes",
         ]]

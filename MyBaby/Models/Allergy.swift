@@ -80,7 +80,7 @@ final class Allergy: NSManagedObject, Identifiable {
     /// The name, or "Allergy" before one is typed.
     var displayName: String {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Allergy" : trimmed
+        return trimmed.isEmpty ? String(localized: "Allergy") : trimmed
     }
 
     /// Confirmed or suspected. Outgrown allergies stay on the list but don't warn.
@@ -88,7 +88,9 @@ final class Allergy: NSManagedObject, Identifiable {
 
     /// "Peanut (confirmed, severe)", for the baby's profile.
     var shortSummary: String {
-        "\(displayName) (\(status.title.lowercased()), \(severity.title.lowercased()))"
+        let status = self.status.title.lowercased()
+        let severity = self.severity.title.lowercased()
+        return String(localized: "\(displayName) (\(status), \(severity))", comment: "An allergy, its status and its severity, e.g. “Peanut (confirmed, severe)”")
     }
 
     /// "Confirmed · Severe".
@@ -208,7 +210,7 @@ final class AllergyReaction: NSManagedObject, Identifiable {
     /// What they had, or "Reaction" when it wasn't written down.
     var displayTitle: String {
         let trimmed = food.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Reaction" : trimmed
+        return trimmed.isEmpty ? String(localized: "Reaction", comment: "An allergic reaction") : trimmed
     }
 
     /// "Hives or rash, Vomiting".
@@ -268,6 +270,18 @@ enum AllergyCategory: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .food: return String(localized: "Food", comment: "Kind of allergy, or an emoji's label")
+        case .medicine: return String(localized: "Medicine", comment: "Kind of log entry, or of allergy")
+        case .environment: return String(localized: "Environment", comment: "Kind of allergy: pollen, dust mites…")
+        case .skinContact: return String(localized: "Skin contact", comment: "Kind of allergy: latex…")
+        case .other: return String(localized: "Other")
+        }
+    }
+
+    /// The allergies CSV export's Type column.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
+        switch self {
         case .food: return "Food"
         case .medicine: return "Medicine"
         case .environment: return "Environment"
@@ -295,6 +309,16 @@ enum AllergyStatus: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .suspected: return String(localized: "Suspected", comment: "Status of an allergy (feminine in French and Spanish)")
+        case .confirmed: return String(localized: "Confirmed", comment: "Status of an allergy (feminine in French and Spanish)")
+        case .outgrown: return String(localized: "Outgrown", comment: "Status of an allergy the baby no longer has (feminine in French and Spanish)")
+        }
+    }
+
+    /// The allergies CSV export's Status column.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
+        switch self {
         case .suspected: return "Suspected"
         case .confirmed: return "Confirmed"
         case .outgrown: return "Outgrown"
@@ -318,6 +342,16 @@ enum AllergySeverity: String, CaseIterable, Identifiable, Comparable {
     var id: String { rawValue }
 
     var title: String {
+        switch self {
+        case .mild: return String(localized: "Mild", comment: "Severity of an allergy or a reaction (both feminine in French and Spanish)")
+        case .moderate: return String(localized: "Moderate", comment: "Severity of an allergy or a reaction (both feminine in French and Spanish)")
+        case .severe: return String(localized: "Severe", comment: "Severity of an allergy or a reaction (both feminine in French and Spanish)")
+        }
+    }
+
+    /// The Severity column of the allergies and reactions CSV exports.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
         switch self {
         case .mild: return "Mild"
         case .moderate: return "Moderate"
@@ -346,6 +380,23 @@ enum ReactionSymptom: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String {
+        switch self {
+        case .hivesRash: return String(localized: "Hives or rash", comment: "Symptom of a reaction")
+        case .swelling: return String(localized: "Swelling", comment: "Symptom of a reaction")
+        case .vomiting: return String(localized: "Vomiting", comment: "Symptom")
+        case .diarrhea: return String(localized: "Diarrhea", comment: "Symptom")
+        case .coughingWheezing: return String(localized: "Coughing or wheezing", comment: "Symptom of a reaction")
+        case .troubleBreathing: return String(localized: "Trouble breathing", comment: "Symptom of a reaction")
+        case .sleepiness: return String(localized: "Unusual sleepiness", comment: "Symptom of a reaction")
+        case .fussiness: return String(localized: "Fussiness", comment: "Symptom of a reaction")
+        case .eczemaFlare: return String(localized: "Eczema flare", comment: "Symptom of a reaction")
+        case .other: return String(localized: "Other")
+        }
+    }
+
+    /// The reactions CSV export's Symptoms column.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
         switch self {
         case .hivesRash: return "Hives or rash"
         case .swelling: return "Swelling"
@@ -380,6 +431,17 @@ enum ReactionAction: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
+        case .antihistamine: return String(localized: "Gave an antihistamine", comment: "What the parents did about a reaction")
+        case .epinephrine: return String(localized: "Gave epinephrine", comment: "What the parents did about a reaction")
+        case .calledDoctor: return String(localized: "Called the doctor", comment: "What the parents did about a reaction")
+        case .wentToER: return String(localized: "Went to the ER", comment: "What the parents did about a reaction: went to the emergency room")
+        }
+    }
+
+    /// The reactions CSV export's What you did column.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String {
+        switch self {
         case .antihistamine: return "Gave an antihistamine"
         case .epinephrine: return "Gave epinephrine"
         case .calledDoctor: return "Called the doctor"
@@ -396,57 +458,112 @@ enum ReactionAction: String, CaseIterable, Identifiable {
 /// An allergen that's one tap away when adding an allergy, and a chip in the solids editor (foods only).
 ///
 /// The `id` is stored (in `Allergy.allergenRaw` and `Activity.allergensRaw`), so it never changes.
+/// The name is in the iPhone's language. Picking one saves that name on the allergy, so `named(_:)`
+/// also knows the English name, which the CSV export uses and older allergies were saved with.
 struct CommonAllergen: Identifiable, Hashable {
     let id: String
     let name: String
+    /// Not localized: the English name, which `named(_:)` also matches, so allergies saved in
+    /// English and the CSV export's Allergens column still find their allergen.
+    let englishName: String
     let emoji: String
     let category: AllergyCategory
-    /// Words that mean it in a food's description, lowercased and singular ("tahini" for sesame).
+    /// Words that mean it in a food's description, lowercased and singular ("tahini" for sesame):
+    /// the English ones, which always count, then the ones in the iPhone's language.
     /// Plain "milk" isn't one, since solids are often mixed with breast milk.
     let keywords: [String]
 
+    /// `localizedKeywords` is one comma-separated string, so each language can list its own words.
+    init(
+        id: String, name: String, englishName: String, emoji: String, category: AllergyCategory,
+        keywords: [String], localizedKeywords: String
+    ) {
+        self.id = id
+        self.name = name
+        self.englishName = englishName
+        self.emoji = emoji
+        self.category = category
+        let local = localizedKeywords.split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
+            .filter { !$0.isEmpty && !keywords.contains($0) }
+        self.keywords = keywords + local
+    }
+
     /// The nine common food allergens, in the order the chips show them.
     static let foods: [CommonAllergen] = [
-        CommonAllergen(id: "milk", name: "Milk", emoji: "🥛", category: .food,
-                       keywords: ["cow's milk", "cows milk", "dairy", "cheese", "yogurt", "yoghurt"]),
-        CommonAllergen(id: "egg", name: "Egg", emoji: "🥚", category: .food, keywords: ["egg"]),
-        CommonAllergen(id: "peanut", name: "Peanut", emoji: "🥜", category: .food, keywords: ["peanut"]),
-        CommonAllergen(id: "treeNuts", name: "Tree nuts", emoji: "🌰", category: .food,
-                       keywords: ["tree nut", "almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia"]),
-        CommonAllergen(id: "soy", name: "Soy", emoji: "🫘", category: .food, keywords: ["soy", "soya", "tofu", "edamame"]),
-        CommonAllergen(id: "wheat", name: "Wheat", emoji: "🌾", category: .food, keywords: ["wheat"]),
-        CommonAllergen(id: "fish", name: "Fish", emoji: "🐟", category: .food,
-                       keywords: ["fish", "salmon", "tuna", "cod", "trout"]),
-        CommonAllergen(id: "shellfish", name: "Shellfish", emoji: "🦐", category: .food,
-                       keywords: ["shellfish", "shrimp", "prawn", "crab", "lobster"]),
-        CommonAllergen(id: "sesame", name: "Sesame", emoji: "🌱", category: .food, keywords: ["sesame", "tahini"]),
+        CommonAllergen(id: "milk", name: String(localized: "Milk", comment: "Common food allergen"), englishName: "Milk",
+                       emoji: "🥛", category: .food,
+                       keywords: ["cow's milk", "cows milk", "dairy", "cheese", "yogurt", "yoghurt"],
+                       localizedKeywords: String(localized: "cow's milk, dairy, cheese, yogurt", comment: "Words that mean the milk allergen in a food description: comma separated, lowercase, singular. Leave out plain “milk”, since solids are often mixed with breast milk.")),
+        CommonAllergen(id: "egg", name: String(localized: "Egg", comment: "Common food allergen"), englishName: "Egg",
+                       emoji: "🥚", category: .food, keywords: ["egg"],
+                       localizedKeywords: String(localized: "egg", comment: "Words that mean the egg allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "peanut", name: String(localized: "Peanut", comment: "Common food allergen"), englishName: "Peanut",
+                       emoji: "🥜", category: .food, keywords: ["peanut"],
+                       localizedKeywords: String(localized: "peanut", comment: "Words that mean the peanut allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "treeNuts", name: String(localized: "Tree nuts", comment: "Common food allergen"), englishName: "Tree nuts",
+                       emoji: "🌰", category: .food,
+                       keywords: ["tree nut", "almond", "cashew", "walnut", "pecan", "pistachio", "hazelnut", "macadamia"],
+                       localizedKeywords: String(localized: "tree nut, almond, cashew, walnut, pecan, pistachio, hazelnut, macadamia", comment: "Words that mean the tree nut allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "soy", name: String(localized: "Soy", comment: "Common food allergen"), englishName: "Soy",
+                       emoji: "🫘", category: .food, keywords: ["soy", "soya", "tofu", "edamame"],
+                       localizedKeywords: String(localized: "soy, tofu, edamame", comment: "Words that mean the soy allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "wheat", name: String(localized: "Wheat", comment: "Common food allergen"), englishName: "Wheat",
+                       emoji: "🌾", category: .food, keywords: ["wheat"],
+                       localizedKeywords: String(localized: "wheat", comment: "Words that mean the wheat allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "fish", name: String(localized: "Fish", comment: "Common food allergen"), englishName: "Fish",
+                       emoji: "🐟", category: .food, keywords: ["fish", "salmon", "tuna", "cod", "trout"],
+                       localizedKeywords: String(localized: "fish, salmon, tuna, cod, trout", comment: "Words that mean the fish allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "shellfish", name: String(localized: "Shellfish", comment: "Common food allergen"), englishName: "Shellfish",
+                       emoji: "🦐", category: .food, keywords: ["shellfish", "shrimp", "prawn", "crab", "lobster"],
+                       localizedKeywords: String(localized: "shellfish, shrimp, prawn, crab, lobster", comment: "Words that mean the shellfish allergen in a food description: comma separated, lowercase, singular")),
+        CommonAllergen(id: "sesame", name: String(localized: "Sesame", comment: "Common food allergen"), englishName: "Sesame",
+                       emoji: "🌱", category: .food, keywords: ["sesame", "tahini"],
+                       localizedKeywords: String(localized: "sesame, tahini", comment: "Words that mean the sesame allergen in a food description: comma separated, lowercase, singular")),
     ]
 
     /// Medicines parents commonly list.
     static let medicines: [CommonAllergen] = [
-        CommonAllergen(id: "amoxicillin", name: "Amoxicillin", emoji: "💊", category: .medicine, keywords: ["amoxicillin"]),
-        CommonAllergen(id: "penicillin", name: "Penicillin", emoji: "💊", category: .medicine, keywords: ["penicillin"]),
+        CommonAllergen(id: "amoxicillin", name: String(localized: "Amoxicillin", comment: "Common medicine allergen"), englishName: "Amoxicillin",
+                       emoji: "💊", category: .medicine, keywords: ["amoxicillin"],
+                       localizedKeywords: String(localized: "amoxicillin", comment: "Words that mean this medicine: comma separated, lowercase")),
+        CommonAllergen(id: "penicillin", name: String(localized: "Penicillin", comment: "Common medicine allergen"), englishName: "Penicillin",
+                       emoji: "💊", category: .medicine, keywords: ["penicillin"],
+                       localizedKeywords: String(localized: "penicillin", comment: "Words that mean this medicine: comma separated, lowercase")),
     ]
 
     /// A few from the environment and skin contact.
     static let others: [CommonAllergen] = [
-        CommonAllergen(id: "pollen", name: "Pollen", emoji: "🌼", category: .environment, keywords: ["pollen"]),
-        CommonAllergen(id: "dustMites", name: "Dust mites", emoji: "🏠", category: .environment, keywords: ["dust mite"]),
-        CommonAllergen(id: "petDander", name: "Pet dander", emoji: "🐾", category: .environment, keywords: ["pet dander"]),
-        CommonAllergen(id: "latex", name: "Latex", emoji: "🧤", category: .skinContact, keywords: ["latex"]),
+        CommonAllergen(id: "pollen", name: String(localized: "Pollen", comment: "Common allergen"), englishName: "Pollen",
+                       emoji: "🌼", category: .environment, keywords: ["pollen"],
+                       localizedKeywords: String(localized: "pollen", comment: "Words that mean this allergen: comma separated, lowercase, singular")),
+        CommonAllergen(id: "dustMites", name: String(localized: "Dust mites", comment: "Common allergen"), englishName: "Dust mites",
+                       emoji: "🏠", category: .environment, keywords: ["dust mite"],
+                       localizedKeywords: String(localized: "dust mite", comment: "Words that mean this allergen: comma separated, lowercase, singular")),
+        CommonAllergen(id: "petDander", name: String(localized: "Pet dander", comment: "Common allergen"), englishName: "Pet dander",
+                       emoji: "🐾", category: .environment, keywords: ["pet dander"],
+                       localizedKeywords: String(localized: "pet dander", comment: "Words that mean this allergen: comma separated, lowercase, singular")),
+        CommonAllergen(id: "latex", name: String(localized: "Latex", comment: "Common allergen"), englishName: "Latex",
+                       emoji: "🧤", category: .skinContact, keywords: ["latex"],
+                       localizedKeywords: String(localized: "latex", comment: "Words that mean this allergen: comma separated, lowercase, singular")),
     ]
 
     static let all: [CommonAllergen] = foods + medicines + others
+
+    /// The name in the CSV export's Allergens column.
+    // Not localized: CSV value, read back by the importer
+    var exportName: String { englishName }
 
     static func with(id: String) -> CommonAllergen? {
         all.first { $0.id == id }
     }
 
-    /// The common allergen with exactly this name, ignoring case ("peanut" → Peanut).
+    /// The common allergen with exactly this name, ignoring case ("peanut" → Peanut), in the iPhone's
+    /// language or in English (the CSV export, and allergies saved in another language).
     static func named(_ name: String) -> CommonAllergen? {
         let key = AllergyMatch.key(name)
         guard !key.isEmpty else { return nil }
-        return all.first { AllergyMatch.key($0.name) == key }
+        return all.first { AllergyMatch.key($0.name) == key || AllergyMatch.key($0.englishName) == key }
     }
 }
 

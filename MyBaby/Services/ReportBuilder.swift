@@ -92,22 +92,56 @@ struct ReportAverages {
     /// "Based on 5 fully tracked days (2 partly tracked days not counted)." Shown under the averages
     /// on Reports, the PDF and the visit summary.
     var basisNote: String {
-        guard basedOnDays > 0 else { return "Averages appear once you've logged a full day." }
+        guard basedOnDays > 0 else {
+            return String(localized: "Averages appear once you've logged a full day.", comment: "Under the daily averages")
+        }
+        let days = basedOnDays
+        let skipped = partialDaysSkipped
         switch basis {
         case .fullyTracked:
-            let skipped = partialDaysSkipped > 0
-                ? " (\(Format.plural(partialDaysSkipped, "partly tracked day")) not counted)"
-                : ""
-            return "Based on \(Format.plural(basedOnDays, "fully tracked day"))\(skipped)."
+            // Whole sentences for one day and for several, with and without days left out.
+            switch (days == 1, skipped) {
+            case (true, 0):
+                return String(localized: "Based on 1 fully tracked day.", comment: "Under the daily averages")
+            case (false, 0):
+                return String(localized: "Based on \(days) fully tracked days.", comment: "Under the daily averages; a number of days")
+            case (true, 1):
+                return String(localized: "Based on 1 fully tracked day (1 partly tracked day not counted).", comment: "Under the daily averages")
+            case (true, _):
+                return String(
+                    localized: "Based on 1 fully tracked day (\(skipped) partly tracked days not counted).",
+                    comment: "Under the daily averages; the number of days left out"
+                )
+            case (false, 1):
+                return String(
+                    localized: "Based on \(days) fully tracked days (1 partly tracked day not counted).",
+                    comment: "Under the daily averages; a number of days"
+                )
+            case (false, _):
+                return String(
+                    localized: "Based on \(days) fully tracked days (\(skipped) partly tracked days not counted).",
+                    comment: "Under the daily averages; the number of days counted, then the number left out"
+                )
+            }
         case .partlyTracked:
-            return "Based on \(Format.plural(basedOnDays, "partly tracked day")), since no day was fully tracked. They may undercount."
+            return days == 1
+                ? String(
+                    localized: "Based on 1 partly tracked day, since no day was fully tracked. They may undercount.",
+                    comment: "Under the daily averages"
+                )
+                : String(
+                    localized: "Based on \(days) partly tracked days, since no day was fully tracked. They may undercount.",
+                    comment: "Under the daily averages; a number of days"
+                )
         case .todaySoFar:
-            return "Based on today so far."
+            return String(localized: "Based on today so far.", comment: "Under the daily averages")
         }
     }
 
     /// The caution for days that weren't fully tracked, on the PDF and the visit summary.
-    static let undercountNote = "Days not fully tracked may undercount; low numbers on those days may not be real."
+    static var undercountNote: String {
+        String(localized: "Days not fully tracked may undercount; low numbers on those days may not be real.")
+    }
 }
 
 enum ReportBuilder {

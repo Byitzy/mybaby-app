@@ -36,16 +36,18 @@ struct AllergyCardContent {
     init(baby: Baby, emergencyNumbers: String?, note: String, now: Date = .now) {
         babyName = baby.displayName
         ageLine = baby.birthDate.map {
-            "Born \($0.formatted(date: .abbreviated, time: .omitted)) · \(Format.age(birthDate: $0, now: now))"
+            String(localized: "Born \($0.formatted(date: .abbreviated, time: .omitted)) · \(Format.age(birthDate: $0, now: now))")
         }
         let active = baby.allergyList().filter(\.isActive)
         allergies = active.map { allergy -> Entry in
             let doctor = allergy.diagnosedBy.trimmingCharacters(in: .whitespacesAndNewlines)
-            var diagnosed = ""
-            if !doctor.isEmpty || allergy.diagnosedDate != nil {
-                diagnosed = "Diagnosed"
-                if !doctor.isEmpty { diagnosed += " by \(doctor)" }
-                if let date = allergy.diagnosedDate { diagnosed += " on \(date.formatted(date: .abbreviated, time: .omitted))" }
+            let diagnosedOn = allergy.diagnosedDate?.formatted(date: .abbreviated, time: .omitted)
+            let diagnosed: String
+            switch (doctor.isEmpty, diagnosedOn) {
+            case (false, let date?): diagnosed = String(localized: "Diagnosed by \(doctor) on \(date)")
+            case (false, nil): diagnosed = String(localized: "Diagnosed by \(doctor)")
+            case (true, let date?): diagnosed = String(localized: "Diagnosed on \(date)")
+            case (true, nil): diagnosed = ""
             }
             return Entry(
                 name: allergy.displayName,
@@ -58,7 +60,7 @@ struct AllergyCardContent {
         var places: [String] = []
         for allergy in active where allergy.hasAutoInjector {
             let place = allergy.autoInjectorLocation.trimmingCharacters(in: .whitespacesAndNewlines)
-            let line = place.isEmpty ? "Ask a parent where it's kept" : place
+            let line = place.isEmpty ? String(localized: "Ask a parent where it's kept") : place
             if !places.contains(line) { places.append(line) }
         }
         autoInjectors = places
@@ -70,42 +72,45 @@ struct AllergyCardContent {
 
     /// "Call 911 right away if Mavie has trouble breathing, or swelling of the face, lips or tongue."
     var emergencyLine: String {
-        "Call \(emergencyNumbers ?? "your local emergency number") right away if \(babyName) has trouble breathing, or swelling of the face, lips or tongue."
+        if let emergencyNumbers {
+            return String(localized: "Call \(emergencyNumbers) right away if \(babyName) has trouble breathing, or swelling of the face, lips or tongue.")
+        }
+        return String(localized: "Call your local emergency number right away if \(babyName) has trouble breathing, or swelling of the face, lips or tongue.")
     }
 
     /// The card as plain text, for Messages or Mail.
     var text: String {
-        var lines = ["\(babyName) — Allergy card"]
+        var lines = [String(localized: "\(babyName) — Allergy card")]
         if let ageLine { lines.append(ageLine) }
         lines.append("")
-        lines.append("IN AN EMERGENCY")
+        lines.append(String(localized: "IN AN EMERGENCY"))
         lines.append(emergencyLine)
         for place in autoInjectors {
-            lines.append("Epinephrine auto-injector: \(place)")
+            lines.append(String(localized: "Epinephrine auto-injector: \(place)"))
         }
         lines.append("")
-        lines.append("ALLERGIES")
+        lines.append(String(localized: "ALLERGIES", comment: "Heading in the allergy card's text"))
         if allergies.isEmpty {
-            lines.append("None listed.")
+            lines.append(String(localized: "None listed."))
         }
         for entry in allergies {
             lines.append("• \(entry.name) (\(entry.statusAndSeverity))")
-            if !entry.reactionsSeen.isEmpty { lines.append("  Reactions: \(entry.reactionsSeen)") }
+            if !entry.reactionsSeen.isEmpty { lines.append("  " + String(localized: "Reactions: \(entry.reactionsSeen)")) }
             if !entry.diagnosed.isEmpty { lines.append("  \(entry.diagnosed)") }
             if !entry.notes.isEmpty { lines.append("  \(entry.notes)") }
         }
         if !recentReactions.isEmpty {
             lines.append("")
-            lines.append("RECENT REACTIONS")
+            lines.append(String(localized: "RECENT REACTIONS"))
             lines += recentReactions.map { "• \($0)" }
         }
         if !note.isEmpty {
             lines.append("")
-            lines.append("FROM THE PARENTS")
+            lines.append(String(localized: "FROM THE PARENTS"))
             lines.append(note)
         }
         lines.append("")
-        lines.append("Written by \(babyName)'s parents with MyBaby on \(Date.now.formatted(date: .long, time: .omitted)). Not a medical record.")
+        lines.append(String(localized: "Written by \(babyName)'s parents with MyBaby on \(Date.now.formatted(date: .long, time: .omitted)). Not a medical record."))
         return lines.joined(separator: "\n")
     }
 }
@@ -143,7 +148,7 @@ struct AllergyCardDocument: View {
             .background(Color(red: 1, green: 0.93, blue: 0.92), in: RoundedRectangle(cornerRadius: 8))
 
             VStack(alignment: .leading, spacing: 8) {
-                sectionTitle("Allergies")
+                sectionTitle(String(localized: "Allergies"))
                 if content.allergies.isEmpty {
                     Text("None listed.").font(.system(size: 11)).foregroundStyle(.gray)
                 }
@@ -166,7 +171,7 @@ struct AllergyCardDocument: View {
 
             if !content.recentReactions.isEmpty {
                 VStack(alignment: .leading, spacing: 5) {
-                    sectionTitle("Recent reactions")
+                    sectionTitle(String(localized: "Recent reactions"))
                     ForEach(Array(content.recentReactions.enumerated()), id: \.offset) { item in
                         Text(item.element).font(.system(size: 10))
                     }
@@ -175,7 +180,7 @@ struct AllergyCardDocument: View {
 
             if !content.note.isEmpty {
                 VStack(alignment: .leading, spacing: 5) {
-                    sectionTitle("From the parents")
+                    sectionTitle(String(localized: "From the parents"))
                     Text(content.note).font(.system(size: 11))
                 }
             }

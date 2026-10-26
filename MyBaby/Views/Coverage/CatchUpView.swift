@@ -64,7 +64,7 @@ struct CatchUpView: View {
                             Text("Breast milk").tag(FeedingType.breastMilkBottle)
                         }
                         Stepper(value: $bottleAmount, in: unit.step...unit.maxValue, step: unit.step) {
-                            LabeledContent("About", value: "\(unit.format(value: bottleAmount)) each")
+                            LabeledContent("About", value: String(localized: "\(unit.format(value: bottleAmount)) each", comment: "Catch up: the amount of each bottle, e.g. \"90 ml each\""))
                         }
                     }
                     countRow("🤱", "Breastfeeds", $breastfeeds)
@@ -76,9 +76,9 @@ struct CatchUpView: View {
                     countRow("😴", "Naps", $naps, upTo: 10)
                     if naps > 0 {
                         Stepper(value: $napMinutes, in: 10...240, step: 5) {
-                            LabeledContent("About", value: "\(Format.duration(Double(napMinutes) * 60)) each")
+                            LabeledContent("About", value: String(localized: "\(Format.duration(Double(napMinutes) * 60)) each", comment: "Catch up: how long each nap was, e.g. \"45 min each\""))
                         }
-                        .accessibilityValue("\(Format.spokenDuration(Double(napMinutes) * 60)) each")
+                        .accessibilityValue(String(localized: "\(Format.spokenDuration(Double(napMinutes) * 60)) each", comment: "Catch up: how long each nap was, e.g. \"45 min each\""))
                     }
                 } header: {
                     EmojiTitle("😴", "Sleep")
@@ -115,10 +115,10 @@ struct CatchUpView: View {
 
     // MARK: Pieces
 
-    private func countRow(_ emoji: String, _ title: String, _ value: Binding<Int>, upTo limit: Int = 20) -> some View {
+    private func countRow(_ emoji: String, _ title: LocalizedStringKey, _ value: Binding<Int>, upTo limit: Int = 20) -> some View {
         Stepper(value: value, in: 0...limit) {
             LabeledContent {
-                Text("\(value.wrappedValue)")
+                Text(value.wrappedValue, format: .number)
                     .monospacedDigit()
             } label: {
                 EmojiTitle(emoji, title)
@@ -130,7 +130,9 @@ struct CatchUpView: View {
 
     /// "1 approximate entry", "6 approximate entries".
     private var entriesText: String {
-        total == 1 ? "1 approximate entry" : "\(total) approximate entries"
+        total == 1
+            ? String(localized: "1 approximate entry", comment: "Catch up: what it will add")
+            : String(localized: "\(total) approximate entries", comment: "Catch up: what it will add; always more than one")
     }
 
     private var canSave: Bool {
@@ -139,11 +141,14 @@ struct CatchUpView: View {
 
     private var footer: String {
         guard total > 0 else {
-            return "Add a rough count of what happened. If nothing did, use Nothing happened instead."
+            return String(localized: "Add a rough count of what happened. If nothing did, use Nothing happened instead.")
         }
         let from = start.formatted(date: .omitted, time: .shortened)
         let to = end.formatted(date: .omitted, time: .shortened)
-        return "Adds \(entriesText) spread evenly from \(from) to \(to). They show ≈ in History, count in Reports, and this time counts as tracked."
+        return String(
+            localized: "Adds \(entriesText) spread evenly from \(from) to \(to). They show ≈ in History, count in Reports, and this time counts as tracked.",
+            comment: "Catch up footer. The first value is like \"6 approximate entries\"; then two times."
+        )
     }
 
     // MARK: Saving
@@ -185,7 +190,7 @@ struct CatchUpView: View {
         if bottles + breastfeeds > 0 {
             NotificationManager.refreshFeedingReminder(context: context)
         }
-        onSaved?("Caught up · \(entriesText) added")
+        onSaved?(String(localized: "Caught up · \(entriesText) added", comment: "Confirmation after Catch up; the value is like \"6 approximate entries\""))
         dismiss()
     }
 }

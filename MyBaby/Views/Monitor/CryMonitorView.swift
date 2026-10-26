@@ -3,6 +3,9 @@ import SwiftUI
 /// Turn crying alerts on for the night and see what the monitor has heard.
 struct CryMonitorView: View {
     @AppStorage(SettingsKey.nightPlan, store: .shared) private var nightPlanData = Data()
+    @AppStorage(SettingsKey.listeningStop) private var listeningStop: ListeningStop = .never
+    @AppStorage(SettingsKey.listeningStopMinutes) private var stopMinutes = ListeningStop.defaultMinutes
+    @AppStorage(SettingsKey.listeningStopHours) private var stopHours = ListeningStop.defaultHours
     @ScaledMetric(relativeTo: .headline) private var statusSize: CGFloat = 56
     private let monitor = CryMonitor.shared
 
@@ -33,6 +36,7 @@ struct CryMonitorView: View {
                     NoticeLabel(error, systemImage: "exclamationmark.circle.fill", tint: Palette.danger)
                         .font(.subheadline)
                 }
+                stopPicker
                 if monitor.isLowPowerMode {
                     NoticeLabel(
                         "Low Power Mode is on: listening uses a little less battery, and a soft cry may take a moment longer to notice.",
@@ -78,7 +82,7 @@ struct CryMonitorView: View {
                     ForEach(monitor.episodes) { episode in
                         LabeledContent(
                             episode.start.formatted(date: .omitted, time: .shortened),
-                            value: "Cried for \(Format.duration(max(episode.duration, 60)))"
+                            value: String(localized: "Cried for \(Format.duration(max(episode.duration, 60)))", comment: "How long, like \"3 min\"")
                         )
                     }
                 }
@@ -127,14 +131,63 @@ struct CryMonitorView: View {
 
     /// "Baby is crying, for 3 minutes", "Listening for crying, stops by itself at 7:00 AM".
     private func spokenStatus(now: Date) -> String {
-        var parts = [statusTitle]
+        var parts: [String] = []
         if let cryStart = monitor.cryStart {
-            parts.append("for \(Format.spokenDuration(now.timeIntervalSince(cryStart)))")
+            let duration = Format.spokenDuration(now.timeIntervalSince(cryStart))
+            parts.append(String(localized: "Baby is crying, for \(duration)", comment: "Read by VoiceOver. How long, like \"3 minutes\""))
         } else if let stopsAt = monitor.stopsAt {
-            parts.append("stops by itself at \(stopsAt.formatted(date: .omitted, time: .shortened))")
+            let time = stopsAt.formatted(date: .omitted, time: .shortened)
+            parts.append(String(localized: "\(statusTitle), stops by itself at \(time)", comment: "Read by VoiceOver: \"Listening for crying\", then a time"))
+        } else {
+            parts.append(statusTitle)
         }
         if let action = monitor.lastAction { parts.append(action) }
         return parts.joined(separator: ", ")
+    }
+
+    /// When listening stops by itself on this iPhone (`ListeningStop`). Changing it while listening
+    /// moves the stop time at once.
+    @ViewBuilder
+    private var stopPicker: some View {
+        Picker("Stop listening", selection: $listeningStop) {
+            ForEach(ListeningStop.allCases) { choice in
+                Text(choice.title).tag(choice)
+            }
+        }
+        .onChange(of: listeningStop) { monitor.updateStopTime() }
+        switch listeningStop {
+        case .atTime:
+            DatePicker("Stop at", selection: stopTime, displayedComponents: .hourAndMinute)
+                .onChange(of: stopMinutes) { monitor.updateStopTime() }
+        case .afterDuration:
+            Picker("Stop after", selection: $stopHours) {
+                ForEach(ListeningStop.hourChoices, id: \.self) { hours in
+                    Text(hours == 1 ? "1 hour" : "\(hours) hours").tag(hours)
+                }
+            }
+            .onChange(of: stopHours) { monitor.updateStopTime() }
+        case .endOfShifts:
+            if !NightPlan(data: nightPlanData).isEnabled {
+                Text("Night shifts are off, so listening goes on until you stop it.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        case .never:
+            EmptyView()
+        }
+    }
+
+    /// `stopMinutes` as a time of day today, for the time picker.
+    private var stopTime: Binding<Date> {
+        Binding(
+            get: {
+                Calendar.current.date(byAdding: .minute, value: stopMinutes, to: Calendar.current.startOfDay(for: .now)) ?? .now
+            },
+            set: { date in
+                let parts = Calendar.current.dateComponents([.hour, .minute], from: date)
+                stopMinutes = (parts.hour ?? 7) * 60 + (parts.minute ?? 0)
+            }
+        )
     }
 
     private var statusContent: some View {
@@ -178,8 +231,8 @@ struct CryMonitorView: View {
     }
 
     private var statusTitle: String {
-        if monitor.cryStart != nil { return "Baby is crying" }
-        return monitor.isListening ? "Listening for crying" : "Not listening"
+        if monitor.cryStart != nil { return String(localized: "Baby is crying") }
+        return monitor.isListening ? String(localized: "Listening for crying") : String(localized: "Not listening")
     }
 
     private var statusColor: Color {
@@ -190,20 +243,21 @@ struct CryMonitorView: View {
     private var plan: NightPlan { NightPlan(data: nightPlanData) }
 
     private var whoGetsBuzzed: String {
-        guard plan.isEnabled else { return "This phone" }
+        guard plan.isEnabled else { return String(localized: "This phone", comment: "Who gets buzzed") }
         switch plan.alarmOwner {
-        case .both: return "Whoever is on duty"
+        case .both: return String(localized: "Whoever is on duty", comment: "Who gets buzzed")
         case .parent1, .parent2:
             let owner: Parent = plan.alarmOwner == .parent1 ? .parent1 : .parent2
-            return "\(plan.name(of: owner)), on their shifts"
+            let name = plan.name(of: owner)
+            return String(localized: "\(name), on their shifts", comment: "Who gets buzzed: a parent's name")
         }
     }
 
     private var alertsFooter: String {
         guard plan.isEnabled else {
-            return "Turn on Night shifts to buzz only the parent on duty. Until then, this phone buzzes whenever it hears crying."
+            return String(localized: "Turn on Night shifts to buzz only the parent on duty. Until then, this phone buzzes whenever it hears crying.")
         }
-        return "Run cry alerts on both parents' phones. Both hear the baby, but each phone buzzes only when its owner is on duty, so the parent who's off can keep sleeping. If the crying keeps going, the other parent's phone buzzes too."
+        return String(localized: "Run cry alerts on both parents' phones. Both hear the baby, but each phone buzzes only when its owner is on duty, so the parent who's off can keep sleeping. If the crying keeps going, the other parent's phone buzzes too.")
     }
 
     private func planBinding<Value>(_ keyPath: WritableKeyPath<NightPlan, Value>) -> Binding<Value> {

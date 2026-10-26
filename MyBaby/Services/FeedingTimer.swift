@@ -42,7 +42,7 @@ final class FeedingTimer {
             side: side,
             at: now,
             babyID: baby?.uuid?.uuidString,
-            babyName: baby?.displayName ?? "Baby"
+            babyName: baby?.displayName ?? String(localized: "Baby", comment: "Shown on the Live Activity when the baby has no name")
         )
         commit(new, startLiveActivity: true)
     }
@@ -148,14 +148,22 @@ final class FeedingTimer {
         let right = last.rightMinutes ?? 0
 
         if left == 0 && right == 0 { return nil }
-        if left == 0 { return Suggestion(side: .left, reason: "Only the right side was used last feed.") }
-        if right == 0 { return Suggestion(side: .right, reason: "Only the left side was used last feed.") }
-        if left < right { return Suggestion(side: .left, reason: "It had less time last feed (\(left) vs \(right) min).") }
-        if right < left { return Suggestion(side: .right, reason: "It had less time last feed (\(right) vs \(left) min).") }
+        if left == 0 { return Suggestion(side: .left, reason: String(localized: "Only the right side was used last feed.", comment: "Breastfeeding")) }
+        if right == 0 { return Suggestion(side: .right, reason: String(localized: "Only the left side was used last feed.", comment: "Breastfeeding")) }
+        if left < right { return Suggestion(side: .left, reason: lessTime(left, vs: right)) }
+        if right < left { return Suggestion(side: .right, reason: lessTime(right, vs: left)) }
 
         guard let raw = UserDefaults.shared.string(forKey: SharedKey.lastBreastSide),
               let ended = BreastSide(rawValue: raw)
         else { return nil }
-        return Suggestion(side: ended.other, reason: "The last feed ended on the \(ended.title.lowercased()) side.")
+        let reason = ended == .left
+            ? String(localized: "The last feed ended on the left side.", comment: "Breastfeeding")
+            : String(localized: "The last feed ended on the right side.", comment: "Breastfeeding")
+        return Suggestion(side: ended.other, reason: reason)
+    }
+
+    /// "It had less time last feed (4 vs 9 min)."
+    private static func lessTime(_ minutes: Int, vs other: Int) -> String {
+        String(localized: "It had less time last feed (\(minutes) vs \(other) min).", comment: "Breastfeeding: the suggested side, then the other side, in minutes")
     }
 }

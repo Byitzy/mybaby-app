@@ -32,8 +32,28 @@ struct LogDiaperIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let target = try SiriBaby.resolveForLogging(baby)
         try QuickLog.logDiaper(type.diaperType, for: target)
-        let what = type == .both ? "wet and dirty" : type.rawValue
-        return .result(dialog: "Logged a \(what) diaper\(SiriText.forBaby(target)).")
+        let text: String
+        switch type {
+        case .wet:
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged a wet diaper for \($0).") },
+                unnamed: String(localized: "Logged a wet diaper.")
+            )
+        case .dirty:
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged a dirty diaper for \($0).") },
+                unnamed: String(localized: "Logged a dirty diaper.")
+            )
+        case .both:
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged a wet and dirty diaper for \($0).") },
+                unnamed: String(localized: "Logged a wet and dirty diaper.")
+            )
+        }
+        return .result(dialog: "\(text)")
     }
 }
 
@@ -96,12 +116,34 @@ struct LogBottleIntent: AppIntent {
             feed.amountML = amount.map(unit.toML)
         }
 
-        let what = feedingType == .formula ? "formula" : "breast milk"
-        let whose = SiriText.forBaby(target)
-        if let amount {
-            return .result(dialog: "Logged \(unit.format(value: amount)) of \(what)\(whose).")
+        let text: String
+        switch (feedingType == .formula, amount.map(unit.format(value:))) {
+        case (true, let amount?):
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged \(amount) of formula for \($0).", comment: "Siri. First: the amount, e.g. 120 ml; second: the baby's name") },
+                unnamed: String(localized: "Logged \(amount) of formula.", comment: "Siri. The amount, e.g. 120 ml")
+            )
+        case (false, let amount?):
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged \(amount) of breast milk for \($0).", comment: "Siri. First: the amount, e.g. 120 ml; second: the baby's name") },
+                unnamed: String(localized: "Logged \(amount) of breast milk.", comment: "Siri. The amount, e.g. 120 ml")
+            )
+        case (true, nil):
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged a bottle of formula for \($0).") },
+                unnamed: String(localized: "Logged a bottle of formula.")
+            )
+        case (false, nil):
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged a bottle of breast milk for \($0).") },
+                unnamed: String(localized: "Logged a bottle of breast milk.")
+            )
         }
-        return .result(dialog: "Logged a bottle of \(what)\(whose).")
+        return .result(dialog: "\(text)")
     }
 
     @MainActor
@@ -219,16 +261,28 @@ private enum SleepDialogs {
     static func start(for baby: Baby) throws -> String {
         let (sleep, isNew) = try QuickLog.startSleep(for: baby)
         if isNew {
-            return "Sleep timer started\(SiriText.forBaby(baby)). Sweet dreams."
+            return SiriText.sentence(
+                for: baby,
+                named: { String(localized: "Sleep timer started for \($0). Sweet dreams.") },
+                unnamed: String(localized: "Sleep timer started. Sweet dreams.")
+            )
         }
-        return "\(SiriText.name(baby)) has been asleep since \(SiriText.time(sleep.startDate))."
+        let name = SiriText.name(baby)
+        let time = SiriText.time(sleep.startDate)
+        return String(localized: "\(name) has been asleep since \(time).", comment: "Siri. First: the baby's name, or The baby; second: a time")
     }
 
     static func end(for baby: Baby) -> String {
         guard let duration = QuickLog.endSleep(for: baby) else {
-            return "There's no sleep timer running\(SiriText.forBaby(baby))."
+            return SiriText.sentence(
+                for: baby,
+                named: { String(localized: "There's no sleep timer running for \($0).") },
+                unnamed: String(localized: "There's no sleep timer running.")
+            )
         }
-        return "Got it. \(SiriText.name(baby)) slept \(QuickLog.spokenDuration(duration))."
+        let name = SiriText.name(baby)
+        let length = QuickLog.spokenDuration(duration)
+        return String(localized: "Got it. \(name) slept \(length).", comment: "Siri. First: the baby's name, or The baby; second: how long, e.g. 1 hour, 20 minutes")
     }
 }
 
@@ -280,6 +334,18 @@ struct LogMedicineIntent: AppIntent {
         let dose = dosage?.trimmingCharacters(in: .whitespaces).nilIfEmpty ?? previous?.dosage.nilIfEmpty
         let logged = previous?.name ?? medicine
 
+        // A medicine matching one on the baby's allergy list is only logged once the parent says so,
+        // as in the app's warning. "No" or cancelling throws out of `perform`, so nothing is logged.
+        if let allergy = QuickLog.medicineAllergy(matching: logged, for: target) {
+            let question = AllergyMatch.medicineConfirmation(
+                // "The baby's allergy list…" before the baby has a name.
+                babyName: SiriText.name(target),
+                allergyName: allergy.displayName,
+                status: allergy.status
+            )
+            try await requestConfirmation(result: .result(dialog: "\(question)"))
+        }
+
         // Like the app, it never blocks a dose; it only says when the timing the parent entered didn't allow one yet.
         let key = MedicineSchedule.key(for: logged)
         let earlier = ((try? context.fetch(target.entries(Activity.all(.medication)))) ?? [])
@@ -297,10 +363,22 @@ struct LogMedicineIntent: AppIntent {
         // The "next dose allowed" notification moves with the new dose.
         CareReminders.refreshMedicine(context: context)
 
-        var text = dose.map { "Logged \(logged), \($0)" } ?? "Logged \(logged)"
-        text += SiriText.forBaby(target) + "."
+        var text: String
+        if let dose {
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged \(logged), \(dose) for \($0).", comment: "Siri. First: the medicine; second: the dose as the parent wrote it; third: the baby's name") },
+                unnamed: String(localized: "Logged \(logged), \(dose).", comment: "Siri. First: the medicine; second: the dose as the parent wrote it")
+            )
+        } else {
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Logged \(logged) for \($0).", comment: "Siri. First: the medicine; second: the baby's name") },
+                unnamed: String(localized: "Logged \(logged).", comment: "Siri. The medicine")
+            )
+        }
         if tooSoon {
-            text += " That's sooner than the dose timing you entered for it."
+            text += " " + String(localized: "That's sooner than the dose timing you entered for it.")
         }
         return .result(dialog: "\(text)")
     }

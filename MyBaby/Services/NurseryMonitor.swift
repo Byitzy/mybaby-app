@@ -17,7 +17,7 @@ final class NurseryMonitor {
     /// Listening stopped by itself (an interruption, or the microphone went away), with what to tell the parent.
     private(set) var problem: String?
     /// The baby it listens for, for "Listening for Noah".
-    private(set) var babyName = "Baby"
+    private(set) var babyName = String(localized: "Baby", comment: "Stands in for the baby's name when there's none")
 
     /// Why a device can't be the monitor.
     enum Availability: Equatable {
@@ -31,11 +31,11 @@ final class NurseryMonitor {
             case .available:
                 return nil
             case .noBaby:
-                return "Add your baby first, so the monitor knows who it's listening for."
+                return String(localized: "Add your baby first, so the monitor knows who it's listening for.")
             case .syncOff:
-                return "Turn on iCloud sync in Settings first. The monitor reaches your phones through your family's own iCloud."
+                return String(localized: "Turn on iCloud sync in Settings first. The monitor reaches your phones through your family's own iCloud.")
             case .viewOnly:
-                return "This device can only view the log, so it can't be the monitor. Sign in with a parent's Apple ID, or ask the parent who shared the log to let you make changes."
+                return String(localized: "This device can only view the log, so it can't be the monitor. Sign in with a parent's Apple ID, or ask the parent who shared the log to let you make changes.")
             }
         }
     }
@@ -102,7 +102,7 @@ final class NurseryMonitor {
         guard isActive, !CryMonitor.shared.isListening else { return }
         await CryMonitor.shared.start(mode: .monitorDevice)
         guard CryMonitor.shared.isListening else {
-            problem = CryMonitor.shared.errorMessage ?? "Listening couldn't start again."
+            problem = CryMonitor.shared.errorMessage ?? String(localized: "Listening couldn't start again.")
             return
         }
         problem = nil
@@ -115,7 +115,7 @@ final class NurseryMonitor {
     func cryMonitorDidStop() {
         guard isActive, !isStopping else { return }
         finish()
-        problem = CryMonitor.shared.errorMessage ?? "Listening stopped. Tap Start again."
+        problem = CryMonitor.shared.errorMessage ?? String(localized: "Listening stopped. Tap Start again.", comment: "“Start again” is a button")
     }
 
     /// Sends a test alert to every parent's phone.
@@ -154,7 +154,10 @@ final class NurseryMonitor {
         guard let baby = try? context.fetch(request).first else { return }
 
         let device = ownDevice(for: baby, in: context)
-        let name = "\(baby.displayName)'s \(UIDevice.current.model)"
+        let who = baby.displayName
+        let model = UIDevice.current.model
+        // Shown on the parents' phones, in this device's language.
+        let name = String(localized: "\(who)'s \(model)", comment: "The monitor's name; the baby's name, then iPhone or iPad")
         if device.deviceName != name { device.deviceName = name }
         if device.isListening != listening { device.isListening = listening }
         let noise = WhiteNoise.shared.color.rawValue

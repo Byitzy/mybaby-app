@@ -24,6 +24,9 @@ struct CryEpisode: Identifiable {
 /// On a spare device left by the baby (`Mode.monitorDevice`, see `NurseryMonitor`), it never buzzes
 /// itself and sends the alerts to the parents' phones instead (`RemoteCryAlerts`), and it can play
 /// white noise through the same audio engine (`WhiteNoise`).
+///
+/// On a parent's phone, listening also shows outside the app (`listeningSummary`): a mic badge on the
+/// widgets, and a Live Activity on the Lock Screen and in the Dynamic Island with a Stop button.
 @MainActor
 @Observable
 final class CryMonitor {
@@ -56,6 +59,10 @@ final class CryMonitor {
     /// Counted in debug builds only (see `CryGateMetrics`), as of the last time the classifier started or stopped.
     private(set) var debugMetrics = CryGateMetrics()
     private(set) var listeningSince: Date?
+    /// Stops listening at `stopsAt` (see `updateStopTime`).
+    @ObservationIgnored private var stopTimer: Task<Void, Never>?
+    /// What the widgets and the Live Activity were last told (`publishListening`).
+    @ObservationIgnored private var publishedSummary: WidgetSnapshot.Listening?
 
     /// Each classifier result covers 1.5 s of audio and the next one starts 1.125 s later (overlap 0.25),
     /// so results come a little under once a second, about half as often as with the default window.
@@ -114,7 +121,7 @@ final class CryMonitor {
         setError(nil)
 
         guard await AVAudioApplication.requestRecordPermission() else {
-            setError("MyBaby needs the microphone to hear crying. Allow it in Settings › MyBaby.")
+            setError(String(localized: "MyBaby needs the microphone to hear crying. Allow it in Settings › MyBaby."))
             return
         }
         if self.mode != mode { self.mode = mode }
@@ -143,16 +150,30 @@ final class CryMonitor {
             listeningSince = .now
             debugMetrics = CryGateMetrics()
             // A monitor by the crib listens until it's stopped, for naps too.
-            let morning = mode == .phone ? morningStop() : nil
-            if stopsAt != morning { stopsAt = morning }
+            updateStopTime()
             observeInterruptions()
         } catch {
-            setError("Couldn't start listening: \(error.localizedDescription)")
             stop()
+            if CallWatcher.shared.isOnCall {
+                // The call has the microphone. Start by itself once it's over, as asked.
+                setError(String(localized: "MyBaby can't listen during a phone or FaceTime call. It starts listening by itself when the call ends."))
+                let startMode = mode
+                CallWatcher.shared.afterCallsEnd {
+                    Task { @MainActor in
+                        // A moment for iOS to hand the microphone back.
+                        try? await Task.sleep(for: .seconds(1))
+                        await CryMonitor.shared.start(mode: startMode)
+                    }
+                }
+            } else {
+                setError(String(localized: "Couldn't start listening: \(error.localizedDescription)", comment: "The argument is the system's reason"))
+            }
         }
     }
 
     func stop() {
+        // Stopped by hand: no starting by itself after a call either.
+        CallWatcher.shared.cancel()
         let wasMonitor = isListening && mode == .monitorDevice
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
@@ -174,9 +195,65 @@ final class CryMonitor {
         if isClassifierActive { isClassifierActive = false }
         if level != 0 { level = 0 }
         if stopsAt != nil { stopsAt = nil }
+        stopTimer?.cancel()
+        stopTimer = nil
+        publishListening()
         if wasMonitor {
             NurseryMonitor.shared.cryMonitorDidStop()
         }
+    }
+
+    /// The Stop button on the listening Live Activity (`StopListeningIntent`): the same as Stop
+    /// listening in the app. Only on a parent's phone; a nursery monitor never shows the activity and
+    /// stops from its own screen, which asks first. Also ends an activity left behind by an earlier
+    /// run of the app, which this may have been launched for.
+    func stopFromLiveActivity() {
+        if isListening, mode == .phone {
+            stop()
+            setLastAction(String(localized: "Stopped listening from the Live Activity.", comment: "Cry alerts: listening was stopped with the Stop button on the Lock Screen or in the Dynamic Island"))
+        }
+        LiveActivities.syncListening(listeningSummary)
+        WidgetSnapshotWriter.shared.listeningChanged(immediately: true)
+    }
+
+    /// iOS is closing MyBaby, e.g. it was swiped away in the app switcher while listening: stop, so the
+    /// widgets stop saying "Listening", and end the Live Activity before the app is gone. iOS doesn't
+    /// always say so first (it may just stop the app); then the next launch tidies up instead.
+    func appWillTerminate() {
+        if isListening { stop() }
+        LiveActivities.endListeningBeforeExit()
+    }
+
+    // MARK: Outside the app
+
+    /// What the widgets and the Live Activity show: listening on this iPhone, since when, until when, and
+    /// whether crying is heard now. `nil` when not listening, and on a nursery monitor, which has its own
+    /// full-screen view (see `LiveActivities.syncListening`).
+    var listeningSummary: WidgetSnapshot.Listening? {
+        guard isListening, mode == .phone, let listeningSince else { return nil }
+        return WidgetSnapshot.Listening(since: listeningSince, cryingSince: cryStart, stopsAt: stopsAt)
+    }
+
+    /// Tells the Live Activity and the widgets about a change in `listeningSummary`, if there is one.
+    /// The Live Activity is updated at once, also in the background; the widgets at once when
+    /// listening starts, stops or gets a new stop time, and at most once a minute for a cry.
+    private func publishListening() {
+        let summary = listeningSummary
+        guard summary != publishedSummary else { return }
+        let onlyCryChanged = summary != nil && publishedSummary != nil
+            && summary?.since == publishedSummary?.since && summary?.stopsAt == publishedSummary?.stopsAt
+        publishedSummary = summary
+        LiveActivities.syncListening(summary)
+        WidgetSnapshotWriter.shared.listeningChanged(immediately: !onlyCryChanged)
+    }
+
+    /// Forgets the cry episodes and messages the Cry alerts screen shows, after Delete all MyBaby data.
+    /// Only while not listening.
+    func forgetEpisodes() {
+        guard !isListening else { return }
+        if !episodes.isEmpty { episodes = [] }
+        setLastAction(nil)
+        setError(nil)
     }
 
     /// White noise started or stopped on the monitor device: voice processing (echo cancellation) is only
@@ -184,7 +261,7 @@ final class CryMonitor {
     /// engine is stopped. Carries on with the same cry, if there is one.
     func whiteNoiseChanged() {
         guard isListening, mode == .monitorDevice else { return }
-        restartAudio(failure: "Listening stopped while changing the white noise. Start the monitor again.")
+        restartAudio(failure: String(localized: "Listening stopped while changing the white noise. Start the monitor again."))
     }
 
     // MARK: The level meter
@@ -213,7 +290,7 @@ final class CryMonitor {
         let now = Date.now
         if let stopsAt, now >= stopsAt {
             stop()
-            setLastAction("Stopped listening for the morning.")
+            setLastAction(String(localized: "Stopped listening at the time you chose."))
             return
         }
 
@@ -228,6 +305,7 @@ final class CryMonitor {
             if cryStart == nil {
                 cryStart = now
                 setGateEpisode(true)
+                publishListening()
                 alertOnDutyParent(plan: plan, isRepeat: false)
             } else if let lastAlert, now.timeIntervalSince(lastAlert) >= repeatInterval {
                 alertOnDutyParent(plan: plan, isRepeat: true)
@@ -239,6 +317,7 @@ final class CryMonitor {
             }
         } else if let lastHeard, now.timeIntervalSince(lastHeard) > quietToEnd {
             finishEpisode()
+            publishListening()
         }
     }
 
@@ -267,14 +346,18 @@ final class CryMonitor {
         }
         let onDuty = plan.shift(at: .now)?.parent
         if let onDuty, !plan.alarmOwner.includes(onDuty) {
-            setLastAction("\(plan.name(of: onDuty)) is on duty, so this phone stayed quiet.")
+            setLastAction(String(localized: "\(plan.name(of: onDuty)) is on duty, so this phone stayed quiet."))
             return
         }
         lastAlert = .now
-        let title = onDuty.map { "👶 Baby is crying. Your turn, \(plan.name(of: $0))" } ?? "👶 Baby is crying"
-        let body = isRepeat ? "Still crying." : "Heard just now."
+        let title = onDuty.map { String(localized: "👶 Baby is crying. Your turn, \(plan.name(of: $0))", comment: "Cry alert title; the argument is the parent on duty") }
+            ?? String(localized: "👶 Baby is crying")
+        let body = isRepeat
+            ? String(localized: "Still crying.", comment: "Cry alert body: the baby is still crying")
+            : String(localized: "Heard just now.", comment: "Cry alert body: the crying was heard a moment ago")
         buzz(title: title, body: body, plan: plan)
-        setLastAction(onDuty.map { "Buzzed \(plan.name(of: $0))." } ?? "Buzzed this phone.")
+        setLastAction(onDuty.map { String(localized: "Buzzed \(plan.name(of: $0)).", comment: "A cry alert went to this parent's phone") }
+            ?? String(localized: "Buzzed this phone.", comment: "A cry alert went to this phone"))
     }
 
     /// Buzzes the parent who's off duty when the crying has gone on too long.
@@ -286,12 +369,13 @@ final class CryMonitor {
         }
         let offDuty = onDuty.other
         guard plan.alarmOwner.includes(offDuty) else { return }
+        let length = Format.duration(duration)
         buzz(
-            title: "👶 Baby's still crying",
-            body: "It's been \(Format.duration(duration)). \(plan.name(of: onDuty)) may not have heard.",
+            title: String(localized: "👶 Baby's still crying"),
+            body: String(localized: "It's been \(length). \(plan.name(of: onDuty)) may not have heard.", comment: "Cry alert: how long the crying has gone on, then the parent on duty"),
             plan: plan
         )
-        setLastAction("Crying went on for \(Format.duration(duration)), so this phone buzzed \(plan.name(of: offDuty)) too.")
+        setLastAction(String(localized: "Crying went on for \(length), so this phone buzzed \(plan.name(of: offDuty)) too.", comment: "How long the crying went on, then the parent who was off duty"))
     }
 
     /// Sent as a notification so iOS picks where it lands: a tap on the Apple Watch when it's on your
@@ -437,11 +521,26 @@ final class CryMonitor {
     }
 
     /// With a night plan, listening stops by itself when the night ends.
-    private func morningStop() -> Date? {
-        let plan = NightPlan.load()
-        guard plan.isEnabled, let end = plan.shifts(forNightOf: plan.nightDay(at: .now)).last?.end,
-              end > .now else { return nil }
-        return end
+    /// When listening stops by itself, from the parent's choice in Cry alerts (`ListeningStop`), counted
+    /// from when it started. Also called when that choice changes while listening. A timer stops it
+    /// on time: in a quiet room the classifier, which checks `stopsAt` too, may not run at all.
+    func updateStopTime() {
+        stopTimer?.cancel()
+        stopTimer = nil
+        let stop = isListening && mode == .phone
+            ? ListeningStop.stopDate(from: listeningSince ?? .now, plan: NightPlan.load())
+            : nil
+        if stopsAt != stop { stopsAt = stop }
+        // Listening just started, or "until 7:00" changed.
+        publishListening()
+        guard let stop else { return }
+        stopTimer = Task { [weak self] in
+            let wait = stop.timeIntervalSinceNow
+            if wait > 0 { try? await Task.sleep(for: .seconds(wait)) }
+            guard !Task.isCancelled, let self, self.isListening, self.stopsAt == stop else { return }
+            self.stop()
+            self.setLastAction(String(localized: "Stopped listening at \(stop.formatted(date: .omitted, time: .shortened)), as you chose."))
+        }
     }
 
     /// The classifier's window closest to `classifierWindow` that it allows.
@@ -475,7 +574,7 @@ final class CryMonitor {
                     try self.engine.start()
                 } catch {
                     self.stop()
-                    self.setError("Listening stopped after an interruption. Tap Start listening to resume.")
+                    self.setError(String(localized: "Listening stopped after an interruption. Tap Start listening to resume."))
                 }
             }
         }
@@ -490,7 +589,7 @@ final class CryMonitor {
         ) { [weak self] _ in
             Task { @MainActor in
                 guard let self, self.isListening, !self.engine.isRunning else { return }
-                self.restartAudio(failure: "Listening stopped when the audio changed. Tap Start listening to resume.")
+                self.restartAudio(failure: String(localized: "Listening stopped when the audio changed. Tap Start listening to resume."))
             }
         }
     }
@@ -517,7 +616,7 @@ final class CryMonitor {
 enum CryMonitorError: LocalizedError {
     case noMicrophone
 
-    var errorDescription: String? { "No microphone is available right now." }
+    var errorDescription: String? { String(localized: "No microphone is available right now.") }
 }
 
 /// Receives classifier results and passes the crying confidence to the gate and the monitor.

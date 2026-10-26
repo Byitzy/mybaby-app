@@ -71,25 +71,33 @@ struct CarePredictionLine: View {
     private func headline(_ prediction: CarePrediction) -> String {
         let time = CarePredictions.time(prediction.expected)
         switch kind {
-        case .feed: return "Next feed around \(time)"
-        case .diaper: return prediction.followsFeeds ? "Change after the next feed" : "Next change around \(time)"
+        case .feed: return String(localized: "Next feed around \(time)")
+        case .diaper:
+            return prediction.followsFeeds
+                ? String(localized: "Change after the next feed", comment: "The next diaper change")
+                : String(localized: "Next change around \(time)", comment: "The next diaper change")
         }
     }
 
     /// "2:20–3:05 AM", or "Around 4:10 PM" for a change after a feed.
     private func detail(_ prediction: CarePrediction) -> String {
         if kind == .diaper && prediction.followsFeeds {
-            return "Around \(CarePredictions.time(prediction.expected))"
+            return String(localized: "Around \(CarePredictions.time(prediction.expected))", comment: "Around a time")
         }
         return CarePredictionSheet.range(prediction)
     }
 
     private func spokenLabel(_ prediction: CarePrediction) -> String {
-        let between = "likely between \(CarePredictions.time(prediction.earliest)) and \(CarePredictions.time(prediction.latest))"
+        let earliest = CarePredictions.time(prediction.earliest)
+        let latest = CarePredictions.time(prediction.latest)
         if kind == .diaper && prediction.followsFeeds {
-            return "Next diaper change probably after the next feed, around \(CarePredictions.time(prediction.expected)), \(between)"
+            let expected = CarePredictions.time(prediction.expected)
+            return String(localized: "Next diaper change probably after the next feed, around \(expected), likely between \(earliest) and \(latest)")
         }
-        return "\(headline(prediction)), \(between)"
+        return String(
+            localized: "\(headline(prediction)), likely between \(earliest) and \(latest)",
+            comment: "VoiceOver. The first value is e.g. “Next feed around 2:40 AM”"
+        )
     }
 
     /// The prediction to show now, or `nil` (see the type's notes).
@@ -168,11 +176,11 @@ struct CarePredictionSheet: View {
         let time = CarePredictions.time(prediction.expected)
         switch prediction.kind {
         case .feed:
-            return "\(babyName)'s next feed around \(time)"
+            return String(localized: "\(babyName)'s next feed around \(time)")
         case .diaper:
             return prediction.followsFeeds
-                ? "\(babyName)'s next change after the next feed, around \(time)"
-                : "\(babyName)'s next change around \(time)"
+                ? String(localized: "\(babyName)'s next change after the next feed, around \(time)", comment: "The next diaper change")
+                : String(localized: "\(babyName)'s next change around \(time)", comment: "The next diaper change")
         }
     }
 
@@ -182,25 +190,35 @@ struct CarePredictionSheet: View {
     }
 
     private var nightHours: String {
-        plan.isEnabled ? "your night shifts' hours" : "7 PM to 7 AM"
+        plan.isEnabled
+            ? String(localized: "your night shifts' hours", comment: "Fills the parentheses in “Day and night (…) are worked out separately”")
+            : String(
+                localized: "\(Format.clockHour(19)) to \(Format.clockHour(7))",
+                comment: "Night hours, e.g. “7 PM to 7 AM”. Fills the parentheses in “Day and night (…) are worked out separately”"
+            )
     }
 
     private var method: String {
         switch prediction.kind {
         case .feed:
-            return "MyBaby looks at the time from the start of one feed to the start of the next over the last 5 days, with the most recent days counting most. Day and night (\(nightHours)) are worked out separately. Feeds less than \(CarePredictions.describe(FeedPredictor.clusterGap)) apart count as one. Time marked Not tracked, long stretches with nothing logged and caught-up entries are skipped, so a forgotten night doesn't look like a long sleep. It's never later than your \"Never wait longer than\" limit."
+            return String(
+                localized: "MyBaby looks at the time from the start of one feed to the start of the next over the last 5 days, with the most recent days counting most. Day and night (\(nightHours)) are worked out separately. Feeds less than \(CarePredictions.describe(FeedPredictor.clusterGap)) apart count as one. Time marked Not tracked, long stretches with nothing logged and caught-up entries are skipped, so a forgotten night doesn't look like a long sleep. It's never later than your \"Never wait longer than\" limit.",
+                comment: "“Not tracked” and “Never wait longer than” are names used elsewhere in the app"
+            )
         case .diaper:
-            return "MyBaby looks at the time between changes over the last 5 days, with the most recent days counting most, day and night (\(nightHours)) separately. When most changes come soon after a feed, it expects the next one after the next feed. Time marked Not tracked, long stretches with nothing logged and caught-up entries are skipped."
+            return String(
+                localized: "MyBaby looks at the time between changes over the last 5 days, with the most recent days counting most, day and night (\(nightHours)) separately. When most changes come soon after a feed, it expects the next one after the next feed. Time marked Not tracked, long stretches with nothing logged and caught-up entries are skipped.",
+                comment: "Diaper changes. “Not tracked” is a name used elsewhere in the app"
+            )
         }
     }
 
     private var footer: String {
-        let local = "Worked out on this iPhone from your log. It moves each time you or your partner log something."
         switch prediction.kind {
         case .feed:
-            return "\(local) It's a guess from what was logged, not medical advice. Ask your pediatrician how long your baby can go between feeds, especially in the first weeks."
+            return String(localized: "Worked out on this iPhone from your log. It moves each time you or your partner log something. It's a guess from what was logged, not medical advice. Ask your pediatrician how long your baby can go between feeds, especially in the first weeks.")
         case .diaper:
-            return "\(local) It's a guess from what was logged, not medical advice."
+            return String(localized: "Worked out on this iPhone from your log. It moves each time you or your partner log something. It's a guess from what was logged, not medical advice.")
         }
     }
 }

@@ -82,24 +82,24 @@ extension Baby {
     @NSManaged var milkBags: NSSet?
 }
 
-enum MilkStorage: String, CaseIterable, Identifiable, Codable {
+enum MilkStorage: String, CaseIterable, Identifiable, Codable, Sendable {
     case room, fridge, freezer
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .room: return "Room temperature"
-        case .fridge: return "Fridge"
-        case .freezer: return "Freezer"
+        case .room: return String(localized: "Room temperature", comment: "Where a bag of breast milk is kept")
+        case .fridge: return String(localized: "Fridge", comment: "Where a bag of breast milk is kept")
+        case .freezer: return String(localized: "Freezer", comment: "Where a bag of breast milk is kept")
         }
     }
 
     var shortTitle: String {
         switch self {
-        case .room: return "Room"
-        case .fridge: return "Fridge"
-        case .freezer: return "Freezer"
+        case .room: return String(localized: "Room", comment: "Short for room temperature, where a bag of breast milk is kept")
+        case .fridge: return String(localized: "Fridge", comment: "Where a bag of breast milk is kept")
+        case .freezer: return String(localized: "Freezer", comment: "Where a bag of breast milk is kept")
         }
     }
 
@@ -123,7 +123,7 @@ enum MilkStorageGuide {
     static let thawedHours = 24
 
     /// The footer shown with the stash and the pumping editor.
-    static let summary = "Storage times from the CDC: room temperature up to 4 hours, fridge up to 4 days, freezer best within 6 months and acceptable up to 12 months. Thawed milk: use within 24 hours in the fridge, and never refreeze it. Ask your pediatrician if your baby was born early or is in the hospital."
+    static let summary = String(localized: "Storage times from the CDC: room temperature up to 4 hours, fridge up to 4 days, freezer best within 6 months and acceptable up to 12 months. Thawed milk: use within 24 hours in the fridge, and never refreeze it. Ask your pediatrician if your baby was born early or is in the hospital.")
 }
 
 /// How close a bag is to its use-by date. Every case has its own words, not just a color.
@@ -179,12 +179,14 @@ extension MilkBag {
 
     /// "Use by Oct 28, 9:14 AM", "Use soon · by 1:30 PM", "Past use-by date".
     func useByText(now: Date = .now) -> String {
+        let date = Self.formatted(useBy, storage: storage, thawed: isThawed)
         switch freshness(now: now) {
-        case .fresh: return "Use by \(Self.formatted(useBy, storage: storage, thawed: isThawed))"
-        case .useSoon: return "Use soon · by \(Self.formatted(useBy, storage: storage, thawed: isThawed))"
+        case .fresh: return String(localized: "Use by \(date)", comment: "A bag of breast milk's use-by date or time, e.g. “Use by Oct 28, 9:14 AM” or “Use by 1:30 PM”")
+        case .useSoon: return String(localized: "Use soon · by \(date)", comment: "A bag of breast milk close to its use-by date or time")
         case .pastBest:
-            return "Past the 6-month best date · OK until \(acceptableUntil.formatted(date: .abbreviated, time: .omitted))"
-        case .expired: return "Past its use-by date"
+            let until = acceptableUntil.formatted(date: .abbreviated, time: .omitted)
+            return String(localized: "Past the 6-month best date · OK until \(until)", comment: "Frozen breast milk past its best date but still acceptable until a date")
+        case .expired: return String(localized: "Past its use-by date", comment: "A bag of breast milk")
         }
     }
 

@@ -22,7 +22,7 @@ struct FeedingLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 2) {
-                        Text("🤱 \(context.attributes.babyName)")
+                        Text(verbatim: "🤱 \(context.attributes.babyName)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .accessibilityLabel("Breastfeeding \(context.attributes.babyName), total")
@@ -35,9 +35,9 @@ struct FeedingLiveActivity: Widget {
                     FeedingButtons(timer: context.state.timer)
                 }
             } compactLeading: {
-                Text("🤱 \(context.state.timer.side.letter)")
+                Text(verbatim: "🤱 \(context.state.timer.side.letter)")
                     .font(.caption.weight(.semibold))
-                    .accessibilityLabel("Breastfeeding, \(context.state.timer.side.title) side")
+                    .accessibilityLabel(context.state.timer.side == .left ? Text("Breastfeeding, left side") : Text("Breastfeeding, right side"))
             } compactTrailing: {
                 FeedingClockText(state: context.state.timer, side: context.state.timer.side)
                     .font(.caption.weight(.semibold))
@@ -60,13 +60,13 @@ private struct FeedingLockScreenView: View {
     var body: some View {
         VStack(spacing: 10) {
             HStack {
-                Text("🤱 \(babyName)")
+                Text(verbatim: "🤱 \(babyName)")
                     .font(.headline)
                     .accessibilityLabel("Breastfeeding \(babyName)")
                 Spacer()
                 HStack(spacing: 4) {
-                    Text(timer.isRunning ? "Total" : "Paused ·")
-                        .accessibilityLabel(timer.isRunning ? "Total" : "Paused, total")
+                    (timer.isRunning ? Text("Total", comment: "Breastfeeding Live Activity: the time on both sides together") : Text("Paused ·"))
+                        .accessibilityLabel(timer.isRunning ? Text("Total") : Text("Paused, total"))
                     FeedingClockText(state: timer)
                 }
                 .font(.subheadline.weight(.medium))
@@ -89,13 +89,20 @@ private struct SideClock: View {
 
     private var isCurrent: Bool { timer.side == side }
 
+    /// "Left side, feeding now", for VoiceOver.
+    private var feedingNowLabel: String {
+        side == .left
+            ? String(localized: "Left side, feeding now", comment: "VoiceOver, breastfeeding Live Activity")
+            : String(localized: "Right side, feeding now", comment: "VoiceOver, breastfeeding Live Activity")
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             Text(isCurrent && timer.isRunning ? "\(side.title) ●" : side.title)
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(isCurrent ? Color.pink : Color.secondary)
                 // On the title, so the combined element still reads the clock after it.
-                .accessibilityLabel(isCurrent && timer.isRunning ? "\(side.title) side, feeding now" : "\(side.title) side")
+                .accessibilityLabel(isCurrent && timer.isRunning ? feedingNowLabel : side.sideTitle)
             FeedingClockText(state: timer, side: side)
                 .font(.title3.weight(isCurrent ? .bold : .regular))
                 .foregroundStyle(isCurrent ? Color.primary : Color.secondary)
@@ -115,7 +122,7 @@ private struct FeedingButtons: View {
                 Label("Switch", systemImage: "arrow.left.arrow.right")
                     .frame(maxWidth: .infinity)
             }
-            .accessibilityLabel("Switch to the \(timer.side.other.title.lowercased()) side")
+            .accessibilityLabel(timer.side.other == .left ? Text("Switch to the left side") : Text("Switch to the right side"))
 
             Button(intent: ToggleFeedingPauseIntent()) {
                 Label(timer.isRunning ? "Pause" : "Resume", systemImage: timer.isRunning ? "pause.fill" : "play.fill")

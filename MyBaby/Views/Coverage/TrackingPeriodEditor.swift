@@ -156,8 +156,10 @@ struct TrackingPeriodEditor: View {
     }
 
     private var notesPrompt: String {
-        if kind == .notTracked && reason == .caregiver { return "Who? e.g. grandma" }
-        return "Optional"
+        if kind == .notTracked && reason == .caregiver {
+            return String(localized: "Who? e.g. grandma", comment: "Placeholder: who looked after the baby")
+        }
+        return String(localized: "Optional", comment: "Placeholder for notes")
     }
 
     private func save() {
@@ -227,7 +229,9 @@ struct TrackingPeriodRow: View {
         let interval = period.interval
         var parts = [period.kind.title]
         if !period.reasonPhrase.isEmpty { parts.append(period.reasonPhrase) }
-        parts.append("from \(interval.start.formatted(date: .omitted, time: .shortened)) to \(interval.end.formatted(date: .omitted, time: .shortened))")
+        let from = interval.start.formatted(date: .omitted, time: .shortened)
+        let to = interval.end.formatted(date: .omitted, time: .shortened)
+        parts.append(String(localized: "from \(from) to \(to)", comment: "VoiceOver: when a marked time was, two times"))
         if !extraNote.isEmpty { parts.append(extraNote) }
         return parts.joined(separator: ", ")
     }

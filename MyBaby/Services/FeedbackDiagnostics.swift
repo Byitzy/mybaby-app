@@ -8,8 +8,19 @@ enum FeedbackKind: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// As the parent picks it, and in the subject.
+    /// As the parent picks it.
     var title: String {
+        switch self {
+        case .problem: return String(localized: "Something's not working", comment: "A kind of feedback")
+        case .idea: return String(localized: "An idea", comment: "A kind of feedback")
+        case .love: return String(localized: "Something I love", comment: "A kind of feedback")
+        case .question: return String(localized: "A question", comment: "A kind of feedback")
+        }
+    }
+
+    /// In the email's subject, always in English so feedback is easy to sort whatever the language.
+    var subjectTitle: String {
+        // Not localized: read by the developer, not the parent.
         switch self {
         case .problem: return "Something's not working"
         case .idea: return "An idea"
@@ -30,10 +41,10 @@ enum FeedbackKind: String, CaseIterable, Identifiable {
     /// The hint in the empty message box.
     var placeholder: String {
         switch self {
-        case .problem: return "What happened, and what did you expect? The steps to make it happen again help a lot."
-        case .idea: return "What would make your days and nights easier?"
-        case .love: return "What do you enjoy about MyBaby?"
-        case .question: return "What would you like to know?"
+        case .problem: return String(localized: "What happened, and what did you expect? The steps to make it happen again help a lot.")
+        case .idea: return String(localized: "What would make your days and nights easier?")
+        case .love: return String(localized: "What do you enjoy about MyBaby?")
+        case .question: return String(localized: "What would you like to know?")
         }
     }
 }
@@ -77,6 +88,7 @@ struct FeedbackDiagnostics: Equatable {
     var text: String { Self.text(for: self) }
 
     /// The details as plain lines, one fact per line. Only reads `details`, so it's easy to test.
+    /// Not localized: they're for the developer, and stay the same in every language.
     static func text(for details: FeedbackDiagnostics) -> String {
         [
             "App: MyBaby \(details.appVersion) (build \(details.appBuild))",
@@ -199,13 +211,14 @@ struct FeedbackEmail: Equatable {
         )
     }
 
-    /// "MyBaby feedback: An idea (1.0, build 12)".
+    /// "MyBaby feedback: An idea (1.0, build 12)". Not localized: it's how feedback is sorted.
     static func subject(kind: FeedbackKind, version: String, build: String) -> String {
-        "MyBaby feedback: \(kind.title) (\(version), build \(build))"
+        "MyBaby feedback: \(kind.subjectTitle) (\(version), build \(build))"
     }
 
     static func body(message: String, diagnostics: FeedbackDiagnostics?) -> String {
         var body = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Not localized: the technical details are for the developer.
         if let diagnostics {
             body += "\n\n---\nTechnical details\n" + diagnostics.text
         }
@@ -220,7 +233,7 @@ struct FeedbackEmail: Equatable {
 
     /// Everything, to paste into any email app.
     var plainText: String {
-        "To: \(recipient)\nSubject: \(subject)\n\n\(body)"
+        String(localized: "To: \(recipient)\nSubject: \(subject)\n\n\(body)", comment: "An email to paste into any email app: the address, the subject, then the message")
     }
 
     /// Percent-encodes everything but letters, digits and `-._~`, with line breaks as CRLF (RFC 6068).

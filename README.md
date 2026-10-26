@@ -1,6 +1,6 @@
 # MyBaby 👶
 
-A simple iPhone app that makes it easy for new parents to track their newborn's care
+A simple iPhone app (it runs on iPad too) that makes it easy for new parents to track their newborn's care
 and share clear reports with their pediatrician.
 
 Everything is designed for one-handed, half-asleep use at 3 a.m.: big buttons, one tap
@@ -35,10 +35,10 @@ and nobody else.**
 | Tab | What it does |
 | --- | --- |
 | **Today** | Baby's name and age (tap it to switch babies or add one), "time since" cards (last feed, last diaper, awake/asleep for), one-tap quick log, and today's timeline. |
-| **History** | Every entry grouped by day with a daily summary, filter by type, tap to edit, swipe to delete. **Mark time** marks a stretch as not tracked or nothing happened, or catches up on it. |
+| **History** | Every entry grouped by day with a daily summary (the last 30 days, then *Show earlier*), filter by type, tap to edit, swipe to delete. **Mark time** marks a stretch as not tracked or nothing happened, or catches up on it. |
 | **Reports** | 7 / 14 / 30-day charts for feedings, bottle amounts, breastfeeding minutes, wet & dirty diapers and sleep, plus daily averages. **Share PDF** creates a one-page report to bring to checkups. **Patterns** finds the baby's rhythms. |
-| **Health** | Appointments (with reminders, questions to ask, a visit summary, an after-visit recap and Add to Calendar), vaccines (given and upcoming, with lot numbers), medicine (history, one-tap "Give now" and dose timing), allergies (a reactions log, introducing foods and an allergy card for caregivers), and growth (weight and length charts with WHO percentiles). |
-| **More** | **Babies** (switch or add), **Night shifts**, **Cry alerts**, **Milestones**, **Diary**, **Parent care** and **Settings**: baby profile, parents (names and whose iPhone this is), iCloud & sharing, ml/oz, 3 AM mode, feed & diaper reminders (every few hours, or smart ones that learn from the log), CSV export, privacy. |
+| **Health** | Appointments (with reminders, questions to ask, a visit summary, an after-visit recap, Add to Calendar, and cancel or restore), vaccines (given and upcoming, with lot numbers, the clinic, and a guide to what each one is for and what's normal after), medicine (history, one-tap "Give now" and dose timing), allergies (a reactions log, introducing foods and an allergy card for caregivers), and growth (weight, length and head circumference charts with WHO percentiles). |
+| **More** | **Babies** (switch or add), **Night shifts**, **Cry alerts**, **Milestones**, **Diary**, **Parent care** and **Settings**: baby profile, parents (names and whose iPhone this is), iCloud & sharing, ml/oz, 3 AM mode, feed & diaper reminders (every few hours, or smart ones that learn from the log), CSV export, import from another app, privacy. |
 
 What you can log:
 
@@ -48,7 +48,7 @@ What you can log:
 - 🛁 **Baths** — one tap.
 - 💊 **Medicine** — name and dose, with recent medicines one tap away.
 - 💉 **Vaccines** and 🩺 **appointments** — under the Health tab.
-- 📏 **Growth** — weight and length from each checkup or a home scale, in kg/cm or lb/oz/in. Health → Growth
+- 📏 **Growth** — weight, length and head circumference from each checkup or a home scale, in kg/cm or lb/oz/in. Health → Growth
   shows the latest of each with the change since the last measurement and a chart over time. Measurements
   are included in the PDF report.
 - 🫙 **Pumping** — how much from each side (ml or oz) and how long, with the total. Tap *Pump* on Today.
@@ -143,6 +143,12 @@ below.
   Check with your doctor or pharmacist before giving it." ("Mavie's allergy list includes amoxicillin." until
   the baby's sex is set). *Give now* asks first. You can always save. The matching is
   `AllergyMatch.medicineMatches` in `MyBaby/Services/AllergyMatch.swift`, a pure function.
+- **Siri and the widget check too.** Siri's *Log Medicine* asks first when the medicine matches: "Mavie's
+  allergy list includes amoxicillin. Log it anyway?" Saying no logs nothing. The widget's **Medicine** button
+  never logs a match: it shows **Check allergy list** instead and opens the app, where the warning says more
+  and you can still log it. The button checks again when tapped, in case an allergy was added since the widget
+  was drawn. The Bottle button has no check: a bottle is formula or breast milk, with no food name to compare,
+  and MyBaby never decides that a formula and a milk allergy are related.
 - **Allergy card.** Allergies → **Allergy card for caregivers** is a one-page summary for daycare,
   grandparents or a babysitter: name and age, the emergency line with your region's number, the auto-injector
   and where it's kept, confirmed and suspected allergies with severity and reactions, recent reactions (last
@@ -159,9 +165,9 @@ two copies of a baby keeps one allergy per allergen (filling in what's missing a
 ### 📈 WHO growth percentiles
 
 Set the baby's sex (Settings → *Baby* → **Sex (for growth charts)**, or when adding the baby) and Health →
-Growth shows where each weight and length falls on the **WHO Child Growth Standards**, e.g.
+Growth shows where each weight, length and head circumference falls on the **WHO Child Growth Standards**, e.g.
 "4.2 kg · 48th percentile". The charts draw the WHO 3rd, 15th, 50th, 85th and 97th percentile curves as
-faint gray lines behind the baby's own, and the PDF report adds a percentile column to the growth table.
+faint gray lines behind the baby's own, and the PDF report adds percentile columns to the growth table.
 Very low or high values show as "<1st" or ">99th". Without a sex and birthday, Growth asks for them
 instead of guessing.
 
@@ -170,9 +176,10 @@ use a corrected age for a baby born early). They're there to help you follow alo
 your pediatrician can explain what they mean for your baby.
 
 > The numbers are the WHO's own LMS values, bundled in `MyBaby/Resources/who-growth.json`: the daily
-> "expanded tables" for weight-for-age and length/height-for-age, girls and boys, birth to 1856 days, from
-> https://www.who.int/tools/child-growth-standards/standards (files `wfa-boys/girls-zscore-expanded-tables.xlsx`
-> and `lhfa-boys/girls-zscore-expanded-tables.xlsx`), downloaded on 2026-10-25 and checked against the
+> "expanded tables" for weight-for-age, length/height-for-age and head circumference-for-age, girls and boys,
+> birth to 1856 days, from https://www.who.int/tools/child-growth-standards/standards (files
+> `wfa-boys/girls-zscore-expanded-tables.xlsx`, `lhfa-boys/girls-zscore-expanded-tables.xlsx` and
+> `hcfa-boys/girls-zscore-expanded-tables.xlsx`), downloaded on 2026-10-25 and checked against the
 > CDC's copies of the WHO monthly tables (https://www.cdc.gov/growthcharts/who-data-files.htm). From
 > day 731 the length table is standing height, as in the WHO standard. Percentiles come from
 > z = ((X/M)^L − 1) / (L·S) and the normal distribution (`MyBaby/Services/GrowthStandards.swift`).
@@ -305,7 +312,7 @@ medical advice.
   **Share PDF** turns it into a one-page summary to hand to the pediatrician. It includes what the doctor
   said at the previous visit, if you noted it.
 - **How did it go?** After a visit, a short, optional recap: what the doctor said, the weight, length and
-  head circumference measured (weight and length go to Growth, dated at the visit), shots given (upcoming
+  head circumference measured (all three go to Growth, dated at the visit), shots given (upcoming
   vaccines are marked as given, or new ones added) and answers to your questions, plus **Book the next
   visit** with the same doctor (after "2-month checkup" it suggests "4-month checkup"). Every part can be
   skipped. It's offered by a notification an hour after the visit ends (appointments count as an hour long;
@@ -313,24 +320,81 @@ medical advice.
   3 days, and a row under recent past appointments. Once saved, the appointment shows a summary like
   "Weighed 5.2 kg · 2 shots · notes". The recap is in the shared log, so the other parent's nudges go away
   too; view-only family can read it. (`Views/Health/VisitRecapView.swift`, `Services/VisitFollowUp.swift`.)
+  Recaps saved before Growth had head circumference kept it on the appointment; Growth, the reports and the
+  export still show it, and editing it in Growth or the recap moves it along.
+- **Cancel, not delete**: open an appointment (or long-press it) and tap **Cancel appointment**, separate from
+  Delete. After you confirm, it moves to a **Cancelled** group, struck through, with its questions and notes
+  kept. Its reminder, the "How did it go?" follow-up and Today card go away, and with *Keep appointments in my
+  calendar* on, so does its calendar event. **Restore** (swipe right on it, or open it) brings them all back.
+  The visit summary doesn't count a cancelled visit as the previous appointment, the diary leaves it out, and
+  the appointments CSV marks it (*Cancelled*, *Cancelled on*). It's in the shared log, so it's cancelled on
+  your partner's phone too. (`Models/Appointment+Cancel.swift`.)
+- **Places**: type in an appointment's *Location* and MyBaby suggests clinics, hospitals and addresses from
+  Apple Maps as you type (name, with the address below). Pick one to save its address, coordinates and
+  phone number with the appointment; the list shows the address under the place, and the appointment shows
+  a small map (tap it to open Maps), **Directions** (driving, in Apple Maps) and **Call** when Maps has a
+  number. You can still type any place and just save it, and older appointments keep their text. Suggestions
+  lean toward the last place you picked, or your iPhone's Region setting; MyBaby never asks for your location.
+  Only what you type in the field is sent to Apple Maps, never before you type, after a short pause in typing
+  (`Services/PlaceSearch.swift`, `Models/Appointment+Place.swift`). The visit summary and its PDF include the
+  address, and the appointments CSV adds *Address*, *Latitude*, *Longitude* and *Phone* at the end.
+- **Vaccine clinics**: a vaccine's *Clinic or provider* field searches Apple Maps the same way, and a picked
+  clinic shows its address, map, **Directions** and **Call**. The clock button by this field, and by an
+  appointment's *Location*, lists places already picked for vaccines and appointments, so the usual clinic is
+  one tap, with nothing searched. The vaccines CSV adds *Provider address*, *Latitude*, *Longitude* and
+  *Phone* at the end (`Models/Vaccine+Place.swift`).
+- **Vaccine guide** (Health › Vaccines, and the list button in the vaccine editor): 21 vaccines and combination
+  shots (routine ones, 6-in-1 and 5-in-1 shots, MMRV, and MenB, MenC, MenACWY and BCG where they're offered),
+  searchable by name or brand, including the names on French-language records (DCaT-HB-VPI-Hib, RRO-Var).
+  Each has what it protects against and why, roughly when it's given (never exact ages, which differ by
+  country), what's common after it, and the rare reactions to watch for. A vaccine typed or saved by any of
+  its names shows *About this vaccine* in the editor. **After a vaccine** covers comfort, when to call the
+  doctor (with the region's nurse line, like 811 or NHS 111) and the signs of an emergency (with the region's
+  emergency number), and the list links it for two days after a shot. The guide links the official schedule
+  for the region picked for support lines (AAP and CDC in the US, Québec and Canada, the NHS, or the WHO
+  elsewhere). It's bundled and works offline; the notes carry a *Reviewed* date to check yearly
+  (`Models/VaccineGuide.swift`, `Views/Health/VaccineGuideView.swift`).
+- **After the shots, on Today**: once a vaccine is marked given, Today shows one calm card for the visit
+  while there's something to look out for, timed to each vaccine: "After Tuesday's shots" for the first two
+  days after most vaccines (soreness, a low fever, fussiness, extra sleep), then, where it applies, "MMR was 9
+  days ago" (MMR and MMRV again about days 6 to 14: fever, a mild rash, swollen glands and the rare febrile
+  seizure), chickenpox spots up to about 4 weeks (keep them covered around newborns, pregnant people and
+  anyone with a weak immune system), rotavirus's first week (the rare signs of intussusception to get care
+  for right away), BCG's bump and blister from about 2 to 12 weeks, MenB's more common fever (follow the
+  clinic's advice on infant paracetamol) and the RSV antibody's mild first days. Each card has two or three
+  short lines, **Comfort, and when to call** and each vaccine's notes. Shots given the same day are one card,
+  and it's never shown for a vaccine that's only due. Dismissing it hides it until that visit's next window
+  starts, remembered on this iPhone. View-only family see it too (it changes nothing in the log), and in
+  3 AM mode its lines stay in readable primary text. Settings › **After vaccines** (off by default, on each
+  phone) adds a notification at 9 AM the day a later window starts (MMR and MMRV on day 6, BCG at 2 weeks):
+  "MMR was 6 days ago: a fever or mild rash can show up around now. Here's what's normal." Tapping it opens
+  Today. Only the next one is pending, and it's moved whenever vaccines change, here or on the partner's
+  phone (`Models/VaccineGuide+Watch.swift`, `Services/VaccineFollowUp.swift`,
+  `Views/Today/VaccineFollowUpSection.swift`).
 
 ### 📅 Appointments in your calendar
 
 - **Add to Calendar**: open an appointment (or long-press it in the list) for iOS's new-event sheet, filled in
   with "Mavie: 2-month checkup", the time (an hour long), the doctor and place, and an alert an hour before.
+  A place picked from the suggestions comes with its address and map location, so Calendar shows the map and
+  can offer a time-to-leave alert (both here and with *Keep appointments in my calendar*).
   You see exactly what's added and pick the calendar. It needs no calendar permission (on iOS 17 the sheet
   runs outside the app).
 - **Keep appointments in my calendar** (Settings › *Calendar*, per phone, off by default) asks for full
   calendar access, then adds every upcoming appointment (all babies, from 24 hours ago on) to the default
-  calendar or one you pick, such as a shared Family calendar. Edits update the event, deleting an appointment
-  removes it, and changes your partner makes show up too. Events get no alerts, since MyBaby already sends the
-  reminder chosen on each appointment. If the picked calendar is deleted, appointments go to the default one.
+  calendar or one you pick, such as a shared Family calendar. Edits update the event, deleting or cancelling
+  an appointment removes it (restoring adds it back), and changes your partner makes show up too. Events get
+  no alerts, since MyBaby already sends the reminder chosen on each appointment. If the picked calendar is
+  deleted, appointments go to the default one.
   Turning it off asks whether to keep or remove the events.
 - **Two phones, one family calendar**: before adding an event, MyBaby looks for one with the same title at the
   same time in that calendar and adopts it, so turning it on on both phones doesn't make duplicates. It's still
   best to turn it on on one phone only.
 - Which event belongs to which appointment is kept on the phone (`CalendarEvents.json` in Application
   Support, keyed by the appointment's `uuid`), never in the shared log (`Services/CalendarSync.swift`).
+  Events added with *Add to Calendar* are remembered next to it (`CalendarAddedEvents.json`: the event's
+  identifier when MyBaby has calendar access, otherwise the title and time), so *Delete all MyBaby data* can
+  remove them too.
 
 ### 🤱 Breastfeeding timer
 
@@ -367,7 +431,8 @@ hold the Lock Screen, **Customize**, then tap the widget):
   **Bottle** (the same bottle as last time, which the button shows), **Breastfeed** (starts the timer on the
   side MyBaby suggests; **Switch** while it runs) and **Medicine** (the medicine given last, recorded with the
   dose you logged last time; it never suggests a dose). While the dose timing you entered doesn't allow
-  another dose yet, the Medicine button shows the time it will instead, and opens the app.
+  another dose yet, the Medicine button shows the time it will instead, and opens the app. When the medicine
+  matches one on the baby's allergy list, it shows **Check allergy list** and opens the app (see *Allergies*).
 - **Show** (Lock Screen): one of the last feed, last diaper, asleep or awake, next medicine dose, or who's
   on night duty.
 
@@ -377,6 +442,7 @@ for each widget: they aren't synced, so you and your partner each set up your ow
 **Live Activities:** the breastfeeding timer and a running sleep ("Sleeping 0:42", with **Woke up**) appear on
 the Lock Screen and in the Dynamic Island, counting by themselves. A sleep your partner starts shows up on
 your phone too, the next time MyBaby opens or syncs. Swipe one away and it stays away for that sleep.
+While cry alerts listen, there's one for that too, and every widget shows a small mic (see *Cry alerts*).
 
 **Siri and Shortcuts** work without any setup, also from the Shortcuts app, the Action button, Spotlight and
 Siri on Apple Watch. Say "in MyBaby" (or "in My Baby") so Siri knows which app you mean. These are the
@@ -415,9 +481,9 @@ whenever a baby is added, renamed or removed. Replies use the baby's name once i
 
 **In Shortcuts and Spotlight only** (Apple allows an app 10 Siri phrases; add any of these to Siri from the
 Shortcuts app if you like): **Switch Breastfeeding Side**, **Start Sleep**, **End Sleep**, **Log Medicine**
-(pick from medicines given before; it records the dose you logged last time, never suggests one, and says
-when the dose timing you entered didn't allow one yet), **When Did Baby Last Eat?** (kept for shortcuts made
-with it; the same answer as Ask MyBaby) and **Start or Stop White Noise** (white, pink or brown, on the
+(pick from medicines given before; it records the dose you logged last time, never suggests one, says
+when the dose timing you entered didn't allow one yet, and asks first when the medicine is on the baby's
+allergy list), **When Did Baby Last Eat?** (kept for shortcuts made with it; the same answer as Ask MyBaby) and **Start or Stop White Noise** (white, pink or brown, on the
 nursery monitor, at the volume set there).
 
 Everything logged this way counts for the parent on night duty, like Today's quick log. On a log that's view
@@ -438,6 +504,29 @@ reads the diary back, not even the note just added, and nothing from the care pa
 > Intents (`MyBabyWidgets/WidgetConfigurationIntents.swift`), and the baby list comes from that same summary
 > (`Shared/BabyEntity.swift`).
 
+### 📱 iPad
+
+MyBaby runs on iPad as an iPad app, not a stretched iPhone one, which suits the nursery monitor and a
+tablet on the changing table. The iPhone layout doesn't change.
+
+- **Sidebar** (iPadOS 18 and later): the five tabs can show as a sidebar, or as the tab bar along the top.
+  iPadOS 17 keeps the tab bar.
+- **Wider screens, laid out for them.** Today puts the "time since" cards and the quick log side by side.
+  Reports shows the charts two by two, with all six averages in one row. History, Health, More and Settings
+  keep to a readable column in the middle of the screen.
+- **Sheets** open as form-sized cards in the middle of the screen (iPadOS 18), never full screen.
+- **Keyboard:** ⌘1 to ⌘5 open Today, History, Reports, Health and More; ⌘N on Today or History asks what to
+  log and opens it. Hold ⌘ to see them.
+- **Pointer:** the quick log buttons and History's filter chips light up under the pointer.
+- **Every orientation, Split View and Slide Over.** In a narrow window the iPhone layout comes back.
+- **Nursery monitor:** a big, dim clock above the status. In landscape the status is centered on the left
+  and the controls sit beside it; the night light's glow fills the whole screen.
+- **Widgets:** the same small, medium and large Home Screen widgets, and the Lock Screen ones.
+
+The layout pieces live in `MyBaby/Views/Components/RegularWidth.swift`: `readableContentWidth()`, the
+`CardColumns` layout, `formSheetSizing()` and the keyboard shortcuts. They only do something in a regular
+width (`horizontalSizeClass`), so iPhone screens stay exactly as they were.
+
 ### ⌚ Apple Watch
 
 Log from your wrist without reaching for the phone in the dark. The watch app shows the baby you're viewing on
@@ -447,25 +536,44 @@ the iPhone:
   and how long baby has been asleep or awake. The times count up by themselves.
 - **Big buttons:** **Wet**, **Dirty**, **Both**, **Sleep** / **Woke up**, **Bottle** (formula or breast milk,
   then an amount in your ml or oz setting) and **Medicine** (medicines you've logged before, recorded with the
-  dose you logged last time, which the button shows; it never suggests a dose).
+  dose you logged last time, which the button shows; it never suggests a dose). A medicine on the baby's
+  allergy list shows **⚠︎** and isn't logged from the watch. Tapping it says why instead: "Mavie's list
+  includes amoxicillin. Log it on the iPhone after checking with your doctor or pharmacist." The iPhone
+  checks too, so a medicine added to the allergy list while the watch was away isn't logged either, and the
+  watch says so when it next hears from the iPhone.
 - **Breastfeeding timer:** **Start left** or **Start right** (with MyBaby's suggested side starred), then a live
   clock with each side's time, **Switch** and **Stop & save**. It's the same timer as on the iPhone, its Live
   Activity and Siri.
 - Every tap buzzes and shows a short confirmation, with **Undo** for 5 seconds.
 - After 9 PM, before 7 AM and during a night shift, the buttons turn a dim red.
-- **Complications** for the watch face: time since the last feed (round and inline), and the last feed and
-  diaper (rectangular).
+- **Complications** for the watch face (round, rectangular, inline and corner): the last feed, the last
+  diaper, asleep or awake, the next medicine dose (from the dose timing you entered) or who's on night duty.
+  Each one follows the baby shown on the iPhone, or a particular baby: with twins, put one for each side by
+  side, and each shows its baby's name.
+
+**Choosing what a complication shows.** Touch and hold the watch face, tap **Edit**, swipe to the
+complications and tap one, then pick from MyBaby's list: each detail for the baby on the iPhone (*Last
+feed* first), then each baby by name ("Mavie: last feed"; with twins also their last diaper and sleep).
+Complications already on your watch face, and ones you add without choosing, look as they always did: the
+last feed, for the baby on the iPhone. The choices are kept on each watch, so you and your partner each set
+up your own.
 
 **No phone nearby?** Taps still work. They're queued on the watch ("Will sync to iPhone") and logged at the time
 you tapped as soon as the iPhone is back in range, even if you closed the app. The home screen says how many
-are waiting, and "Last synced 3 min ago" when what it shows may be out of date.
+are waiting, and "Last synced 3 min ago" when what it shows may be out of date. The complications keep showing
+the last summary for every baby, with your taps on the watch added.
 
 > How it works: the watch has no database and never talks to a server. It talks only to your own iPhone, over
 > Apple's WatchConnectivity, directly between the two devices. The iPhone sends a small summary (the same one
-> the widgets use, plus your bottle amounts, recent medicine names and the suggested side) whenever it changes,
-> and each tap on the watch is sent back as a small command that the iPhone logs through the same code as Siri
-> and the widgets (`MyBaby/Services/WatchBridge.swift`). The watch keeps the last summary in its own App Group,
-> for the complications.
+> the widgets use, with each baby's part trimmed to what the complications show, plus your bottle amounts,
+> recent medicine names with any allergy-list matches, and the suggested side) whenever it changes, and each
+> tap on the watch is sent back as a small command that the iPhone logs through the same code as Siri and the
+> widgets (`MyBaby/Services/WatchBridge.swift`). Before logging a medicine from the watch, the iPhone checks
+> the baby's allergy list with the same name matching as the app's warnings (`AllergyMatch.medicineMatches`).
+> The watch keeps the last summary in its own App Group, for the complications. Their options are an App
+> Intent (`MyBabyWatchWidgets/ComplicationIntent.swift`) with the widgets' baby choice (`Shared/BabyEntity.swift`,
+> which reads that summary on the watch); watchOS shows them as the ready-made list above
+> (`recommendations()`).
 
 ### 👶👶 Twins and siblings
 
@@ -538,9 +646,28 @@ saved or sent anywhere.
 - Alerts use the alert style from Night shifts, so they can be vibrate only.
 - While it's listening, a soft **teal border pulses around the whole app**, so it's obvious the microphone is on.
   It turns orange and pulses faster while the baby is crying. It stays still with Reduce Motion and dims in 3 AM mode.
-- Sensitivity is Low, Medium or High. Listening stops by itself when the night ends.
+- Sensitivity is Low, Medium or High. **Stop listening** is set on each iPhone: when you stop it (the default),
+  when the night shifts end, at a time you pick, or after a number of hours (1 to 12). A nursery monitor always
+  listens until it's stopped.
 - Keep the phone close to the baby, plugged in, and leave MyBaby running in the background. Swiping the
   app away stops listening.
+- **Outside the app, too.** While this iPhone listens, a **Live Activity** shows on the Lock Screen: a mic,
+  "Listening for crying", since when, and "until 7:00 AM" when it stops by itself, with a **Stop** button
+  that really stops listening. In the Dynamic Island it's a small green mic (tap and hold for Stop). During
+  a cry it turns orange: "Crying for 1:20", counting up. It's dark, dim and still, whatever the 3 AM mode
+  setting, so it doesn't light up the room. It ends when listening stops, however that happens: Stop, the
+  time you chose, a call that ends listening, or swiping MyBaby away. If iOS closes MyBaby without saying so,
+  it's marked out of date at the stop time and removed the next time MyBaby opens (or with Stop). Swipe it
+  away and it stays away until you start listening again; it isn't shown when Live Activities are off for
+  MyBaby (iPhone Settings › MyBaby), and iOS ends any Live Activity after about 8 hours, while listening
+  goes on. When listening starts again by itself after a call, it appears the next time you open MyBaby.
+- **Widgets** show it as well, whichever baby they're set to: a small mic capsule, "Listening", at the top
+  of the medium and large Home Screen widgets (just the mic on the small one), and a tiny mic on the Lock
+  Screen widgets. It turns orange, "Crying", during a cry (a small waveform on the Lock Screen, which
+  usually shows without color). The widgets stop showing it at the stop time even if the app can't redraw
+  them. A cry starting or ending redraws them at most once a minute.
+- A nursery monitor shows neither: it has its own dim full-screen view by the crib, its **Stop monitor**
+  asks first (a Lock Screen button wouldn't), and the parents' phones already show whether it's listening.
 - Without a night plan, the phone simply buzzes whenever it hears crying.
 - **Battery.** Listening is built to sip power. A cheap loudness check looks at the sound all the time
   (an RMS level, against a slowly adapting "how loud is the room" floor, so a fan or white noise counts as
@@ -550,6 +677,12 @@ saved or sent anywhere.
   and the screen isn't kept awake. In Low Power Mode the check is a little less eager (Cry alerts says
   so); listening never stops because of it. Keep the phone or the monitor plugged in overnight anyway.
   Debug builds show how much the classifier ran in Cry alerts' footer (`CryGate`).
+
+> How it shows outside the app: `CryMonitor.listeningSummary` goes into the widgets' snapshot
+> (`WidgetSnapshot.listening`, optional, so a snapshot written before it reads as not listening) and into
+> the Live Activity (`ListeningActivityAttributes`, started, updated and ended in
+> `Services/LiveActivities.swift`, drawn in `MyBabyWidgets/ListeningLiveActivity.swift`). Stop is
+> `StopListeningIntent` in `Shared/ButtonIntents.swift`, which runs in the app like the other buttons.
 
 > Cry alerts help you rest; they aren't a medical or safety monitor.
 
@@ -564,7 +697,8 @@ A spare device can stay by the crib and alert the parent on duty's phone, with n
 
 **Setting it up**
 
-1. Install MyBaby on the spare iPhone or iPad. (MyBaby is an iPhone app; iPads run it as one.)
+1. Install MyBaby on the spare iPhone or iPad. On an iPad the monitor works in either orientation, with a
+   big clock (see *iPad*).
 2. Sign in to iCloud on it with a parent's Apple ID, or with another Apple ID you invite to the log with
    permission to make changes. Turn on iCloud sync (or open the invitation link).
 3. Open MyBaby once on each parent's iPhone with iCloud on, and pick *This iPhone belongs to* in Night
@@ -654,6 +788,7 @@ learned, a first, a funny moment, or a letter for them to read when they're olde
   used here, with both parents' names one tap away. Every entry shows who wrote it.
 - **The diary** is grouped by the baby's months, "Month 3 · 12 Jan – 11 Feb" (by calendar month until a
   birthday is set, and "Before Mavie was born" for anything written earlier), with search and a filter by kind.
+  It shows the last 3 months, with *Show earlier* for more; search always looks through the whole diary.
 - **Letters for later** can have an *open when*: a birthday (say the 18th) or a date. Until then a letter is
   a sealed envelope, "For Mavie, to open at 18", everywhere in the app, and search never matches its words.
   A parent can always tap **Read anyway** (it's sealed again next time), so nothing is ever locked away.
@@ -700,12 +835,14 @@ they're never in the baby's CSV export or PDF report. They stay on your iPhone, 
 end-to-end encrypted, if sync is on. (If you and your partner use the same Apple ID, iCloud would show them
 on their devices too.)
 
-**It's locked.** The page opens only after Face ID (or Touch ID, or the iPhone's passcode), and nothing in it is
-loaded before. It locks again when you leave it, when MyBaby goes to the background, and when you come back
-after more than 2 minutes away, and it's blurred in the app switcher. The lock icon at the top lets you turn
-it off (that asks for Face ID first) or back on. Without a passcode on the iPhone it can't lock, so it opens
-with a "Not locked" banner instead. Nothing from the care page appears in the widgets, on the Apple Watch or in
-Siri. The lock is `PrivateContentLock` in `MyBaby/Views/Components/PrivacyLock.swift`.
+**It's always locked.** The page opens only after Face ID (or Touch ID, or the iPhone's passcode), and nothing
+in it is loaded before. There's no switch to turn the lock off. It locks again every time you leave it, and
+as soon as MyBaby stops being active (another app, the app switcher, Control Center, the Lock Screen), so
+coming back always asks again. An iPhone without a passcode can't open it at all until one is set. The page
+and the screens it opens (My medicines, past check-ins, recovery notes, the note editor) are left out of
+screenshots, covered while the screen is recorded, mirrored or sent with AirPlay, and blurred in the app
+switcher (`privateScreen()` in `Views/Components/ScreenCaptureShield.swift`). Nothing from the care page
+appears in the widgets, on the Apple Watch or in Siri. The lock is `PrivateContentLock` in `MyBaby/Views/Components/PrivacyLock.swift`.
 
 **Gentle support.** If most of your check-ins over the last two weeks were one of the two lowest faces, a
 card says that many new parents feel this way and help works, and suggests talking to your doctor or
@@ -718,8 +855,9 @@ and languages when known. The region comes from the iPhone's Region setting (Set
 & Region), never from your location, and **Change** next to "Support for …" picks another one (or *Other /
 not listed*, which shows your local emergency number and the Find A Helpline directory). In Canada, choose
 your province or territory to see its own lines, like Quebec's Info-Santé and Info-Social 811 and
-1 866 APPELLE. Covered so far: the US, Canada, the UK, Ireland, Australia, New Zealand, Israel, France,
-Germany, the Netherlands, India and South Africa.
+1 866 APPELLE. Covered so far: the US, Canada (every province and territory), the UK, Ireland, Australia,
+New Zealand, Israel, France, Germany, the Netherlands, Belgium, Switzerland, Spain, Italy, Sweden, Norway,
+Denmark, India, South Africa, Mexico, Brazil, Singapore, Hong Kong and Japan.
 
 The numbers live in `MyBaby/Resources/support-resources.json`. Every resource lists the official pages
 (the organization's own site or a government health site) where its number was checked, each region
@@ -808,6 +946,30 @@ uploads a new copy, instead of reacting to the deleted zone (which can make iClo
 interrupted, for example offline, Settings shows *Finish deleting iCloud copy*, and turning sync on finishes
 it first. Other devices signed in to the same Apple ID stop syncing and may remove their copy.
 
+**Delete all MyBaby data** (Settings → *Your data*) is the "delete my account" button. MyBaby has no account
+or server, so the account is everything it keeps on the iPhone and in the parent's own iCloud. A sheet lists
+what goes (every baby's log with photos, diary, milestones, allergies and reports; the iCloud copy; the
+private Parent care page; settings, widgets and reminders; the Apple Watch summary), offers the CSV export
+and a keepsake PDF first, and says what happens to sharing: a log you created and shared disappears from
+your partner's iPhone too, since its share is deleted with your iCloud copy (named when iCloud knows the
+partner's name); a log you joined is left, and the partner's own log stays. It can also remove the
+appointments *Keep appointments in my calendar* added and the ones added with *Add to Calendar* on this
+iPhone; that needs full calendar access, which is asked for only then, and if it's not given the summary
+names the events that stayed. The parent types DELETE (any case), then confirms
+with Face ID, Touch ID or the passcode when the iPhone has one. `Services/DataWipe.swift` then takes the
+screens down (like switching iCloud) behind a "Deleting your data…" progress screen and, carrying on past
+any step that fails: stops cry alerts, monitor mode, white noise, the breastfeeding timer, Live Activities
+and all notifications; leaves joined logs (Core Data's purge), turns sync off, deletes Core Data's zones and
+the `MyBabyAlertInbox` zone from the private database, leaves other parents' logs and inboxes in the shared
+database and deletes every CloudKit subscription; removes the calendar events; destroys both stores and
+everything next to them, the widget snapshot, Application Support (calendar links, crash reports) and
+temporary exports; clears both `UserDefaults` domains (MyBaby keeps nothing in the Keychain); tells the
+widgets and the watch there's no baby; and opens new, empty stores with sync off, back on the welcome
+screen. Offline or signed out, the iPhone is still wiped and only `iCloudDeletionPending` is kept, the same
+flag as *Delete my iCloud copy*: the iCloud part finishes by itself the next time the app opens online with
+no log, from *Finish deleting iCloud copy*, or before sync is turned back on. Deleting the app alone never
+deletes the iCloud copy.
+
 **Before sync turns on**, every way of turning it on (the Settings switch, *Invite partner*, onboarding's
 *Back up to iCloud*, *Restore from iCloud* and opening a partner's link) checks the iCloud account first. If
 the iPhone isn't signed in, iCloud is restricted (Screen Time, a work profile) or can't be reached, sync stays
@@ -821,6 +983,15 @@ so the log is still there; only if they can't be opened even then does the app s
 Switching sync on or off opens the database files in a new `NSPersistentCloudKitContainer` each time (a
 container's CloudKit mirroring can't be restarted), and the screens are rebuilt with its context. Sharing
 and joining wait until iCloud has finished setting up the store ("Connecting to iCloud…").
+
+**Change history is kept for a week.** Both stores have persistent history tracking on, which
+`NSPersistentCloudKitContainer` uses to find what to upload; it adds a little to the database with every
+save. Once a day, 10 seconds after launch, the app deletes history older than 7 days from both stores on a
+background context (`PersistenceController.purgeOldHistoryIfDue`), so the database doesn't keep growing.
+The container keeps its own place in the history and only needs what it hasn't uploaded yet, so a week is a
+wide margin even for a phone that was offline for days; if it ever found its place purged, it would set
+sync up again from the store, losing nothing. The app itself never reads the history. The database isn't
+vacuumed: the space freed inside the files is reused by later saves.
 
 Turning iCloud on or off rebuilds the app's screens with the database reopened, but you stay where you
 were: on the same tab, and in More › Settings if that's where you flipped the switch (the tab is kept in
@@ -838,6 +1009,71 @@ medicine schedules with the same name become one. **Not now** isn't asked again 
 baby's profile still offers *Merge with the other Mavie*. A baby your partner shared with you is never
 merged: it lives in their iCloud, and entries can't link across the two. The check runs after sync is
 turned on, after a restore and when an iCloud download finishes (`Services/BabyMerge.swift`).
+
+### 📥 Import from another app
+
+Switching to MyBaby doesn't mean starting over. Settings › *Your data* › **Import from another app** brings
+a log over from another baby tracker, or from MyBaby on another iPhone without iCloud.
+
+1. **Choose a file**: a CSV, TXT or ZIP exported from the other app (several at once for MyBaby's own set
+   of CSVs).
+2. **Exported from**: *Auto-detect* (it says what it found) or the app, with how to export from it.
+3. **Import into**: a baby already in MyBaby, or *A new baby* (named, and with a birthday, from the file
+   when it has them).
+4. **Time zone**: most apps write times without one, so they're read in the zone you pick, this iPhone's
+   by default.
+5. **Preview**: how many of each kind, the dates covered, how many are already in MyBaby, the rows left out
+   with the reason for each, and a few entries as they'll appear. Nothing is saved until you tap
+   **Import**.
+
+What each reader understands, and where its format comes from (none of these apps documents its export, so
+each reader was written against real exports people have published, cited in its source file):
+
+| From | File | What comes over |
+| --- | --- | --- |
+| **MyBaby** | The CSVs from *Export all data* | The log, growth, vaccines and marked times (not tracked, nothing happened, caught up), exactly as exported. Appointments, the diary and allergies aren't brought back yet. |
+| **Huckleberry** | Child profile › *Export tracking data as CSV* | Breastfeeds with each side's minutes, bottles (formula or breast milk, ml or oz), solids, diapers (pee, poo, both, dry, with the color and consistency MyBaby knows), sleep, pumping (left and right), medicine with the dose, baths, weight and length. `Services/Import/HuckleberryImporter.swift` |
+| **Glow Baby** | *Export Report* › CSV (a ZIP of CSVs) | Diapers with color and texture, bottles, solids, sleep, weight and length. `GlowBabyImporter.swift` |
+| **Nara Baby** | Activity › the child › *Export Data* | Breastfeeds with each side's time, bottles, diapers, sleep, pumping and growth, at the exact moment Nara recorded. With more than one child in the file, you pick which one. `NaraBabyImporter.swift` |
+| **Another app** | Any CSV | You match the columns (date and time, end, type, amount, unit, duration, side, notes) on a screen that shows the first rows; MyBaby suggests a match from the headers and the date format from the values, for you to confirm. Each row's kind comes from words like *bottle*, *formula*, *nursing*, *wet*, *nap*, *pump* or a medicine's name, or *Every row is a…* for a file with one kind per file. |
+
+Baby Tracker (Nighp), Baby Connect, Sprout Baby and Baby Daybook don't document their CSV exports and no
+published example could be found, so they go through *Another app* rather than a reader built on guesses.
+
+- **Units** are converted to MyBaby's: oz to ml, lb (and lb + oz) to kg, inches and feet to cm, °F to °C.
+  Weights and lengths need their unit in the file, a temperature without one is read as °C or °F from the
+  number (36.8 or 98.2), and amounts without one use the unit you pick.
+- **Nothing is guessed.** A row MyBaby can't read (an unknown type, a sleep with no end, a diaper that
+  doesn't say wet or dirty) is skipped and counted, with the reason shown in the preview. Breastfeeds with
+  only a total time are split evenly between the sides, and the note says so; a bottle that doesn't say what
+  was in it is saved as formula with a note.
+- **Duplicates.** An entry of the same kind within a minute of one already in MyBaby is skipped, so
+  importing the same file twice adds nothing the second time.
+- **Gaps stay gaps.** Imported entries count as logged time for coverage like any other, and nothing else
+  is added: a stretch nobody logged in the other app is untracked in MyBaby too, never a run of zeros.
+- **In the background, with Stop.** Entries are saved in batches of 400 on a background context, with
+  progress. Stopping keeps what's added so far, which can be removed.
+- **Undo.** Every entry an import adds carries its id (`importBatchID` on `Activity`, `GrowthEntry`,
+  `Vaccine` and `TrackingPeriod`). Settings › *Your data* › **Recent imports** lists the last 10 imports made
+  on this iPhone, and **Remove this import** deletes exactly what it added, on every iPhone that shares the
+  log, and nothing logged in MyBaby.
+- **Private.** The file is read on the iPhone, from where it is, into memory, and let go when the import
+  closes: it's never uploaded, copied into MyBaby or kept. Only the entries you import are saved, like any
+  others. The list of recent imports (app, file name, baby, count) stays on this iPhone.
+
+The readers are pure functions from text to an `ImportPlan` (`MyBaby/Services/Import/`), with their own CSV
+reader (quotes, line breaks in fields, commas, semicolons or tabs, UTF-8 or UTF-16) and a small ZIP reader
+on Apple's Compression framework, so they can be tried on sample files without Core Data.
+`ImportWriter.swift` saves a plan and removes an import.
+
+### 📜 Terms of Use
+
+On first launch, and again whenever the terms change, each person sees the key points (not medical advice;
+cry alerts and reminders can miss something; check medicine doses; the log stays theirs), can read the full
+terms and the privacy policy, and ticks a box before **Agree and continue**. It's kept per device, so a
+partner agrees on their own phone. An app update that doesn't change the terms doesn't ask again; raising
+`TermsOfUse.version` does. The full text is in Settings › Privacy › *Terms of Use* and at `docs/terms.html`
+(`Models/TermsOfUse.swift`, `Views/Settings/TermsViews.swift`).
 
 ### 🔒 Privacy
 
@@ -859,23 +1095,37 @@ third-party code. Settings → *Privacy* explains this in the app.
   sync and the share's title.
 - **If you lose access to iCloud Keychain** (for example, you reset it), the encrypted data can't be recovered
   from iCloud. The copy on your iPhone is still there.
+- **Imports** read the other app's file on the iPhone, from where it is. It's never uploaded, copied or
+  kept; only the entries you choose to import are saved.
 - **CSV exports and the PDF report** go wherever you send them. The temporary copies are deleted from the
   phone when the share sheet closes.
 - **Calendar events** (Add to Calendar, or Keep appointments in my calendar) leave the encrypted log: they're
   stored by the calendar's provider (iCloud, Google, Outlook…). They hold the title, baby's name, time, doctor
-  and place, never the appointment's notes or questions.
-- **Cry alerts** listen on the phone only. The audio never leaves the phone and is never stored.
+  and place (with its address and map location when it was picked from the suggestions), never the
+  appointment's notes or questions.
+- **Places**: searching for an appointment's place or a vaccine's clinic sends what's typed in that field to Apple Maps, the
+  same as typing in Maps, and only once you start typing. The small map of a picked place is loaded from Apple
+  Maps too. Nothing else from the log is sent, and MyBaby doesn't ask for or use the iPhone's location.
+- **Cry alerts** listen on the phone only. The audio never leaves the phone and is never stored. While they
+  listen, their Live Activity shows on the Lock Screen, without unlocking, that they're listening, since and
+  until when, and whether crying is heard now; the widgets show a small mic. The Live Activity shows nothing
+  from the log, not even the baby's name, and none of it is sent anywhere (the Apple Watch's summary leaves
+  it out).
 - **The nursery monitor** listens on the device too, and its white noise is generated there. Its alerts
   travel as small encrypted records (a time, a kind, how long the crying went on, no names) in the family's
   own iCloud, in each parent's private inbox, and are deleted after an hour. The notification's wording is
   fixed and generic.
 - **Widgets and Live Activities** read a small summary for each baby (last feed, diaper, sleep, pumping, the
   stash total, today's counts, the last medicine and when its next dose is allowed, when the next feed is
-  probably due, who's on duty) that the
+  probably due, who's on duty), plus whether cry alerts are listening on this iPhone, that the
   app keeps in its App Group on the iPhone. It's never synced or sent anywhere. Widget settings stay on the
   iPhone too.
-- **The Apple Watch app** gets that summary for the baby shown (plus your bottle amounts and recent medicine names) straight from
+- **The Apple Watch app** gets that summary (each baby's part trimmed to what the complications show, plus your bottle amounts,
+  recent medicine names and, for those, any matching names on the allergy list) straight from
   your iPhone over Apple's WatchConnectivity, and sends taps back the same way. No server is involved.
+- **Deleting everything** (Settings → *Your data* → *Delete all MyBaby data*) removes everything MyBaby keeps
+  on the iPhone and in your iCloud; there's no account to close besides. Uninstalling the app alone leaves
+  the iCloud copy in place.
 - **Feedback** (Settings → *Help & support* → *Send feedback*) is an email from the parent's own account,
   filled in by the app and sent only by the parent, who sees and can change all of it first. If Mail isn't
   set up, it opens a `mailto:` link or copies the message instead. The optional technical details (app and
@@ -928,12 +1178,17 @@ Requirements: a Mac with **Xcode 16 or newer** and a **paid Apple Developer Prog
 ### TestFlight & App Store checklist
 
 TestFlight and App Store builds use CloudKit's **Production** environment; builds run from Xcode use
-**Development**. Production only knows the record types that were deployed to it, and until they are,
+**Development**. Debug builds keep their own database files (`MyBaby-private-development.sqlite`), so running
+one from Xcode on a phone that also has the TestFlight build never mixes the two: a debug build starts with
+an empty log of its own. Production only knows the record types that were deployed to it, and until they are,
 syncing and sharing fail (the app says "iCloud isn't set up for this version of MyBaby yet").
 
 1. Run a **Debug** build from Xcode on an iPhone signed in to iCloud, turn on **Sync with iCloud**, and tap
    More → Settings → *About · Debug build* → **Create iCloud schema**. That creates every record type and
-   field in Development (`initializeCloudKitSchema`). The button only exists in debug builds.
+   field in Development: the Core Data ones (`initializeCloudKitSchema`) and the nursery monitor's
+   `CryAlert` and `CryAlertTest`, which are plain CloudKit records. The button only exists in debug builds.
+   Until they're deployed, a TestFlight phone shows "Alerts from a nursery monitor aren't available in this
+   version yet" under Cry alerts.
 2. In the [CloudKit Console](https://icloud.developer.apple.com), open the container `iCloud.<bundle id>`
    (now `iCloud.com.mybaby.ios`), then **Schema → Deploy Schema Changes…** to Production.
 3. **Redeploy after any change to the data model** (`MyBaby.xcdatamodeld`), before uploading a build that
@@ -941,13 +1196,21 @@ syncing and sharing fail (the app says "iCloud isn't set up for this version of 
 4. In the developer account (Certificates, Identifiers & Profiles), check that the iCloud container exists and
    is enabled for the App ID, with CloudKit, and that the App Group `group.<bundle id>` exists and is enabled
    for the app and widget App IDs.
+5. MyBaby supports iPhone and iPad (`TARGETED_DEVICE_FAMILY = 1,2`, for the app and the widgets), so App
+   Store Connect needs iPad screenshots too (see `docs/screenshots.md`). Once a version with iPad support
+   is on the App Store, later versions can't drop it.
 
 ## Website and App Store links
 
 App Store Connect needs a Privacy Policy URL and a Support URL. `docs/` holds those pages as plain
-static HTML with no JavaScript: `index.html` (landing page), `privacy.html`, `support.html`, a shared
+static HTML: `index.html` (landing page), `privacy.html`, `terms.html`, `support.html`, a shared
 `style.css` and `icon.png`. The links between them are relative, so they work from any folder or domain. The App Store listing text (name,
 subtitle, promotional text, description and keywords, within Apple's limits) is in `docs/app-store.md`.
+
+The pages are also in French (`docs/fr/`) and Spanish (`docs/es/`); the English ones keep their URLs. Each page
+has an English · Français · Español switcher, and `lang.js` remembers the choice. The English home page sends a
+French or Spanish browser to its language until a language is picked. The terms match the app's own French and
+Spanish text, and the app opens the pages in the language it's showing.
 
 The site is published with **GitHub Pages** from the public repository (`byitzy/mybaby-app`, branch `main`,
 folder `/docs`):
@@ -966,8 +1229,8 @@ folder `/docs`):
 4. In App Store Connect → App Privacy, answer **Data Not Collected**. This matches the privacy manifest
    and the policy: the developer never receives any data.
 
-If the app's data handling changes, update `docs/privacy.html` (and its effective date),
-`PrivacyView.swift` and `PrivacyInfo.xcprivacy` together.
+If the app's data handling changes, update `docs/privacy.html` and its French and Spanish copies (and their
+effective dates), `PrivacyView.swift` and `PrivacyInfo.xcprivacy` together.
 
 ## Project layout
 
@@ -982,7 +1245,8 @@ MyBaby/
                            DiaryEntry + DiaryPhoto (the diary and letters for later)
   Services/                iCloud persistence & sharing, reminders, cry monitor, report math, coverage, patterns,
                            WHO growth percentiles, visit summaries, export, breastfeeding timer, help lines by region,
-                           Live Activities, the widget snapshot writer, the Apple Watch bridge
+                           Live Activities, the widget snapshot writer, the Apple Watch bridge,
+                           Delete all MyBaby data (DataWipe), Import/ (reading other apps' exports)
   Intents/                 Siri & Shortcuts actions and phrases
   Resources/               who-growth.json (WHO growth standards, bundled), support-resources.json
                            (help lines by region, with their sources)
@@ -997,7 +1261,7 @@ MyBaby/
     Milestones/            Milestone timeline, editor (photos and camera), photo viewer, image downscaling
     Diary/                 The diary, its editor, week and month summaries, letters, Today's card, keepsake PDF
     MomCare/               Parent care: check-ins, medicines, birth recovery notes, mood chart and support
-    Components/            Shared pieces and the design system (DesignSystem.swift)
+    Components/            Shared pieces and the design system (DesignSystem.swift), iPad layout (RegularWidth.swift)
     History/  Reports/  Health/  Settings/  Onboarding/
   Preview Content/         Debug-only sample data for screenshots
 Shared/                    Built into the app, the widgets and the watch: App Group, WidgetSnapshot, the
@@ -1005,20 +1269,20 @@ Shared/                    Built into the app, the widgets and the watch: App Gr
                            and what the iPhone and the watch send each other (WatchContext, WatchCommand)
 MyBabyWidgets/             Widget extension: Home & Lock Screen widgets, their Edit Widget options, Live Activity views
 MyBabyWatch/               Apple Watch app: status, quick-log buttons, breastfeeding timer, offline queue
-MyBabyWatchWidgets/        Watch face complications
+MyBabyWatchWidgets/        Watch face complications and their options
 ```
 
 The Xcode project uses synchronized folders, so any `.swift` file you add under `MyBaby/` is
 included in the app automatically, under `MyBabyWidgets/` in the widgets, and under `Shared/` in both.
 Code in `Shared/` that only the app can run (it uses Core Data) goes inside `#if !WIDGET_EXTENSION`.
 The watch targets build `Shared/` too, except `ButtonIntents.swift` and `LiveActivityAttributes.swift`
-(Live Activities aren't on watchOS) and `BabyEntity.swift` (the iPhone widgets' baby picker), which the
-project excludes for them. So a new file in `Shared/` must
+(Live Activities aren't on watchOS), and the watch app also leaves out `BabyEntity.swift` (the widgets' and
+complications' baby picker), which the project excludes for them. The complications set `WIDGET_EXTENSION`
+like the iPhone widgets. So a new file in `Shared/` must
 build on watchOS, or be added to those exclusions (in Xcode: the file's Target Membership).
 
 ## Ideas for next steps
 
-- Head circumference (the WHO tables have it too) and weight-for-length
-- The same baby choice for the watch face complications (they follow the baby shown on the iPhone)
+- Weight-for-length (the WHO tables have it too)
 
 > MyBaby is a tracking tool, not medical advice. Always contact your pediatrician with questions or concerns.

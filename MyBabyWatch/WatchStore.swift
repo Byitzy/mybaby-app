@@ -29,6 +29,9 @@ final class WatchStore {
     private(set) var pendingCount = 0
     /// The short confirmation shown after a tap.
     private(set) var confirmation: Confirmation?
+    /// Something to read and dismiss, shown as an alert: why a medicine on the baby's allergy list
+    /// isn't logged from the watch.
+    private(set) var notice: String?
 
     @ObservationIgnored private var delegate: SessionDelegate?
     /// Taps made before the session finished activating (right after launch), sent once it has.
@@ -108,7 +111,7 @@ final class WatchStore {
             let undoCommand = WatchCommand(action: .undo(id), babyID: context?.snapshot?.babyID)
             status = isActivated && session.isReachable ? .sending : .queued
             deliver(undoCommand)
-            show(Confirmation(message: "Undone", status: status, commandID: undoCommand.id, canUndo: false))
+            show(Confirmation(message: String(localized: "Undone", comment: "Watch: a tap was taken back"), status: status, commandID: undoCommand.id, canUndo: false))
         }
         if let before = contextBeforeTap {
             setContext(before)
@@ -116,7 +119,7 @@ final class WatchStore {
         contextBeforeTap = nil
         WKInterfaceDevice.current().play(.click)
         if status == .local {
-            show(Confirmation(message: "Undone", status: .local, commandID: id, canUndo: false))
+            show(Confirmation(message: String(localized: "Undone", comment: "Watch: a tap was taken back"), status: .local, commandID: id, canUndo: false))
         }
     }
 
@@ -124,6 +127,16 @@ final class WatchStore {
         dismissTask?.cancel()
         withAnimation { confirmation = nil }
         contextBeforeTap = nil
+    }
+
+    /// Shows `message` as an alert, with a gentle buzz, instead of logging.
+    func showNotice(_ message: String) {
+        WKInterfaceDevice.current().play(.notification)
+        notice = message
+    }
+
+    func dismissNotice() {
+        notice = nil
     }
 
     /// Asks the iPhone for the latest context, when it can be reached. Sent when the app opens.
@@ -243,17 +256,51 @@ final class WatchStore {
     /// contexts can arrive out of order.
     fileprivate func receive(_ incoming: WatchContext) {
         if let current = context, incoming.sentAt < current.sentAt { return }
+        // No baby on the iPhone any more (e.g. all MyBaby data was deleted there): there's nothing left
+        // to undo, and Undo mustn't bring back what was shown before.
+        if incoming.snapshot == nil, context?.snapshot != nil {
+            dismissConfirmation()
+        }
         setContext(incoming)
+        if let refusal = incoming.refusal {
+            showOnce(refusal)
+        }
     }
+
+    /// A tap the iPhone didn't log: says why, once, in place of its "logged" confirmation.
+    private func showOnce(_ refusal: WatchContext.Refusal) {
+        var shown = (UserDefaults.standard.array(forKey: Self.shownRefusalsKey) as? [String]) ?? []
+        let id = refusal.commandID.uuidString
+        guard !shown.contains(id) else { return }
+        shown.append(id)
+        UserDefaults.standard.set(Array(shown.suffix(20)), forKey: Self.shownRefusalsKey)
+        if confirmation?.commandID == refusal.commandID {
+            dismissConfirmation()
+        }
+        showNotice(refusal.message)
+    }
+
+    /// The `WatchCommand.id`s of the refusals already shown, kept on the watch so each shows once.
+    private static let shownRefusalsKey = "shownWatchRefusals"
 
     /// Shows `new`, saves it for next launch and the complications, and redraws them if it changed.
     private func setContext(_ new: WatchContext) {
         let changed = context.map { !new.hasSameContent(as: $0) } ?? true
+        let babiesChanged = Self.babyList(context) != Self.babyList(new)
         context = new
         WatchContext.save(new)
         if changed {
             WidgetCenter.shared.reloadAllTimelines()
         }
+        if babiesChanged {
+            // The face editor's presets list each baby by name (`recommendations()`).
+            WidgetCenter.shared.invalidateConfigurationRecommendations()
+        }
+    }
+
+    /// The babies' ids and names, which the complications' presets are made from.
+    private static func babyList(_ context: WatchContext?) -> [String] {
+        (context?.snapshot?.babies ?? []).map { "\($0.id) \($0.name)" }
     }
 }
 
@@ -271,9 +318,9 @@ struct Confirmation: Equatable {
 
         var text: String? {
             switch self {
-            case .sending: return "Sending to iPhone…"
-            case .saved: return "Saved on iPhone"
-            case .queued: return "Will sync to iPhone"
+            case .sending: return String(localized: "Sending to iPhone…")
+            case .saved: return String(localized: "Saved on iPhone")
+            case .queued: return String(localized: "Will sync to iPhone")
             case .local: return nil
             }
         }

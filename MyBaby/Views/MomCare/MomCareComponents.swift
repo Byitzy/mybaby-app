@@ -54,7 +54,7 @@ struct SleepStepper: View {
 
     var body: some View {
         Stepper {
-            LabeledContent(title, value: hours.map { Format.hours($0 * 3600) } ?? "Not set")
+            LabeledContent(title, value: hours.map { Format.hours($0 * 3600) } ?? String(localized: "Not set"))
         } onIncrement: {
             hours = min(24, (hours ?? 5.5) + 0.5)
         } onDecrement: {
@@ -78,8 +78,8 @@ struct PainPicker: View {
 
     static func title(_ value: Int) -> String {
         switch value {
-        case 0: return "0 · None"
-        case 10: return "10 · Worst"
+        case 0: return String(localized: "0 · None", comment: "Pain level")
+        case 10: return String(localized: "10 · Worst", comment: "Pain level")
         default: return "\(value)"
         }
     }

@@ -229,7 +229,10 @@ struct AllergyEmergencyBanner: View {
 
     /// The banner's words, also read out by VoiceOver when it appears.
     static func message(numbers: String?) -> String {
-        "Trouble breathing, or swelling of the face, lips or tongue, can be an emergency. Call \(numbers ?? "your local emergency number") now."
+        if let numbers {
+            return String(localized: "Trouble breathing, or swelling of the face, lips or tongue, can be an emergency. Call \(numbers) now.")
+        }
+        return String(localized: "Trouble breathing, or swelling of the face, lips or tongue, can be an emergency. Call your local emergency number now.")
     }
 
     /// The same, for the person's region right now.
@@ -241,7 +244,8 @@ struct AllergyEmergencyBanner: View {
     /// "Call 9 1 1", so VoiceOver reads the digits one by one.
     private func spokenCall(_ number: EmergencyNumber) -> String {
         let digits = SupportDirectory.spoken(number.number)
-        return number.label.map { "Call \(digits), \($0)" } ?? "Call \(digits)"
+        return number.label.map { String(localized: "Call \(digits), \($0)", comment: "The digits, then what the number is for: Call 1 1 2, from a mobile") }
+            ?? String(localized: "Call \(digits)")
     }
 }
 
@@ -262,7 +266,7 @@ struct AllergyProfileSection: View {
 
     var body: some View {
         let active = allergies.sortedForDisplay().filter(\.isActive)
-        let summary = active.isEmpty ? "None listed" : active.map(\.shortSummary).joined(separator: ", ")
+        let summary = active.isEmpty ? String(localized: "None listed", comment: "No allergies on the list") : active.map(\.shortSummary).joined(separator: ", ")
         Section {
             NavigationLink {
                 AllergiesList(baby: baby)
@@ -334,7 +338,7 @@ struct AllergyRow: View {
 
     private var autoInjectorText: String {
         let place = allergy.autoInjectorLocation.trimmingCharacters(in: .whitespacesAndNewlines)
-        return place.isEmpty ? "Has an epinephrine auto-injector" : "Auto-injector: \(place)"
+        return place.isEmpty ? String(localized: "Has an epinephrine auto-injector") : String(localized: "Auto-injector: \(place)")
     }
 }
 

@@ -5,6 +5,7 @@ struct TodayView: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.canEditLog) private var canEditLog
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @ObservedObject var baby: Baby
     @AppStorage(SettingsKey.volumeUnit, store: .shared) private var unit: VolumeUnit = .ml
     @AppStorage(SettingsKey.nightPlan, store: .shared) private var nightPlanData = Data()
@@ -62,6 +63,8 @@ struct TodayView: View {
                 DeviceOwnerPromptSection(baby: baby)
                 // "How did the 2-month checkup go?", for a visit in the last 3 days.
                 VisitRecapPromptSection(baby: baby, now: now)
+                // "After Tuesday's shots" or "MMR was 9 days ago": what to look out for after a vaccine.
+                VaccineFollowUpSection(baby: baby, now: now)
                 // "Mavie is 3 months old today 🎉": a week or month summary is ready in the diary.
                 DiaryReadyCard(baby: baby, now: now)
 
@@ -79,40 +82,40 @@ struct TodayView: View {
                     if nightPlan.isEnabled {
                         NavigationLink {
                             NightPlanView()
+                                .readableContentWidth()
                         } label: {
                             NightDutyCard(plan: nightPlan)
                         }
                     }
                     NavigationLink {
                         CryMonitorView()
+                            .readableContentWidth()
                     } label: {
                         CryAlertsRow()
                     }
                     MonitorStatusRows(baby: baby)
                 }
 
-                Section {
-                    SinceLastRow(
-                        feeding: lastFeeding.first,
-                        diaper: lastDiaper.first,
-                        sleep: lastSleep.first,
-                        unit: unit,
-                        baby: baby
-                    )
-                }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-
-                Section("Quick log") {
-                    if !canEditLog {
-                        ViewOnlyBanner()
-                            .tileStyle()
+                if usesTwoColumns {
+                    sideBySideSection
+                } else {
+                    Section {
+                        sinceLastRow(stacked: false)
                     }
-                    quickLogGrid
-                        .disabled(!canEditLog)
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+
+                    Section("Quick log") {
+                        if !canEditLog {
+                            ViewOnlyBanner()
+                                .tileStyle()
+                        }
+                        quickLogGrid
+                            .disabled(!canEditLog)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
                 }
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
 
                 Section {
                     if todaysActivities.isEmpty {
@@ -140,6 +143,12 @@ struct TodayView: View {
                 }
             }
             .listStyle(.insetGrouped)
+            // Wider than other lists on iPad, for the two columns of cards.
+            .readableContentWidth(ReadableWidth.twoColumns)
+            // ⌘N with a keyboard: pick what to log.
+            .newEntryKeyboardShortcut(isEnabled: canEditLog) { kind in
+                editorTarget = .new(kind)
+            }
             .navigationTitle("Today")
             .sheet(item: $editorTarget) { target in
                 ActivityEditorView(kind: target.kind, activity: target.activity, baby: baby)
@@ -260,37 +269,134 @@ struct TodayView: View {
     /// The baby's emoji circle, growing a little with the text size.
     private var avatarSide: CGFloat { min(avatarSize, 84) }
 
+    /// On iPad (a regular width), the "time since" cards and the quick log sit side by side. In a
+    /// compact width, such as Split View or Slide Over, and at the accessibility text sizes they stay
+    /// one above the other, as on iPhone.
+    private var usesTwoColumns: Bool {
+        horizontalSizeClass == .regular && !dynamicTypeSize.isAccessibilitySize
+    }
+
+    private func sinceLastRow(stacked: Bool) -> some View {
+        SinceLastRow(
+            feeding: lastFeeding.first,
+            diaper: lastDiaper.first,
+            sleep: lastSleep.first,
+            unit: unit,
+            baby: baby,
+            stacked: stacked
+        )
+    }
+
+    /// iPad: the "time since" cards on the left, the quick log on the right, each under its own header.
+    private var sideBySideSection: some View {
+        Section {
+            HStack(alignment: .top, spacing: Spacing.l) {
+                VStack(alignment: .leading, spacing: Spacing.s) {
+                    columnHeader(String(localized: "Time since", comment: "Header over the time-since-last cards on iPad"))
+                    sinceLastRow(stacked: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+
+                VStack(alignment: .leading, spacing: Spacing.s) {
+                    columnHeader(String(localized: "Quick log"))
+                    if !canEditLog {
+                        ViewOnlyBanner()
+                            .tileStyle()
+                    }
+                    quickLogGrid
+                        .disabled(!canEditLog)
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+    }
+
+    private func columnHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, Spacing.xs)
+            .accessibilityAddTraits(.isHeader)
+    }
+
     private var quickLogGrid: some View {
         let columns = dynamicTypeSize.gridColumns(3)
         return LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: columns), spacing: 10) {
-            QuickLogButton(emoji: "🍼", title: "Feed", voiceOverLabel: "Log a feeding", tint: ActivityKind.feeding.color) {
+            QuickLogButton(
+                emoji: "🍼",
+                title: String(localized: "Feed", comment: "Quick log button: log a feeding"),
+                voiceOverLabel: String(localized: "Log a feeding"),
+                tint: ActivityKind.feeding.color
+            ) {
                 showingFeedOptions = true
             }
-            QuickLogButton(emoji: "🧷", title: "Diaper", voiceOverLabel: "Log a diaper change", tint: ActivityKind.diaper.color) {
+            QuickLogButton(
+                emoji: "🧷",
+                title: String(localized: "Diaper", comment: "Quick log button: log a diaper change"),
+                voiceOverLabel: String(localized: "Log a diaper change"),
+                tint: ActivityKind.diaper.color
+            ) {
                 showingDiaperOptions = true
             }
             if let sleep = ongoingSleep.first {
-                QuickLogButton(emoji: "🌤️", title: "Woke up", voiceOverLabel: "Baby woke up, stop the sleep timer", tint: ActivityKind.sleep.color) {
+                QuickLogButton(
+                    emoji: "🌤️",
+                    title: String(localized: "Woke up", comment: "Button: the baby woke up, stops the sleep timer"),
+                    voiceOverLabel: String(localized: "Baby woke up, stop the sleep timer"),
+                    tint: ActivityKind.sleep.color
+                ) {
                     wakeUp(sleep)
                 }
             } else {
-                QuickLogButton(emoji: "😴", title: "Sleep", voiceOverLabel: "Start the sleep timer", tint: ActivityKind.sleep.color) {
+                QuickLogButton(
+                    emoji: "😴",
+                    title: String(localized: "Sleep", comment: "Quick log button: starts the sleep timer"),
+                    voiceOverLabel: String(localized: "Start the sleep timer"),
+                    tint: ActivityKind.sleep.color
+                ) {
                     startSleep()
                 }
             }
-            QuickLogButton(emoji: "🛁", title: "Bath", voiceOverLabel: "Log a bath", tint: ActivityKind.bath.color) {
-                insert(.bath, message: "🛁 Bath logged")
+            QuickLogButton(
+                emoji: "🛁",
+                title: String(localized: "Bath", comment: "Quick log button: log a bath"),
+                voiceOverLabel: String(localized: "Log a bath"),
+                tint: ActivityKind.bath.color
+            ) {
+                insert(.bath, message: String(localized: "🛁 Bath logged"))
             }
-            QuickLogButton(emoji: "💊", title: "Medicine", voiceOverLabel: "Log medicine", tint: ActivityKind.medication.color) {
+            QuickLogButton(
+                emoji: "💊",
+                title: String(localized: "Medicine", comment: "Quick log button: log a medicine dose"),
+                voiceOverLabel: String(localized: "Log medicine"),
+                tint: ActivityKind.medication.color
+            ) {
                 editorTarget = .new(.medication)
             }
-            QuickLogButton(emoji: "✏️", title: "Past sleep", voiceOverLabel: "Add a past sleep", tint: Palette.inactive) {
+            QuickLogButton(
+                emoji: "✏️",
+                title: String(localized: "Past sleep", comment: "Quick log button: add a sleep that already ended"),
+                voiceOverLabel: String(localized: "Add a past sleep"),
+                tint: Palette.inactive
+            ) {
                 editorTarget = .new(.sleep)
             }
-            QuickLogButton(emoji: "🫙", title: "Pump", voiceOverLabel: "Log a pumping session", tint: ActivityKind.pumping.color) {
+            QuickLogButton(
+                emoji: "🫙",
+                title: String(localized: "Pump", comment: "Quick log button: log a pumping session"),
+                voiceOverLabel: String(localized: "Log a pumping session"),
+                tint: ActivityKind.pumping.color
+            ) {
                 editorTarget = .new(.pumping)
             }
-            QuickLogButton(emoji: "🌡️", title: "Temp", voiceOverLabel: "Log a temperature", tint: ActivityKind.temperature.color) {
+            QuickLogButton(
+                emoji: "🌡️",
+                title: String(localized: "Temp", comment: "Quick log button, short for temperature"),
+                voiceOverLabel: String(localized: "Log a temperature"),
+                tint: ActivityKind.temperature.color
+            ) {
                 editorTarget = .new(.temperature)
             }
         }
@@ -305,7 +411,11 @@ struct TodayView: View {
     private var todaySummaryForVoiceOver: String {
         let feeds = todaysActivities.filter { $0.kind == .feeding }.count
         let diapers = todaysActivities.filter { $0.kind == .diaper }.count
-        return "\(Format.plural(feeds, "feeding")), \(Format.plural(diapers, "diaper"))"
+        // One phrase per count, so each language has its own plurals.
+        return [
+            String(localized: "\(feeds) feedings", comment: "VoiceOver: how many feeds today"),
+            String(localized: "\(diapers) diapers", comment: "VoiceOver: how many diaper changes today"),
+        ].formatted(.list(type: .and, width: .narrow))
     }
 
     // MARK: Actions
@@ -324,11 +434,11 @@ struct TodayView: View {
     }
 
     private func logDiaper(_ type: DiaperType) {
-        insert(.diaper, message: "\(type.emoji) \(type.quickTitle) logged") { $0.diaperType = type }
+        insert(.diaper, message: type.loggedMessage) { $0.diaperType = type }
     }
 
     private func startSleep() {
-        insert(.sleep, message: "😴 Sleep timer started")
+        insert(.sleep, message: String(localized: "😴 Sleep timer started"))
     }
 
     private func wakeUp(_ sleep: Activity) {
@@ -382,8 +492,10 @@ private struct CryAlertsRow: View {
     }
 
     private var subtitle: String {
-        if monitor.cryStart != nil { return "Baby is crying" }
-        return monitor.isListening ? "Listening" : "Off · tap to listen tonight"
+        if monitor.cryStart != nil { return String(localized: "Baby is crying") }
+        return monitor.isListening
+            ? String(localized: "Listening", comment: "Cry alerts are listening for crying")
+            : String(localized: "Off · tap to listen tonight")
     }
 }
 
@@ -425,12 +537,18 @@ private struct NightDutyCard: View {
 
     /// "Until 2:00 AM · Sam is sleeping 😴 and takes over then". VoiceOver gets it without `emoji`.
     private func onDutyDetail(_ current: NightShift, in night: [NightShift], emoji: String) -> String {
-        let until = "Until \(current.end.formatted(date: .omitted, time: .shortened))"
+        let until = current.end.formatted(date: .omitted, time: .shortened)
         let partner = plan.name(of: current.parent.other)
         if night.contains(where: { $0.start >= current.end }) {
-            return "\(until) · \(partner) is sleeping \(emoji)and takes over then"
+            return String(
+                localized: "Until \(until) · \(partner) is sleeping \(emoji)and takes over then",
+                comment: "The third value is an emoji and a space, or nothing for VoiceOver"
+            )
         }
-        return "\(until) · \(partner) is sleeping \(emoji)".trimmingCharacters(in: .whitespaces)
+        return String(
+            localized: "Until \(until) · \(partner) is sleeping \(emoji)",
+            comment: "The third value is an emoji and a space, or nothing for VoiceOver"
+        ).trimmingCharacters(in: .whitespaces)
     }
 }
 
@@ -465,6 +583,9 @@ private struct QuickLogButton: View {
             .opacity(isEnabled ? 1 : 0.45)
         }
         .buttonStyle(PressableButtonStyle())
+        // With a pointer on iPad, the button lights up under it, in its own rounded shape.
+        .contentShape(.hoverEffect, RoundedRectangle(cornerRadius: Radius.button))
+        .hoverEffect(.highlight)
         .accessibilityLabel(voiceOverLabel)
     }
 }
@@ -542,7 +663,7 @@ private struct SleepingBanner: View {
     }
 
     private func spokenStatus(now: Date) -> String {
-        "Sleeping for \(Format.spokenDuration(now.timeIntervalSince(sleep.startDate))), since \(sleep.startDate.formatted(date: .omitted, time: .shortened))"
+        String(localized: "Sleeping for \(Format.spokenDuration(now.timeIntervalSince(sleep.startDate))), since \(sleep.startDate.formatted(date: .omitted, time: .shortened))")
     }
 }
 
@@ -554,46 +675,59 @@ private struct SinceLastRow: View {
     let unit: VolumeUnit
     /// For the "Next feed around…" lines (`CarePredictionLine`).
     let baby: Baby
+    /// One above the other, for Today's narrower column on iPad.
+    var stacked = false
 
     var body: some View {
         TimelineView(.everyMinute) { context in
-            // One above the other at the largest text sizes.
-            AdaptiveStack(verticalAlignment: .top, spacing: 10) {
-                SinceLastCard(
-                    emoji: "🍼",
-                    title: "Last feed",
-                    value: feeding.map { Format.timeAgo($0.startDate, now: context.date) } ?? "—",
-                    spokenValue: feeding.map { Format.spokenTimeAgo($0.startDate, now: context.date) } ?? "None yet",
-                    detail: feeding.map(feedingDetail) ?? "Not logged yet",
-                    tint: ActivityKind.feeding.color,
-                    prediction: .feed,
-                    baby: baby
-                )
-                SinceLastCard(
-                    emoji: "🧷",
-                    title: "Last diaper",
-                    value: diaper.map { Format.timeAgo($0.startDate, now: context.date) } ?? "—",
-                    spokenValue: diaper.map { Format.spokenTimeAgo($0.startDate, now: context.date) } ?? "None yet",
-                    detail: diaper?.diaperType?.quickTitle ?? "Not logged yet",
-                    tint: ActivityKind.diaper.color,
-                    prediction: .diaper,
-                    baby: baby
-                )
-                SinceLastCard(
-                    emoji: "😴",
-                    title: sleep?.isOngoing == true ? "Asleep for" : "Awake for",
-                    value: sleepValue(now: context.date),
-                    spokenValue: sleepSeconds(now: context.date).map(Format.spokenDuration) ?? "Unknown",
-                    detail: sleepDetail,
-                    tint: ActivityKind.sleep.color
-                )
+            if stacked {
+                VStack(spacing: 10) {
+                    cards(now: context.date)
+                }
+            } else {
+                // One above the other at the largest text sizes.
+                AdaptiveStack(verticalAlignment: .top, spacing: 10) {
+                    cards(now: context.date)
+                }
             }
         }
     }
 
+    @ViewBuilder
+    private func cards(now: Date) -> some View {
+        SinceLastCard(
+            emoji: "🍼",
+            title: String(localized: "Last feed"),
+            value: feeding.map { Format.timeAgo($0.startDate, now: now) } ?? "—",
+            spokenValue: feeding.map { Format.spokenTimeAgo($0.startDate, now: now) } ?? String(localized: "None yet"),
+            detail: feeding.map(feedingDetail) ?? String(localized: "Not logged yet"),
+            tint: ActivityKind.feeding.color,
+            prediction: .feed,
+            baby: baby
+        )
+        SinceLastCard(
+            emoji: "🧷",
+            title: String(localized: "Last diaper"),
+            value: diaper.map { Format.timeAgo($0.startDate, now: now) } ?? "—",
+            spokenValue: diaper.map { Format.spokenTimeAgo($0.startDate, now: now) } ?? String(localized: "None yet"),
+            detail: diaper?.diaperType?.quickTitle ?? String(localized: "Not logged yet"),
+            tint: ActivityKind.diaper.color,
+            prediction: .diaper,
+            baby: baby
+        )
+        SinceLastCard(
+            emoji: "😴",
+            title: sleep?.isOngoing == true ? String(localized: "Asleep for") : String(localized: "Awake for"),
+            value: sleepValue(now: now),
+            spokenValue: sleepSeconds(now: now).map(Format.spokenDuration) ?? String(localized: "Unknown"),
+            detail: sleepDetail,
+            tint: ActivityKind.sleep.color
+        )
+    }
+
     private func feedingDetail(_ feeding: Activity) -> String {
         let detail = feeding.detail(unit: unit)
-        let type = feeding.feedingType?.shortTitle ?? "Feeding"
+        let type = feeding.feedingType?.shortTitle ?? String(localized: "Feeding")
         return detail.isEmpty ? type : "\(type) · \(detail)"
     }
 
@@ -609,10 +743,10 @@ private struct SinceLastRow: View {
     }
 
     private var sleepDetail: String {
-        guard let sleep else { return "Not logged yet" }
-        if sleep.isOngoing { return "Sleeping now" }
+        guard let sleep else { return String(localized: "Not logged yet") }
+        if sleep.isOngoing { return String(localized: "Sleeping now") }
         guard let duration = sleep.duration() else { return "" }
-        return "Slept \(Format.duration(duration))"
+        return String(localized: "Slept \(Format.duration(duration))")
     }
 }
 
@@ -658,5 +792,18 @@ private struct SinceLastCard: View {
         }
         .frame(maxWidth: .infinity, minHeight: 80, alignment: .topLeading)
         .tileStyle(tint: tint)
+    }
+}
+
+private extension DiaperType {
+    /// "💧 Pee logged", the toast after a one-tap diaper. A whole sentence for each, since the words
+    /// around the type change with it in other languages.
+    var loggedMessage: String {
+        switch self {
+        case .wet: return String(localized: "💧 Pee logged")
+        case .dirty: return String(localized: "💩 Poop logged")
+        case .mixed: return String(localized: "💩 Pee + poop logged")
+        case .dry: return String(localized: "✨ Dry logged", comment: "A dry diaper was logged")
+        }
     }
 }

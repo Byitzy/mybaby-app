@@ -27,9 +27,8 @@ enum DiaryReminder {
         let months = next.months
 
         let content = UNMutableNotificationContent()
-        content.title = "\(baby.displayName) is \(ageText(months: months)) today 🎉"
-        let reader = baby.sex == nil ? "\(baby.displayName) will" : "\(baby.subjectPronoun)'ll"
-        content.body = "Write something \(reader) love to read one day?"
+        content.title = title(name: baby.displayName, months: months)
+        content.body = body(name: baby.displayName, sex: baby.sex)
         content.sound = .default
         content.threadIdentifier = identifier
 
@@ -58,8 +57,29 @@ enum DiaryReminder {
         return nil
     }
 
-    /// "3 months", "1 year", "18 months".
-    static func ageText(months: Int) -> String {
-        months % 12 == 0 ? Format.plural(months / 12, "year") : Format.plural(months, "month")
+    /// "Mavie is 3 months today 🎉", "… 1 year today 🎉", "… 18 months today 🎉". Whole sentences, so
+    /// each language can word the age its own way.
+    static func title(name: String, months: Int) -> String {
+        if months % 12 == 0 {
+            let years = months / 12
+            return years == 1
+                ? String(localized: "\(name) is 1 year today 🎉", comment: "Diary reminder title on the first birthday; the baby's name")
+                : String(localized: "\(name) is \(years) years today 🎉", comment: "Diary reminder title on a birthday; the baby's name, then the age in years")
+        }
+        return months == 1
+            ? String(localized: "\(name) is 1 month today 🎉", comment: "Diary reminder title; the baby's name")
+            : String(localized: "\(name) is \(months) months today 🎉", comment: "Diary reminder title; the baby's name, then the age in months")
+    }
+
+    /// "Write something she'll love to read one day?", or with the baby's name when their sex isn't set.
+    static func body(name: String, sex: BabySex?) -> String {
+        switch sex {
+        case .female:
+            return String(localized: "Write something she'll love to read one day?", comment: "Diary reminder, for a girl")
+        case .male:
+            return String(localized: "Write something he'll love to read one day?", comment: "Diary reminder, for a boy")
+        case nil:
+            return String(localized: "Write something \(name) will love to read one day?", comment: "Diary reminder; the baby's name")
+        }
     }
 }

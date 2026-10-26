@@ -2,13 +2,15 @@ import Charts
 import CoreData
 import SwiftUI
 
-/// Weight and length over time, with the latest of each up top. With the baby's sex and birthday
-/// set, each is placed on the WHO growth charts.
+/// Weight, length and head circumference over time, with the latest of each up top. With the
+/// baby's sex and birthday set, each is placed on the WHO growth charts.
 struct GrowthList: View {
     @Environment(\.managedObjectContext) private var context
     @Environment(\.canEditLog) private var canEditLog
     @AppStorage(SettingsKey.growthUnits, store: .shared) private var units: GrowthUnits = .localeDefault
     @FetchRequest private var entries: FetchedResults<GrowthEntry>
+    /// For the head circumference older "How did it go?" recaps kept on the appointment.
+    @FetchRequest private var appointments: FetchedResults<Appointment>
     /// Observed so setting the sex or birthday shows the percentiles right away.
     @ObservedObject private var baby: Baby
 
@@ -16,29 +18,30 @@ struct GrowthList: View {
     @State private var addingNew = false
     /// Waiting for "Delete" after a swipe.
     @State private var deleting: GrowthEntry?
+    /// An older recap's head circumference, which is changed in its recap.
+    @State private var recapping: Appointment?
 
     init(baby: Baby) {
         self.baby = baby
         _entries = FetchRequest(fetchRequest: baby.entries(GrowthEntry.fetchAll()))
+        _appointments = FetchRequest(fetchRequest: baby.entries(Appointment.fetchAll()))
     }
 
     var body: some View {
-        let weights = entries.compactMap { entry in
-            entry.weightKg.map { GrowthPoint(id: entry.objectID, date: entry.date, value: $0) }
-        }
-        let lengths = entries.compactMap { entry in
-            entry.lengthCm.map { GrowthPoint(id: entry.objectID, date: entry.date, value: $0) }
-        }
+        let readings = GrowthReading.all(entries: Array(entries), appointments: Array(appointments))
+        let weights = points(readings, .weight)
+        let lengths = points(readings, .length)
+        let heads = points(readings, .headCircumference)
         let showsPercentiles = baby.canShowGrowthPercentiles
         // With reference curves to compare with, one measurement is already worth a chart.
         let pointsForChart = showsPercentiles ? 1 : 2
 
         List {
-            if entries.isEmpty {
+            if readings.isEmpty {
                 EmptyStateView(
                     "No measurements yet",
                     systemImage: "ruler",
-                    message: "Add your baby's weight and length from each checkup to see how they're growing.",
+                    message: "Add your baby's weight, length and head size from each checkup to see how they're growing.",
                     actionTitle: "Add measurement",
                     isDisabled: !canEditLog
                 ) {
@@ -49,25 +52,40 @@ struct GrowthList: View {
                 Section {
                     AdaptiveStack(verticalAlignment: .top, spacing: 10) {
                         GrowthStat(
-                            title: "Weight",
+                            title: String(localized: "Weight"),
                             emoji: "⚖️",
                             value: weights.last.map { units.formatWeight(kg: $0.value) },
                             change: changeText(weights, format: units.formatWeightChange(kg:)),
                             percentile: weights.last.flatMap { percentile(.weight, $0) }
                         )
                         GrowthStat(
-                            title: "Length",
+                            title: String(localized: "Length"),
                             emoji: "📏",
                             value: lengths.last.map { units.formatLength(cm: $0.value) },
                             change: changeText(lengths, format: units.formatLengthChange(cm:)),
                             percentile: lengths.last.flatMap { percentile(.length, $0) }
                         )
+                        // Only once there's one, so the row stays roomy for families who don't measure it.
+                        if !heads.isEmpty {
+                            GrowthStat(
+                                title: String(localized: "Head", comment: "Short for head circumference"),
+                                emoji: "👶",
+                                value: heads.last.map { units.formatLength(cm: $0.value) },
+                                change: changeText(heads, format: units.formatLengthChange(cm:)),
+                                percentile: heads.last.flatMap { percentile(.headCircumference, $0) },
+                                spokenTitle: String(localized: "Head circumference")
+                            )
+                        }
                     }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                 } footer: {
                     if showsPercentiles {
-                        Text(Self.whoFooter)
+                        if baby.isPreterm, let born = baby.gestationText {
+                            Text("Born at \(born), so the percentiles use corrected age, counted from the due date, until \(baby.displayName)'s second birthday. \(Self.whoSource)")
+                        } else {
+                            Text(Self.whoFooter)
+                        }
                     }
                 }
 
@@ -77,17 +95,25 @@ struct GrowthList: View {
 
                 if weights.count >= pointsForChart {
                     Section("Weight (\(units.weightUnit))") {
-                        chart(weights, measure: .weight, label: "Weight", color: Palette.weight, convert: units.fromKg, format: units.formatWeight(kg:))
+                        chart(weights, measure: .weight, label: String(localized: "Weight"), color: Palette.weight, convert: units.fromKg, format: units.formatWeight(kg:))
                     }
                 }
                 if lengths.count >= pointsForChart {
                     Section("Length (\(units.lengthUnit))") {
-                        chart(lengths, measure: .length, label: "Length", color: Palette.length, convert: units.fromCm, format: units.formatLength(cm:))
+                        chart(lengths, measure: .length, label: String(localized: "Length"), color: Palette.length, convert: units.fromCm, format: units.formatLength(cm:))
+                    }
+                }
+                if heads.count >= pointsForChart {
+                    Section("Head circumference (\(units.lengthUnit))") {
+                        chart(heads, measure: .headCircumference, label: String(localized: "Head circumference"), color: Palette.headCircumference, convert: units.fromCm, format: units.formatLength(cm:))
                     }
                 }
 
                 Section("Measurements") {
-                    ForEach(Array(entries.reversed())) { row($0) }
+                    // Newest first, each with the change since the measurement before it.
+                    ForEach(Array(readings.enumerated()).reversed(), id: \.element.id) { index, reading in
+                        row(reading, earlier: Array(readings[..<index]))
+                    }
                 }
             }
         }
@@ -116,9 +142,19 @@ struct GrowthList: View {
         .sheet(item: $editing) { entry in
             GrowthEditor(entry: entry)
         }
+        .sheet(item: $recapping) { appointment in
+            VisitRecapView(appointment: appointment)
+        }
         .confirmDelete("Delete this measurement?", item: $deleting) { entry in
-            context.delete(entry)
+            entry.deleteIncludingRecapHead(in: context)
             context.saveIfChanged()
+        }
+    }
+
+    /// The readings that have `measure`, for its tile and chart.
+    private func points(_ readings: [GrowthReading], _ measure: GrowthMeasure) -> [GrowthPoint] {
+        readings.compactMap { reading in
+            reading.value(measure).map { GrowthPoint(id: reading.id, date: reading.date, value: $0) }
         }
     }
 
@@ -126,13 +162,14 @@ struct GrowthList: View {
     private func changeText(_ points: [GrowthPoint], format: (Double) -> String) -> String? {
         guard let latest = points.last else { return nil }
         guard points.count >= 2 else {
-            return "Measured \(latest.date.formatted(.dateTime.month(.abbreviated).day()))"
+            return String(localized: "Measured \(latest.date.formatted(.dateTime.month(.abbreviated).day()))")
         }
         let previous = points[points.count - 2]
-        return "\(format(latest.value - previous.value)) since \(previous.date.formatted(.dateTime.month(.abbreviated).day()))"
+        return String(localized: "\(format(latest.value - previous.value)) since \(previous.date.formatted(.dateTime.month(.abbreviated).day()))", comment: "A change, then a date: +180 g since Oct 12")
     }
 
-    static let whoFooter = "WHO Child Growth Standards. Your pediatrician can explain what these mean for your baby. Percentiles use age from the birthday; for a baby born early, your pediatrician may use a corrected age."
+    static let whoSource = String(localized: "WHO Child Growth Standards. Your pediatrician can explain what these mean for your baby.")
+    static let whoFooter = whoSource + " " + String(localized: "Percentiles use age from the birthday. For a baby born early, add the weeks of pregnancy in the baby's profile to use corrected age.")
 
     private func percentile(_ measure: GrowthMeasure, _ point: GrowthPoint) -> GrowthPercentile? {
         baby.growthPercentile(measure, value: point.value, on: point.date)
@@ -157,8 +194,9 @@ struct GrowthList: View {
 
     /// The WHO 3rd, 15th, 50th, 85th and 97th percentiles over the measured ages, with a margin.
     private func referenceCurves(_ points: [GrowthPoint], measure: GrowthMeasure) -> [GrowthCurve] {
-        guard let sex = baby.sex, let birthDate = baby.birthDate, let standards = GrowthStandards.who,
-              let first = points.first?.date, let last = points.last?.date
+        // For a baby born early, the curves start from the due date while corrected age applies.
+        guard let sex = baby.sex, let first = points.first?.date, let last = points.last?.date,
+              let birthDate = baby.growthAgeStart(on: first), let standards = GrowthStandards.who
         else { return [] }
         let margin = max(14 * 86_400, last.timeIntervalSince(first) * 0.15)
         return standards.curves(
@@ -175,9 +213,168 @@ struct GrowthList: View {
         convert: @escaping (Double) -> Double,
         format: @escaping (Double) -> String
     ) -> some View {
-        let curves = referenceCurves(points, measure: measure)
+        GrowthChart(
+            points: points,
+            curves: referenceCurves(points, measure: measure),
+            label: label,
+            color: color,
+            convert: convert,
+            format: format,
+            percentile: { percentile(measure, $0) },
+            spokenValue: { spokenValue(measure, $0, format: format) }
+        )
+    }
 
-        return VStack(alignment: .leading, spacing: 6) {
+    /// "4.2 kg, 48th percentile", for a point on the chart.
+    private func spokenValue(_ measure: GrowthMeasure, _ point: GrowthPoint, format: (Double) -> String) -> String {
+        let value = format(point.value)
+        guard let percentile = percentile(measure, point) else { return value }
+        return "\(value), \(percentile.spokenText)"
+    }
+
+    /// "Weight 48th · Length 62nd · Head 55th percentile" for a row, when the WHO charts apply.
+    private func percentileLine(_ reading: GrowthReading) -> String? {
+        var parts: [String] = []
+        if let kg = reading.weightKg, let p = baby.growthPercentile(.weight, value: kg, on: reading.date) {
+            parts.append(String(localized: "Weight \(p.shortText)", comment: "A weight percentile: Weight 48th"))
+        }
+        if let cm = reading.lengthCm, let p = baby.growthPercentile(.length, value: cm, on: reading.date) {
+            parts.append(String(localized: "Length \(p.shortText)", comment: "A length percentile: Length 62nd"))
+        }
+        if let cm = reading.headCm, let p = baby.growthPercentile(.headCircumference, value: cm, on: reading.date) {
+            parts.append(String(localized: "Head \(p.shortText)", comment: "Head circumference, short: Head 38 cm, or its percentile, Head 55th"))
+        }
+        guard !parts.isEmpty else { return nil }
+        // Its own sentence, apart from "48th percentile", which other languages word differently.
+        return String(localized: "Percentiles: \(parts.joined(separator: " · "))", comment: "Percentiles of each measure: Percentiles: Weight 48th · Length 62nd")
+    }
+
+    /// "4.2 kg · 55 cm · Head 38 cm".
+    private func valuesLine(_ reading: GrowthReading) -> String {
+        [
+            reading.weightKg.map { units.formatWeight(kg: $0) },
+            reading.lengthCm.map { units.formatLength(cm: $0) },
+            reading.headCm.map { String(localized: "Head \(units.formatLength(cm: $0))", comment: "Head circumference, short: Head 38 cm, or its percentile, Head 55th") },
+        ].compactMap { $0 }.joined(separator: " · ")
+    }
+
+    /// "Weight +180 g (+4.5%) in 6 days, 30 g a day · Length +1.2 cm in 14 days, 0.6 cm a week",
+    /// against the latest earlier measurement of each. Weight is per day, like pediatricians count it;
+    /// length and head per week, since a day's growth rounds to nothing.
+    private func changeLine(_ reading: GrowthReading, earlier: [GrowthReading]) -> String? {
+        var parts: [String] = []
+        for measure in [GrowthMeasure.weight, .length, .headCircumference] {
+            guard let value = reading.value(measure),
+                  let previous = earlier.last(where: { $0.value(measure) != nil }),
+                  let before = previous.value(measure), before > 0
+            else { continue }
+            let change = value - before
+            let days = max(1, Calendar.current.dateComponents([.day], from: previous.date, to: reading.date).day ?? 1)
+            let percent = change / before * 100
+            let percentText = (percent >= 0 ? "+" : "−") + abs(percent / 100).formatted(.percent.precision(.fractionLength(0...1)))
+            let span = days == 1 ? String(localized: "1 day") : String(localized: "\(days) days")
+            switch measure {
+            case .weight:
+                parts.append(String(localized: "Weight \(units.formatWeightChange(kg: change)) (\(percentText)) in \(span), \(perDayWeight(change / Double(days))) a day", comment: "Weight +180 g (+4.5%) in 6 days, 30 g a day"))
+            case .length:
+                parts.append(String(localized: "Length \(units.formatLengthChange(cm: change)) (\(percentText)) in \(span), \(units.formatLengthChange(cm: change / Double(days) * 7)) a week", comment: "Length +1.2 cm (+2%) in 14 days, 0.6 cm a week"))
+            case .headCircumference:
+                parts.append(String(localized: "Head \(units.formatLengthChange(cm: change)) (\(percentText)) in \(span), \(units.formatLengthChange(cm: change / Double(days) * 7)) a week", comment: "Head circumference: Head +0.8 cm (+2%) in 14 days, 0.4 cm a week"))
+            }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+    }
+
+    /// A day's weight change: "+30 g" or "+1.1 oz", since pounds a day round to nothing.
+    private func perDayWeight(_ kg: Double) -> String {
+        switch units {
+        case .metric:
+            return units.formatWeightChange(kg: kg)
+        case .imperial:
+            let ounces = kg * 35.27396
+            let magnitude = abs(ounces).formatted(.number.precision(.fractionLength(0...1)))
+            return (ounces >= 0 ? "+" : "−") + String(localized: "\(magnitude) oz", comment: "Ounces")
+        }
+    }
+
+    private func row(_ reading: GrowthReading, earlier: [GrowthReading]) -> some View {
+        Button {
+            if let entry = reading.entry {
+                editing = entry
+            } else {
+                recapping = reading.recap
+            }
+        } label: {
+            HStack(spacing: Spacing.m) {
+                EmojiBadge(emoji: "📏", tint: Palette.growth)
+                VStack(alignment: .leading, spacing: Spacing.xxs) {
+                    let values = valuesLine(reading)
+                    Text(values.isEmpty ? String(localized: "Measurement") : values)
+                        .font(.body.weight(.medium))
+                    if let percentiles = percentileLine(reading) {
+                        Text(percentiles)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if let change = changeLine(reading, earlier: earlier) {
+                        Text(change)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    if !reading.notes.isEmpty {
+                        Text(reading.notes)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                    }
+                }
+                Spacer()
+                Text(reading.date, format: .dateTime.month(.abbreviated).day().year())
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .combine)
+        }
+        .buttonStyle(.plain)
+        // A head circumference from an older recap is changed in that recap.
+        .accessibilityHint(reading.entry == nil ? Text("Opens the visit recap it was noted in") : Text(""))
+        .swipeActions {
+            if canEditLog, let entry = reading.entry {
+                // Not `.destructive`, which would remove the row before the answer.
+                Button("Delete", systemImage: "trash") {
+                    deleting = entry
+                }
+                .tint(.red)
+            }
+        }
+    }
+}
+
+/// A measure's chart: the baby's measurements over the WHO percentile curves. The row above it shows
+/// the latest measurement's value, percentile and date; tapping the chart shows the nearest
+/// measurement's instead, and tapping it again goes back to the latest. The row sits outside the
+/// chart, so nothing in it can be clipped by the chart's edges.
+private struct GrowthChart: View {
+    let points: [GrowthPoint]
+    let curves: [GrowthCurve]
+    let label: String
+    let color: Color
+    let convert: (Double) -> Double
+    let format: (Double) -> String
+    let percentile: (GrowthPoint) -> GrowthPercentile?
+    let spokenValue: (GrowthPoint) -> String
+
+    @State private var selectedID: NSManagedObjectID?
+
+    private var selected: GrowthPoint? {
+        points.first { $0.id == selectedID }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let shown = selected ?? points.max(by: { $0.date < $1.date }) {
+                reading(shown, isSelected: selected != nil)
+            }
             Chart {
                 // Faint reference lines behind the baby's own, the median solid and the rest dashed.
                 ForEach(curves) { curve in
@@ -187,8 +384,8 @@ struct GrowthList: View {
                             y: .value(label, convert(point.value)),
                             series: .value("Line", curve.label)
                         )
-                        .foregroundStyle(Color.gray.opacity(curveOpacity(curve)))
-                        .lineStyle(curveStroke(curve))
+                        .foregroundStyle(Color.gray.opacity(curve.percentile == 50 ? 0.5 : 0.3))
+                        .lineStyle(StrokeStyle(lineWidth: 1, dash: curve.percentile == 50 ? [] : [4, 3]))
                         .accessibilityHidden(true)
                     }
                 }
@@ -206,102 +403,86 @@ struct GrowthList: View {
                         y: .value(label, convert(point.value))
                     )
                     .foregroundStyle(color)
+                    .symbolSize(point.id == selectedID ? 140 : 50)
                     .accessibilityLabel(point.date.formatted(date: .abbreviated, time: .omitted))
-                    .accessibilityValue(spokenValue(measure, point, format: format))
+                    .accessibilityValue(spokenValue(point))
+                }
+                if let selected {
+                    RuleMark(x: .value("Date", selected.date))
+                        .foregroundStyle(color.opacity(0.35))
+                        .accessibilityHidden(true)
                 }
             }
             .chartYScale(domain: .automatic(includesZero: false))
-            .frame(height: 180)
-
-            if !curves.isEmpty {
-                Text("Gray lines: WHO 3rd, 15th, 50th (solid), 85th and 97th percentiles.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            .chartOverlay { proxy in
+                GeometryReader { geometry in
+                    Rectangle()
+                        .fill(.clear)
+                        .contentShape(Rectangle())
+                        // A tap, not a drag, so the list still scrolls past the chart.
+                        .onTapGesture { location in
+                            select(at: location, proxy: proxy, geometry: geometry)
+                        }
+                }
             }
+            .frame(height: 200)
+
+            Text(curves.isEmpty
+                 ? "Tap the chart to see a measurement."
+                 : "Gray lines: WHO 3rd, 15th, 50th (solid), 85th and 97th percentiles. Tap the chart to see where a measurement falls.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 8)
     }
 
-    /// "4.2 kg, 48th percentile", for a point on the chart.
-    private func spokenValue(_ measure: GrowthMeasure, _ point: GrowthPoint, format: (Double) -> String) -> String {
-        let value = format(point.value)
-        guard let percentile = percentile(measure, point) else { return value }
-        return "\(value), \(percentile.spokenText)"
-    }
-
-    private func curveOpacity(_ curve: GrowthCurve) -> Double {
-        curve.percentile == 50 ? 0.5 : 0.3
-    }
-
-    private func curveStroke(_ curve: GrowthCurve) -> StrokeStyle {
-        StrokeStyle(lineWidth: 1, dash: curve.percentile == 50 ? [] : [4, 3])
-    }
-
-    /// "Weight 48th · Length 62nd percentile" for a row, when the WHO charts apply.
-    private func percentileLine(_ entry: GrowthEntry) -> String? {
-        var parts: [String] = []
-        if let kg = entry.weightKg, let p = baby.growthPercentile(.weight, value: kg, on: entry.date) {
-            parts.append("Weight \(p.shortText)")
-        }
-        if let cm = entry.lengthCm, let p = baby.growthPercentile(.length, value: cm, on: entry.date) {
-            parts.append("Length \(p.shortText)")
-        }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ") + " percentile"
-    }
-
-    private func row(_ entry: GrowthEntry) -> some View {
-        Button {
-            editing = entry
-        } label: {
-            HStack(spacing: Spacing.m) {
-                EmojiBadge(emoji: "📏", tint: Palette.growth)
-                VStack(alignment: .leading, spacing: Spacing.xxs) {
-                    let values = [
-                        entry.weightKg.map { units.formatWeight(kg: $0) },
-                        entry.lengthCm.map { units.formatLength(cm: $0) },
-                    ].compactMap { $0 }.joined(separator: " · ")
-                    Text(values.isEmpty ? "Measurement" : values)
-                        .font(.body.weight(.medium))
-                    if let percentiles = percentileLine(entry) {
-                        Text(percentiles)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    if !entry.notes.isEmpty {
-                        Text(entry.notes)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
+    /// "3.02 kg · 15th percentile", with the date and whether it's the latest or the tapped one.
+    private func reading(_ point: GrowthPoint, isSelected: Bool) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Spacing.s) {
+            VStack(alignment: .leading, spacing: Spacing.xxs) {
+                HStack(alignment: .firstTextBaseline, spacing: Spacing.s) {
+                    Text(format(point.value))
+                        .font(.title3.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(color)
+                    if let percentile = percentile(point) {
+                        Text(percentile.text)
+                            .font(.subheadline.weight(.medium))
                     }
                 }
-                Spacer()
-                Text(entry.date, format: .dateTime.month(.abbreviated).day().year())
+                Text(point.date, format: .dateTime.month(.abbreviated).day().year())
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            .accessibilityElement(children: .combine)
+            Spacer(minLength: 0)
+            Text(isSelected ? "Selected" : "Latest")
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, Spacing.s)
+                .padding(.vertical, Spacing.xxs)
+                .background(Palette.chipBackground, in: Capsule())
         }
-        .buttonStyle(.plain)
-        .swipeActions {
-            if canEditLog {
-                // Not `.destructive`, which would remove the row before the answer.
-                Button("Delete", systemImage: "trash") {
-                    deleting = entry
-                }
-                .tint(.red)
-            }
-        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// The measurement nearest the tapped date; the same one again hides the callout.
+    private func select(at location: CGPoint, proxy: ChartProxy, geometry: GeometryProxy) {
+        guard let plotFrame = proxy.plotFrame else { return }
+        let x = location.x - geometry[plotFrame].origin.x
+        guard let date: Date = proxy.value(atX: x),
+              let nearest = points.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) })
+        else { return }
+        selectedID = nearest.id == selectedID ? nil : nearest.id
     }
 }
 
-/// One weight or length reading, in storage units (kg or cm).
+/// One weight, length or head circumference reading, in storage units (kg or cm).
 private struct GrowthPoint: Identifiable {
     let id: NSManagedObjectID
     let date: Date
     let value: Double
 }
 
-/// The latest weight or length, with the change since the measurement before it.
+/// The latest weight, length or head circumference, with the change since the measurement before it.
 private struct GrowthStat: View {
     let title: String
     let emoji: String
@@ -309,6 +490,8 @@ private struct GrowthStat: View {
     let change: String?
     /// On the WHO chart, when the baby's sex and birthday are set.
     var percentile: GrowthPercentile?
+    /// What VoiceOver reads for a short `title`: "Head circumference" for "Head".
+    var spokenTitle: String?
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -318,6 +501,7 @@ private struct GrowthStat: View {
                 Text(emoji)
                     .accessibilityHidden(true)
                 Text(title)
+                    .accessibilityLabel(spokenTitle ?? title)
             }
             .font(.caption.weight(.medium))
             .foregroundStyle(.secondary)
@@ -326,7 +510,7 @@ private struct GrowthStat: View {
                 .font(.title3.weight(.semibold).monospacedDigit())
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                 .minimumScaleFactor(0.7)
-                .accessibilityLabel(value ?? "Not measured yet")
+                .accessibilityLabel(value ?? String(localized: "Not measured yet"))
 
             if let percentile {
                 Text(percentile.text)
@@ -334,7 +518,7 @@ private struct GrowthStat: View {
                     .accessibilityLabel(percentile.spokenText)
             }
 
-            Text(change ?? "Not measured yet")
+            Text(change ?? String(localized: "Not measured yet"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
@@ -362,6 +546,8 @@ struct GrowthEditor: View {
     @State private var ouncesText = ""
     /// Centimeters or inches.
     @State private var lengthText = ""
+    /// Head circumference, in centimeters or inches.
+    @State private var headText = ""
     @State private var notes = ""
     /// The fields as first shown, so an unchanged value is saved as it was instead of being
     /// converted back from rounded text.
@@ -383,17 +569,24 @@ struct GrowthEditor: View {
                 Section("Weight") {
                     switch units {
                     case .metric:
-                        numberField("Weight", text: $weightText, unit: "kg")
+                        numberField(String(localized: "Weight"), text: $weightText, unit: String(localized: "kg", comment: "Kilograms"))
                     case .imperial:
-                        numberField("Pounds", text: $poundsText, unit: "lb")
-                        numberField("Ounces", text: $ouncesText, unit: "oz")
+                        numberField(String(localized: "Pounds"), text: $poundsText, unit: String(localized: "lb", comment: "Pounds"))
+                        numberField(String(localized: "Ounces"), text: $ouncesText, unit: String(localized: "oz", comment: "Ounces"))
                     }
                 }
 
+                Section("Length") {
+                    numberField(String(localized: "Length"), text: $lengthText, unit: units.lengthUnit)
+                }
+
                 Section {
-                    numberField("Length", text: $lengthText, unit: units.lengthUnit)
+                    numberField(
+                        String(localized: "Head", comment: "Short for head circumference"),
+                        text: $headText, unit: units.lengthUnit, spokenTitle: String(localized: "Head circumference")
+                    )
                 } header: {
-                    Text("Length")
+                    Text("Head circumference")
                 } footer: {
                     if hasInvalidNumber {
                         NoticeLabel(
@@ -402,7 +595,7 @@ struct GrowthEditor: View {
                             tint: Palette.danger
                         )
                     } else {
-                        Text("Add a weight, a length, or both.")
+                        Text("Add any of weight, length and head circumference. Head size is measured around the widest part, just above the eyebrows and ears.")
                     }
                 }
 
@@ -418,7 +611,7 @@ struct GrowthEditor: View {
                         }
                         .confirmationDialog("Delete this measurement?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                             Button("Delete", role: .destructive) {
-                                context.delete(entry)
+                                entry.deleteIncludingRecapHead(in: context)
                                 context.saveIfChanged()
                                 dismiss()
                             }
@@ -442,9 +635,10 @@ struct GrowthEditor: View {
         .threeAMSheet()
     }
 
-    private func numberField(_ title: String, text: Binding<String>, unit: String) -> some View {
+    private func numberField(_ title: String, text: Binding<String>, unit: String, spokenTitle: String? = nil) -> some View {
         HStack {
             Text(title)
+                .accessibilityLabel(spokenTitle ?? title)
             TextField("0", text: text)
                 .keyboardType(.decimalPad)
                 .multilineTextAlignment(.trailing)
@@ -520,13 +714,19 @@ struct GrowthEditor: View {
         return value > 0 ? .value(units.toCm(value)) : .invalid
     }
 
-    private var hasInvalidNumber: Bool {
-        parsedWeight.isInvalid || parsedLength.isInvalid
+    /// The head circumference in centimeters.
+    private var parsedHead: Parsed {
+        guard case .value(let value) = parse(headText) else { return parse(headText) }
+        return value > 0 ? .value(units.toCm(value)) : .invalid
     }
 
-    /// At least one of weight or length, and nothing unreadable.
+    private var hasInvalidNumber: Bool {
+        parsedWeight.isInvalid || parsedLength.isInvalid || parsedHead.isInvalid
+    }
+
+    /// At least one measurement, and nothing unreadable.
     private var canSave: Bool {
-        !hasInvalidNumber && (parsedWeight.number != nil || parsedLength.number != nil)
+        !hasInvalidNumber && (parsedWeight.number != nil || parsedLength.number != nil || parsedHead.number != nil)
     }
 
     private var weightFields: [String] { [weightText, poundsText, ouncesText] }
@@ -548,15 +748,29 @@ struct GrowthEditor: View {
         if let cm = entry.lengthCm {
             lengthText = number(units.fromCm(cm), digits: 2)
         }
-        loadedFields = weightFields + [lengthText]
+        // Including one an older recap kept on the appointment, so it can be changed here too.
+        if let cm = entry.headCmIncludingRecap {
+            headText = number(units.fromCm(cm), digits: 2)
+        }
+        loadedFields = weightFields + [lengthText, headText]
     }
 
     private func save() {
         let isNew = entry == nil
         let weightChanged = isNew || Array(loadedFields.prefix(3)) != weightFields
-        let lengthChanged = isNew || loadedFields.last != lengthText
+        let lengthChanged = isNew || loadedFields.count < 5 || loadedFields[3] != lengthText
+        let headChanged = isNew || loadedFields.count < 5 || loadedFields[4] != headText
         let target = entry ?? GrowthEntry.create(in: context)
+        // Found before the date changes, while it still matches the recap's appointment.
+        let visit = target.recapAppointment
+        let head = headChanged ? parsedHead.number : target.headCmIncludingRecap
+        if headChanged { target.setHeadCircumference(head) }
         target.date = date
+        if let visit, visit.headCircumferenceCm != nil, abs(date.timeIntervalSince(visit.date)) >= 60 {
+            // Moved off the visit: the entry keeps the head size, so it isn't shown twice.
+            target.headCircumferenceCm = head
+            visit.headCircumferenceCm = nil
+        }
         if weightChanged { target.weightKg = parsedWeight.number }
         if lengthChanged { target.lengthCm = parsedLength.number }
         target.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)

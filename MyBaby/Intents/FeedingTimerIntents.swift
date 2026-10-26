@@ -42,14 +42,34 @@ struct StartBreastfeedingIntent: LiveActivityIntent {
             let alreadyThere = running.isRunning && running.side == next
             timer.start(next, baby: target)
             if alreadyThere {
-                return .result(dialog: "The timer is already running on the \(next.title.lowercased()) side.")
+                if next == .left {
+                    return .result(dialog: "The timer is already running on the left side.")
+                }
+                return .result(dialog: "The timer is already running on the right side.")
             }
-            return .result(dialog: "Now on the \(next.title.lowercased()) side.")
+            if next == .left {
+                return .result(dialog: "Now on the left side.")
+            }
+            return .result(dialog: "Now on the right side.")
         }
 
         let start = side ?? FeedingTimer.suggestion(for: target, in: QuickLog.context)?.side ?? .left
         timer.start(start, baby: target)
-        return .result(dialog: "Started the timer on the \(start.title.lowercased()) side\(SiriText.forBaby(target)).")
+        let text: String
+        if start == .left {
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Started the timer on the left side for \($0).") },
+                unnamed: String(localized: "Started the timer on the left side.")
+            )
+        } else {
+            text = SiriText.sentence(
+                for: target,
+                named: { String(localized: "Started the timer on the right side for \($0).") },
+                unnamed: String(localized: "Started the timer on the right side.")
+            )
+        }
+        return .result(dialog: "\(text)")
     }
 }
 
@@ -67,8 +87,11 @@ struct SwitchBreastfeedingSideIntent: LiveActivityIntent {
             return .result(dialog: "There's no breastfeeding timer running.")
         }
         timer.switchSide()
-        let side = timer.state?.side.title.lowercased() ?? "other"
-        return .result(dialog: "Switched to the \(side) side.")
+        switch timer.state?.side {
+        case .left?: return .result(dialog: "Switched to the left side.")
+        case .right?: return .result(dialog: "Switched to the right side.")
+        case nil: return .result(dialog: "Switched to the other side.")
+        }
     }
 }
 
@@ -90,10 +113,10 @@ struct StopBreastfeedingIntent: LiveActivityIntent {
         guard let feed = FeedingTimer.shared.finish(context: QuickLog.context) else {
             throw IntentFailure.noBaby
         }
-        let sides = [("left", feed.leftMinutes ?? 0), ("right", feed.rightMinutes ?? 0)]
-            .filter { $0.1 > 0 }
-            .map { "\($0.0) \(Format.plural($0.1, "minute"))" }
-        let whose = feed.baby.map { SiriText.subject($0, "feed", capitalized: false) } ?? "the feed"
-        return .result(dialog: "Saved \(whose): \(sides.joined(separator: ", ")).")
+        let sides = SiriText.breastSides(left: feed.leftMinutes ?? 0, right: feed.rightMinutes ?? 0)
+        if let name = feed.baby.flatMap({ SiriText.possessiveName($0) }) {
+            return .result(dialog: "Saved \(name)'s feed: \(sides).")
+        }
+        return .result(dialog: "Saved the feed: \(sides).")
     }
 }

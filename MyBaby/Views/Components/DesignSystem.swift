@@ -55,6 +55,7 @@ enum Palette {
     static let growth = Color.teal
     static let weight = Color.pink
     static let length = Color.teal
+    static let headCircumference = Color.indigo
     static let milestone = Color.yellow
     /// The diary and its letters for later: a warm coral, like a paper journal's cover.
     static let diary = Color(red: 0.93, green: 0.49, blue: 0.38)
@@ -166,20 +167,35 @@ extension DynamicTypeSize {
 
 /// A list section header with a short summary on the right, like "Today's log   6 🍼 · 4 🧷".
 /// VoiceOver reads `spokenSummary` instead of the emoji.
+///
+/// A literal title is looked up in the String Catalog, like `Text("…")`; a `String` is shown as it is.
 struct SummaryHeader: View {
-    let title: String
+    private let title: Text
     let summary: String
     let spokenSummary: String
+
+    init(title: LocalizedStringKey, summary: String, spokenSummary: String) {
+        self.title = Text(title)
+        self.summary = summary
+        self.spokenSummary = spokenSummary
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(title: S, summary: String, spokenSummary: String) {
+        self.title = Text(title)
+        self.summary = summary
+        self.spokenSummary = spokenSummary
+    }
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
             HStack {
-                Text(title)
+                title
                 Spacer()
                 summaryText
             }
             VStack(alignment: .leading, spacing: Spacing.xxs) {
-                Text(title)
+                title
                 summaryText
             }
         }
@@ -194,43 +210,83 @@ struct SummaryHeader: View {
     }
 }
 
-/// "🍼 Feeding" where VoiceOver should only read "Feeding".
+/// "🍼 Feeding" where VoiceOver should only read "Feeding". A literal title is looked up in the
+/// String Catalog, like `Text("…")`; a `String` is shown as it is.
 struct EmojiTitle: View {
     let emoji: String
-    let title: String
+    private let title: Text
 
-    init(_ emoji: String, _ title: String) {
+    init(_ emoji: String, _ title: LocalizedStringKey) {
         self.emoji = emoji
-        self.title = title
+        self.title = Text(title)
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(_ emoji: String, _ title: S) {
+        self.emoji = emoji
+        self.title = Text(title)
     }
 
     var body: some View {
-        Text("\(emoji) \(title)")
+        Text(joining: [Text(verbatim: emoji), title], separator: " ")
             .accessibilityLabel(title)
+    }
+}
+
+extension Text {
+    /// Pieces of text in one `Text`, so they wrap as one line of words: "🍼 Feeding", or "Birthday,
+    /// Monday, March 3, 2025" for VoiceOver.
+    ///
+    /// Built piece by piece rather than from a `"\(a) \(b)"` literal, which would add a "%@ %@" key to
+    /// the String Catalog for translators. With no such key, the pieces are shown as they are.
+    init(joining parts: [Text], separator: String) {
+        var line = LocalizedStringKey.StringInterpolation(literalCapacity: separator.count, interpolationCount: parts.count)
+        for (index, part) in parts.enumerated() {
+            if index > 0 { line.appendLiteral(separator) }
+            line.appendInterpolation(part)
+        }
+        self.init(LocalizedStringKey(stringInterpolation: line))
     }
 }
 
 // MARK: - Empty states
 
 /// What a list shows before anything is in it: an icon, a title, a sentence, and one clear action.
+///
+/// Literal texts are looked up in the String Catalog, like `Text("…")`. When any of them is a `String`,
+/// the `String` versions are used and every text is shown as it is, so the literals in that call need
+/// `String(localized:)`.
 struct EmptyStateView<Actions: View>: View {
-    let title: String
+    private let title: Text
     let systemImage: String
-    let message: String
+    private let message: Text
     let actions: Actions
 
-    init(_ title: String, systemImage: String, message: String, @ViewBuilder actions: () -> Actions) {
+    init(_ title: LocalizedStringKey, systemImage: String, message: LocalizedStringKey, @ViewBuilder actions: () -> Actions) {
+        self.init(title: Text(title), systemImage: systemImage, message: Text(message), actions: actions())
+    }
+
+    @_disfavoredOverload
+    init<T: StringProtocol, M: StringProtocol>(_ title: T, systemImage: String, message: M, @ViewBuilder actions: () -> Actions) {
+        self.init(title: Text(title), systemImage: systemImage, message: Text(message), actions: actions())
+    }
+
+    fileprivate init(title: Text, systemImage: String, message: Text, actions: Actions) {
         self.title = title
         self.systemImage = systemImage
         self.message = message
-        self.actions = actions()
+        self.actions = actions
     }
 
     var body: some View {
         ContentUnavailableView {
-            Label(title, systemImage: systemImage)
+            Label {
+                title
+            } icon: {
+                Image(systemName: systemImage)
+            }
         } description: {
-            Text(message)
+            message
         } actions: {
             actions
         }
@@ -240,36 +296,78 @@ struct EmptyStateView<Actions: View>: View {
 extension EmptyStateView where Actions == EmptyStateButton {
     /// With one prominent button, turned off with `isDisabled` (e.g. for view-only family).
     init(
-        _ title: String,
+        _ title: LocalizedStringKey,
         systemImage: String,
-        message: String,
-        actionTitle: String,
+        message: LocalizedStringKey,
+        actionTitle: LocalizedStringKey,
         isDisabled: Bool = false,
         action: @escaping () -> Void
     ) {
-        self.init(title, systemImage: systemImage, message: message) {
-            EmptyStateButton(title: actionTitle, isDisabled: isDisabled, action: action)
-        }
+        self.init(
+            title: Text(title),
+            systemImage: systemImage,
+            message: Text(message),
+            actions: EmptyStateButton(label: Text(actionTitle), isDisabled: isDisabled, action: action)
+        )
+    }
+
+    @_disfavoredOverload
+    init<T: StringProtocol, M: StringProtocol, A: StringProtocol>(
+        _ title: T,
+        systemImage: String,
+        message: M,
+        actionTitle: A,
+        isDisabled: Bool = false,
+        action: @escaping () -> Void
+    ) {
+        self.init(
+            title: Text(title),
+            systemImage: systemImage,
+            message: Text(message),
+            actions: EmptyStateButton(label: Text(actionTitle), isDisabled: isDisabled, action: action)
+        )
     }
 }
 
 extension EmptyStateView where Actions == EmptyView {
     /// With nothing to do.
-    init(_ title: String, systemImage: String, message: String) {
-        self.init(title, systemImage: systemImage, message: message) { EmptyView() }
+    init(_ title: LocalizedStringKey, systemImage: String, message: LocalizedStringKey) {
+        self.init(title: Text(title), systemImage: systemImage, message: Text(message), actions: EmptyView())
+    }
+
+    @_disfavoredOverload
+    init<T: StringProtocol, M: StringProtocol>(_ title: T, systemImage: String, message: M) {
+        self.init(title: Text(title), systemImage: systemImage, message: Text(message), actions: EmptyView())
     }
 }
 
-/// The one action of an empty state.
+/// The one action of an empty state. A literal title is looked up in the String Catalog.
 struct EmptyStateButton: View {
-    let title: String
+    private let label: Text
     var isDisabled = false
     let action: () -> Void
 
+    init(title: LocalizedStringKey, isDisabled: Bool = false, action: @escaping () -> Void) {
+        self.init(label: Text(title), isDisabled: isDisabled, action: action)
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(title: S, isDisabled: Bool = false, action: @escaping () -> Void) {
+        self.init(label: Text(title), isDisabled: isDisabled, action: action)
+    }
+
+    fileprivate init(label: Text, isDisabled: Bool, action: @escaping () -> Void) {
+        self.label = label
+        self.isDisabled = isDisabled
+        self.action = action
+    }
+
     var body: some View {
-        Button(title, action: action)
-            .buttonStyle(.borderedProminent)
-            .disabled(isDisabled)
+        Button(action: action) {
+            label
+        }
+        .buttonStyle(.borderedProminent)
+        .disabled(isDisabled)
     }
 }
 
@@ -277,12 +375,23 @@ struct EmptyStateButton: View {
 
 /// A short message with a tinted icon, like a warning or an "OK to give now". The text stays
 /// readable (`.primary`); the icon and the words carry the meaning, so color is never the only signal.
+///
+/// A literal is looked up in the String Catalog, like `Text("…")`; a `String` is shown as it is.
 struct NoticeLabel: View {
-    let text: String
+    private let text: Text
     let systemImage: String
     let tint: Color
 
-    init(_ text: String, systemImage: String = "exclamationmark.triangle.fill", tint: Color = Palette.warning) {
+    init(_ key: LocalizedStringKey, systemImage: String = "exclamationmark.triangle.fill", tint: Color = Palette.warning) {
+        self.init(text: Text(key), systemImage: systemImage, tint: tint)
+    }
+
+    @_disfavoredOverload
+    init<S: StringProtocol>(_ text: S, systemImage: String = "exclamationmark.triangle.fill", tint: Color = Palette.warning) {
+        self.init(text: Text(text), systemImage: systemImage, tint: tint)
+    }
+
+    private init(text: Text, systemImage: String, tint: Color) {
         self.text = text
         self.systemImage = systemImage
         self.tint = tint
@@ -290,7 +399,7 @@ struct NoticeLabel: View {
 
     var body: some View {
         Label {
-            Text(text)
+            text
                 .foregroundStyle(.primary)
         } icon: {
             Image(systemName: systemImage)
@@ -322,11 +431,35 @@ struct ParentTag: View {
 extension View {
     /// Asks before deleting `item`, while it's set. Swipe buttons that use this shouldn't have
     /// the `.destructive` role (it removes the row before the answer); tint them red instead.
+    ///
+    /// Literal texts are looked up in the String Catalog, like `Text("…")`. With a `String` title,
+    /// the texts are shown as they are.
     func confirmDelete<Item>(
-        _ title: String,
+        _ title: LocalizedStringKey,
+        item: Binding<Item?>,
+        message: LocalizedStringKey? = nil,
+        buttonTitle: LocalizedStringKey = "Delete",
+        perform: @escaping (Item) -> Void
+    ) -> some View {
+        confirmDeleteDialog(Text(title), item: item, message: message.map { Text($0) }, buttonTitle: Text(buttonTitle), perform: perform)
+    }
+
+    @_disfavoredOverload
+    func confirmDelete<Item, S: StringProtocol>(
+        _ title: S,
         item: Binding<Item?>,
         message: String? = nil,
-        buttonTitle: String = "Delete",
+        buttonTitle: String = String(localized: "Delete"),
+        perform: @escaping (Item) -> Void
+    ) -> some View {
+        confirmDeleteDialog(Text(title), item: item, message: message.map { Text($0) }, buttonTitle: Text(buttonTitle), perform: perform)
+    }
+
+    fileprivate func confirmDeleteDialog<Item>(
+        _ title: Text,
+        item: Binding<Item?>,
+        message: Text?,
+        buttonTitle: Text,
         perform: @escaping (Item) -> Void
     ) -> some View {
         confirmationDialog(
@@ -338,10 +471,14 @@ extension View {
             titleVisibility: .visible,
             presenting: item.wrappedValue
         ) { value in
-            Button(buttonTitle, role: .destructive) { perform(value) }
+            Button(role: .destructive) {
+                perform(value)
+            } label: {
+                buttonTitle
+            }
         } message: { _ in
             if let message {
-                Text(message)
+                message
             }
         }
     }

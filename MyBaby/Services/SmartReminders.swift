@@ -31,9 +31,9 @@ enum FeedReminderMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .off: return "Off"
-        case .fixed: return "Every few hours"
-        case .smart: return "Smart (learns from your log)"
+        case .off: return String(localized: "Off", comment: "Feed reminder setting: no reminders")
+        case .fixed: return String(localized: "Every few hours", comment: "Feed reminder setting")
+        case .smart: return String(localized: "Smart (learns from your log)", comment: "Feed reminder setting")
         }
     }
 
@@ -229,21 +229,51 @@ final class SmartReminders {
         case .fixed:
             let interval = options.fixedHours * 3600
             fire = last.start.addingTimeInterval(interval)
-            title = babyCount > 1 ? "Time to feed \(name)? 🍼" : "Feeding time? 🍼"
+            let duration = Format.duration(interval)
+            title = babyCount > 1
+                ? String(localized: "Time to feed \(name)? 🍼", comment: "Feed reminder title, with twins or siblings; the baby's name")
+                : String(localized: "Feeding time? 🍼", comment: "Feed reminder title")
             body = babyCount > 1
-                ? "It's been \(Format.duration(interval)) since \(name)'s last feeding."
-                : "It's been \(Format.duration(interval)) since the last feeding."
+                ? String(localized: "It's been \(duration) since \(name)'s last feeding.", comment: "Feed reminder; a duration like 3h, then the baby's name")
+                : String(localized: "It's been \(duration) since the last feeding.", comment: "Feed reminder; a duration like 3h")
         case .smart:
             guard let prediction else { return nil }
             fire = prediction.expected.addingTimeInterval(-options.lead)
-            title = babyCount > 1 ? "Feeding time soon for \(name)? 🍼" : "Feeding time soon? 🍼"
-            body = "\(name) will probably be hungry around \(CarePredictions.time(prediction.expected)) (\(prediction.reminderReason))."
+            title = babyCount > 1
+                ? String(localized: "Feeding time soon for \(name)? 🍼", comment: "Smart feed reminder title, with twins or siblings; the baby's name")
+                : String(localized: "Feeding time soon? 🍼", comment: "Smart feed reminder title")
+            body = smartFeedBody(name: name, prediction: prediction)
         }
         if options.letBabySleep {
             guard let held = holdingForSleep(fire, log: log, now: now) else { return nil }
             fire = held
         }
         return Planned(kind: .feed, identifier: feedPrefix + key, fire: fire, lastEvent: last.start, title: title, body: body)
+    }
+
+    /// "Mavie will probably be hungry around 2:40 AM (usually every 2 h 50 min)." Each reason is its
+    /// own sentence, so it reads naturally in every language; the reasons are the same as
+    /// `CarePrediction.reminderReason`.
+    private static func smartFeedBody(name: String, prediction: CarePrediction) -> String {
+        let time = CarePredictions.time(prediction.expected)
+        let since = CarePredictions.describe(prediction.expected.timeIntervalSince(prediction.lastEvent))
+        if prediction.wasCapped {
+            return String(
+                localized: "\(name) will probably be hungry around \(time) (your \(since) limit).",
+                comment: "Smart feed reminder; the baby's name, a time, then the longest wait the parent set, like 3 h"
+            )
+        }
+        if let usual = prediction.usualInterval, prediction.confidence > .low {
+            let every = CarePredictions.describe(usual)
+            return String(
+                localized: "\(name) will probably be hungry around \(time) (usually every \(every)).",
+                comment: "Smart feed reminder; the baby's name, a time, then the usual time between feeds, like 2 h 50 min"
+            )
+        }
+        return String(
+            localized: "\(name) will probably be hungry around \(time) (\(since) since the last feed).",
+            comment: "Smart feed reminder; the baby's name, a time, then a duration like 3 h"
+        )
     }
 
     private static func diaperReminder(log: CareLog, prediction: CarePrediction?, name: String, key: String, now: Date) -> Planned? {
@@ -254,8 +284,8 @@ final class SmartReminders {
             identifier: diaperPrefix + key,
             fire: fire,
             lastEvent: prediction.lastEvent,
-            title: "Diaper check for \(name)? 🧷",
-            body: "It's been \(since) since the last change."
+            title: String(localized: "Diaper check for \(name)? 🧷", comment: "Diaper reminder title; the baby's name"),
+            body: String(localized: "It's been \(since) since the last change.", comment: "Diaper reminder; a duration like 2 h 30 min")
         )
     }
 
@@ -334,7 +364,11 @@ final class SmartReminders {
 
     /// "Snooze 15 min" on a feed or diaper reminder.
     nonisolated static var notificationCategory: UNNotificationCategory {
-        let snooze = UNNotificationAction(identifier: snoozeAction, title: "Snooze 15 min", options: [])
+        let snooze = UNNotificationAction(
+            identifier: snoozeAction,
+            title: String(localized: "Snooze 15 min", comment: "Notification button on a feed or diaper reminder"),
+            options: []
+        )
         return UNNotificationCategory(identifier: category, actions: [snooze], intentIdentifiers: [], options: [])
     }
 

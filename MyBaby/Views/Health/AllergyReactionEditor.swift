@@ -197,7 +197,7 @@ struct AllergyReactionEditor: View {
             }
             .fullScreenCover(isPresented: $viewingPhoto) {
                 if let keptPhotoID {
-                    PhotoViewer(photoIDs: [keptPhotoID], startIndex: 0, title: "Reaction photo")
+                    PhotoViewer(photoIDs: [keptPhotoID], startIndex: 0, title: String(localized: "Reaction photo"))
                 }
             }
             .alert("Couldn't add the photo", isPresented: Binding(get: { photoError != nil }, set: { if !$0 { photoError = nil } })) {
@@ -316,11 +316,18 @@ struct AllergyReactionEditor: View {
     private func planText(_ plan: AllergyPlan) -> String {
         switch plan {
         case .add(let name, _):
-            return "\(name) will be added as a suspected allergy when you save."
+            return String(localized: "\(name) will be added as a suspected allergy when you save.")
         case .markSuspected:
-            return "\(linkedAllergy?.displayName ?? "The allergy") will be marked as suspected when you save."
+            guard let name = linkedAllergy?.displayName else {
+                return String(localized: "The allergy will be marked as suspected when you save.")
+            }
+            return String(localized: "\(name) will be marked as suspected when you save.")
         case .raiseSeverity:
-            return "\(linkedAllergy?.displayName ?? "The allergy") will be updated to \(severity.title.lowercased()) when you save."
+            let level = severity.title.lowercased()
+            guard let name = linkedAllergy?.displayName else {
+                return String(localized: "The allergy will be updated to \(level) when you save.", comment: "The new severity: mild, moderate or severe")
+            }
+            return String(localized: "\(name) will be updated to \(level) when you save.", comment: "An allergy, then its new severity: mild, moderate or severe")
         }
     }
 
@@ -393,7 +400,7 @@ struct AllergyReactionEditor: View {
             keptPhotoID = nil
             newPhoto = photo
         } else {
-            photoError = "The photo couldn't be read. If it's in iCloud Photos, check that you're online and try again."
+            photoError = String(localized: "The photo couldn't be read. If it's in iCloud Photos, check that you're online and try again.")
         }
         processingPhoto = false
     }
@@ -404,7 +411,7 @@ struct AllergyReactionEditor: View {
             keptPhotoID = nil
             newPhoto = photo
         } else {
-            photoError = "The photo couldn't be saved. Please try again."
+            photoError = String(localized: "The photo couldn't be saved. Please try again.")
         }
         processingPhoto = false
     }

@@ -5,6 +5,9 @@ import SwiftUI
 /// The system's new-event sheet, filled in from a `CalendarEventDraft`. On iOS 17 it runs outside the app
 /// when MyBaby has no calendar access, so it needs no permission: the parent sees exactly what's added,
 /// picks the calendar and taps Add, or cancels.
+///
+/// An added event is remembered on this iPhone (`CalendarSync.rememberAddedEvent`), so Delete all data
+/// can remove it along with everything else.
 struct CalendarEventEditor: UIViewControllerRepresentable {
     let draft: CalendarEventDraft
     /// Called when the sheet is done; `true` if the event was added.
@@ -17,6 +20,11 @@ struct CalendarEventEditor: UIViewControllerRepresentable {
         event.startDate = draft.start
         event.endDate = draft.end
         event.location = draft.location
+        // The same text, with the coordinates of a place picked from the search: Calendar then shows
+        // the map and can offer a travel-time alert.
+        if let structured = CalendarSync.structuredLocation(title: draft.location, coordinate: draft.coordinate) {
+            event.structuredLocation = structured
+        }
         if let offset = draft.alarmOffset {
             event.addAlarm(EKAlarm(relativeOffset: offset))
         }
@@ -35,18 +43,29 @@ struct CalendarEventEditor: UIViewControllerRepresentable {
     func updateUIViewController(_ controller: EKEventEditViewController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onDone: onDone)
+        Coordinator(draft: draft, onDone: onDone)
     }
 
     final class Coordinator: NSObject, EKEventEditViewDelegate {
+        let draft: CalendarEventDraft
         let onDone: (Bool) -> Void
 
-        init(onDone: @escaping (Bool) -> Void) {
+        init(draft: CalendarEventDraft, onDone: @escaping (Bool) -> Void) {
+            self.draft = draft
             self.onDone = onDone
         }
 
         func eventEditViewController(_ controller: EKEventEditViewController, didCompleteWith action: EKEventEditViewAction) {
-            onDone(action == .saved)
+            let saved = action == .saved
+            if saved {
+                let event = controller.event
+                let draft = self.draft
+                // The sheet reports back on the main thread.
+                MainActor.assumeIsolated {
+                    CalendarSync.shared.rememberAddedEvent(event, draft: draft)
+                }
+            }
+            onDone(saved)
         }
     }
 }
@@ -103,14 +122,14 @@ struct AddToCalendarSection: View {
     private var footer: String {
         let privacy = " " + AddToCalendarSection.privacyNote
         if calendarSync.isEnabled {
-            return "Saving changes here updates the event in your calendar." + privacy
+            return String(localized: "Saving changes here updates the event in your calendar.") + privacy
         }
         let alert = hasReminder
-            ? "The event has a calendar alert an hour before, on top of MyBaby's reminder. You can change it before adding."
-            : "The event has a calendar alert an hour before. You can change it before adding."
+            ? String(localized: "The event has a calendar alert an hour before, on top of MyBaby's reminder. You can change it before adding.")
+            : String(localized: "The event has a calendar alert an hour before. You can change it before adding.")
         return alert + privacy
     }
 
     /// The one line shown by the button and the setting.
-    static let privacyNote = "Calendar events are stored by your calendar's provider (such as iCloud, Google or Outlook), outside MyBaby's end-to-end encryption. Notes and questions aren't copied."
+    static let privacyNote = String(localized: "Calendar events are stored by your calendar's provider (such as iCloud, Google or Outlook), outside MyBaby's end-to-end encryption. Notes and questions aren't copied.")
 }

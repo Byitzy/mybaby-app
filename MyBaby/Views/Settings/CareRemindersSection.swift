@@ -1,3 +1,4 @@
+import CoreData
 import SwiftUI
 import UIKit
 
@@ -109,13 +110,13 @@ struct CareRemindersSection: View {
         case .off:
             break
         case .fixed:
-            parts.append("A reminder when it's been this long since the last feed began.")
+            parts.append(String(localized: "A reminder when it's been this long since the last feed began."))
         case .smart:
-            parts.append("Smart learns how far apart feeds usually are from the last few days of your log, day and night separately, and moves the reminder whenever either of you logs. Until there's enough logged, it uses the time you chose for Every few hours, or a common gap for your baby's age. It never waits longer than your limit.")
+            parts.append(String(localized: "Smart learns how far apart feeds usually are from the last few days of your log, day and night separately, and moves the reminder whenever either of you logs. Until there's enough logged, it uses the time you chose for Every few hours, or a common gap for your baby's age. It never waits longer than your limit."))
         }
-        parts.append("Diaper check waits while the baby sleeps. During a night shift only the parent on duty gets these, with their alert style; otherwise both phones do. None while the breastfeeding timer is running.")
+        parts.append(String(localized: "Diaper check waits while the baby sleeps. During a night shift only the parent on duty gets these, with their alert style; otherwise both phones do. None while the breastfeeding timer is running."))
         if mode != .off {
-            parts.append("Ask your pediatrician how long your baby can go between feeds, especially in the first weeks.")
+            parts.append(String(localized: "Ask your pediatrician how long your baby can go between feeds, especially in the first weeks."))
         }
         return parts.joined(separator: " ")
     }

@@ -63,6 +63,7 @@ struct ParentCareView: View {
             Section {
                 NavigationLink {
                     MomMedicinesView()
+                        .privateScreen()
                 } label: {
                     LabeledContent {
                         Text(medicineSummary)
@@ -72,6 +73,7 @@ struct ParentCareView: View {
                 }
                 NavigationLink {
                     CareLogList(kind: .mood)
+                        .privateScreen()
                 } label: {
                     LabeledContent {
                         Text("\(checkIns.count)")
@@ -165,6 +167,7 @@ struct ParentCareView: View {
                 }
                 NavigationLink {
                     CareLogList(kind: .recovery)
+                        .privateScreen()
                 } label: {
                     LabeledContent {
                         Text("\(recoveryNotes.count)")
@@ -193,7 +196,7 @@ struct ParentCareView: View {
 
     /// "Ibuprofen 2h ago", or how many there are.
     private var medicineSummary: String {
-        guard let latest = medicines.first else { return "None yet" }
+        guard let latest = medicines.first else { return String(localized: "None yet") }
         return "\(latest.title) · \(Format.timeAgo(latest.date).lowercased())"
     }
 
@@ -246,7 +249,7 @@ private struct DailyCheckIn: View {
         Section {
             MoodPicker(selection: $mood)
                 .padding(.vertical, 4)
-            SleepStepper(title: "Sleep last night", hours: $sleepHours)
+            SleepStepper(title: String(localized: "Sleep last night"), hours: $sleepHours)
             PainPicker(level: $painLevel)
             TextField("Anything on your mind? (optional)", text: $notes, axis: .vertical)
                 .lineLimit(2...5)
@@ -283,7 +286,7 @@ private struct DailyCheckIn: View {
         entry.painLevel = painLevel
         entry.notes = trimmedNotes
         context.saveIfChanged()
-        onSaved(existing == nil ? "💛 Check-in saved" : "💛 Check-in updated")
+        onSaved(existing == nil ? String(localized: "💛 Check-in saved") : String(localized: "💛 Check-in updated"))
     }
 }
 

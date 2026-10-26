@@ -258,8 +258,8 @@ struct MilestoneEditor: View {
         }
         if failures > 0 {
             photoError = failures == 1
-                ? "One photo couldn't be read. If it's in iCloud Photos, check that you're online and try again."
-                : "\(failures) photos couldn't be read. If they're in iCloud Photos, check that you're online and try again."
+                ? String(localized: "One photo couldn't be read. If it's in iCloud Photos, check that you're online and try again.")
+                : String(localized: "\(failures) photos couldn't be read. If they're in iCloud Photos, check that you're online and try again.")
         }
     }
 
@@ -268,7 +268,7 @@ struct MilestoneEditor: View {
         if let photo = await Self.prepare({ MilestoneImages.storableJPEG(from: image) }) {
             newPhotos.append(photo)
         } else {
-            photoError = "The photo couldn't be saved. Please try again."
+            photoError = String(localized: "The photo couldn't be saved. Please try again.")
         }
         processing -= 1
     }

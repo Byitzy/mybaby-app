@@ -5,16 +5,16 @@ import Foundation
 ///
 /// Extensions never open the Core Data stores: the app is the only process that reads the log, and
 /// `WidgetSnapshotWriter` (in the app) rewrites this file whenever the log, the selected baby, the
-/// night plan or the breastfeeding timer changes, then reloads the widgets.
+/// night plan, the breastfeeding timer or cry alerts' listening changes, then reloads the widgets.
 ///
 /// The top-level fields (`babyName`, `lastFeed`, `sleepStart`, …) are for the baby shown in the app, as
 /// they always were, so the Apple Watch and older readers keep working. `babies` has the same and more
 /// for every baby, so each widget can show the baby picked in Edit Widget (twins side by side). Who's on
-/// night duty and the breastfeeding timer are the same for every baby.
+/// night duty, the breastfeeding timer and cry alerts' listening are the same for every baby.
 ///
 /// **Privacy:** it holds only what the widgets show. It stays on this iPhone, in the App Group's folder;
-/// it's never synced or sent anywhere, except that the paired Apple Watch gets the shown baby's part over
-/// WatchConnectivity (see `WatchContext`; `babies` is left out of what's sent).
+/// it's never synced or sent anywhere, except that the paired Apple Watch gets it over WatchConnectivity
+/// (see `WatchContext`), with `babies` trimmed to what the watch's complications show.
 ///
 /// Times are stored as dates, so views count from them (`Text(_:style: .relative)`) and stay current
 /// without the file being rewritten. Text is already formatted in the parent's units (ml or oz).
@@ -82,6 +82,10 @@ struct WidgetSnapshot: Codable, Equatable {
             var dosage: String
             /// While the dose timing entered for it doesn't allow another dose yet: when it will.
             var nextAllowed: Date?
+            /// The medicine allergy on the baby's list it matches (`AllergyMatch.medicineMatches`), as
+            /// listed, e.g. "Amoxicillin". While it's set, the button never logs it: it says "Check
+            /// allergy list" and opens the app. Added later, so it's optional.
+            var allergyName: String? = nil
         }
 
         /// The last bottle, for the Bottle button, which logs the same again.
@@ -132,6 +136,19 @@ struct WidgetSnapshot: Codable, Equatable {
         }
     }
 
+    /// Cry alerts listening on this iPhone (`CryMonitor`), for the widgets' mic badge. It's the app's
+    /// state, not a baby's, and it's never set on a nursery monitor, which has its own screen.
+    struct Listening: Codable, Equatable {
+        /// When listening started.
+        var since: Date
+        /// When the crying going on now started, or `nil` while it's quiet.
+        var cryingSince: Date?
+        /// When listening stops by itself (`ListeningStop`), or `nil` to listen until it's stopped.
+        var stopsAt: Date?
+
+        var isCrying: Bool { cryingSince != nil }
+    }
+
     /// Bumped if the format changes in a way older readers can't handle.
     var version = 1
     var babyName: String
@@ -154,11 +171,22 @@ struct WidgetSnapshot: Codable, Equatable {
     var feedingTimer: FeedingTimerState?
     var updatedAt = Date.now
     /// Every baby, oldest first, the one shown in the app included. `nil` in snapshots written before
-    /// widgets could pick a baby (`baby(_:)` then falls back to the top-level fields), and in the copy
-    /// sent to the Apple Watch.
+    /// widgets could pick a baby (`baby(_:)` then falls back to the top-level fields). In the copy sent to
+    /// the Apple Watch, each is trimmed to what the complications show (`WatchBridge.makeContext`).
     var babies: [BabySnapshot]?
+    /// While cry alerts listen on this iPhone. Added later, so it's optional: snapshots written before
+    /// it decode without it, as not listening. Left out of the copy sent to the Apple Watch.
+    var listening: Listening?
 
     var isSleeping: Bool { sleepStart != nil }
+
+    /// Cry alerts listening at `date`, as far as the snapshot knows. From its stop time on it reads as
+    /// stopped, so a widget's timeline stops showing "Listening" then even if the app couldn't reload it.
+    func activeListening(at date: Date) -> Listening? {
+        guard let listening else { return nil }
+        if let stop = listening.stopsAt, date >= stop { return nil }
+        return listening
+    }
 
     /// The baby shown in the app (`Baby.uuid`): the same as `babyID`.
     var selectedBabyID: String? { babyID }

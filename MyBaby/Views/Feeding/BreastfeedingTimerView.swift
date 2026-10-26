@@ -106,9 +106,11 @@ struct BreastfeedingTimerView: View {
     private func spokenSummary(_ state: FeedingTimerState, now: Date) -> String {
         let total = Format.spokenDuration(state.totalSeconds(at: now))
         let started = state.startDate.formatted(date: .omitted, time: .shortened)
-        var text = state.isRunning ? "Total \(total), started \(started)" : "Paused. Total \(total), started \(started)"
+        var text = state.isRunning
+            ? String(localized: "Total \(total), started \(started)")
+            : String(localized: "Paused. Total \(total), started \(started)")
         if state.babyID != baby.uuid?.uuidString {
-            text += ". Feeding \(state.babyName)"
+            text += ". " + String(localized: "Feeding \(state.babyName)", comment: "The breastfeeding timer is for this baby, e.g. the other twin")
         }
         return text
     }
@@ -143,7 +145,7 @@ struct BreastfeedingTimerView: View {
                 Button {
                     timer.switchSide()
                 } label: {
-                    Label("Switch to \(state.side.other.title.lowercased())", systemImage: "arrow.left.arrow.right")
+                    Label(state.side.other == .left ? "Switch to left" : "Switch to right", systemImage: "arrow.left.arrow.right")
                         .frame(maxWidth: .infinity, minHeight: 36)
                 }
             }
@@ -222,7 +224,7 @@ private struct SideButton: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(side.title) side")
+        .accessibilityLabel(side == .left ? "Left side" : "Right side")
         .accessibilityValue(spokenValue(now: now))
         .accessibilityHint(isRunning ? "Pauses the timer" : "Starts timing this side")
         .accessibilityAddTraits(isRunning ? .isSelected : [])
@@ -230,11 +232,11 @@ private struct SideButton: View {
 
     /// Said in words too, so the running side isn't shown by color alone.
     private var status: String {
-        if isRunning { return "● Feeding" }
+        if isRunning { return String(localized: "● Feeding", comment: "This side is the one feeding now") }
         if let state {
-            if state.side == side { return "Paused · tap to resume" }
-            return "Tap to switch"
+            if state.side == side { return String(localized: "Paused · tap to resume") }
+            return String(localized: "Tap to switch")
         }
-        return isSuggested ? "Suggested · tap to start" : "Tap to start"
+        return isSuggested ? String(localized: "Suggested · tap to start") : String(localized: "Tap to start")
     }
 }

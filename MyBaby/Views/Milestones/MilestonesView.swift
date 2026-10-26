@@ -17,7 +17,10 @@ struct MilestonesView: View {
 
     init(baby: Baby) {
         self.baby = baby
-        _milestones = FetchRequest(fetchRequest: baby.entries(Milestone.fetchAll()))
+        let request = baby.entries(Milestone.fetchAll())
+        // In batches: the list only reads the milestones scrolled into view.
+        request.fetchBatchSize = 30
+        _milestones = FetchRequest(fetchRequest: request)
     }
 
     var body: some View {
@@ -137,7 +140,7 @@ private struct MilestoneRow: View {
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
-        .accessibilityValue(photoIDs.isEmpty ? "" : Format.plural(photoIDs.count, "photo"))
+        .accessibilityValue(photoIDs.isEmpty ? "" : String(localized: "\(photoIDs.count) photos"))
         .task(id: milestone.photoIDSet) {
             photoIDs = milestone.photoIDs()
         }

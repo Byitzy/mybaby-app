@@ -34,6 +34,8 @@ struct MonitorView: View {
     @AppStorage(SettingsKey.nightPlan, store: .shared) private var nightPlanData = Data()
     @AppStorage("monitorNightLight") private var nightLight = false
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @ScaledMetric(relativeTo: .largeTitle) private var emojiSize: CGFloat = 64
 
     private let monitor = NurseryMonitor.shared
@@ -47,6 +49,8 @@ struct MonitorView: View {
     @State private var isPluggedIn = true
     /// The brightness before the monitor dimmed the screen, put back when it closes.
     @State private var savedBrightness: CGFloat?
+    /// The screen's size, for the iPad layouts and so the night light's glow reaches every corner.
+    @State private var screenSize: CGSize = .zero
 
     var body: some View {
         ZStack {
@@ -54,21 +58,32 @@ struct MonitorView: View {
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
 
-            ScrollView {
-                VStack(spacing: Spacing.xl) {
-                    status
-                        .padding(.top, Spacing.xl)
-                    noiseControls
-                    nightLightControl
-                    tips
-                    buttons
+            if isLargeScreen && screenSize.width > screenSize.height {
+                landscapeLayout
+            } else {
+                ScrollView {
+                    VStack(spacing: Spacing.xl) {
+                        status
+                            .padding(.top, Spacing.xl)
+                            // On an iPad standing up, the clock and status fill the top of the screen.
+                            .frame(minHeight: isLargeScreen ? screenSize.height * 0.45 : nil)
+                        noiseControls
+                        nightLightControl
+                        tips
+                        buttons
+                    }
+                    .padding(.horizontal, Spacing.l)
+                    .padding(.bottom, Spacing.xl)
+                    .frame(maxWidth: 560)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, Spacing.l)
-                .padding(.bottom, Spacing.xl)
-                .frame(maxWidth: 560)
-                .frame(maxWidth: .infinity)
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
+        }
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { size in
+            screenSize = size
         }
         .foregroundStyle(.white.opacity(0.85))
         .tint(Palette.nightLight)
@@ -91,6 +106,49 @@ struct MonitorView: View {
         }
     }
 
+    // MARK: iPad
+
+    /// An iPad (regular width and height, whichever way it's turned) gets a big clock, and in
+    /// landscape the controls move beside the status. iPhones keep the one-column screen.
+    private var isLargeScreen: Bool {
+        horizontalSizeClass == .regular && verticalSizeClass == .regular
+    }
+
+    /// iPad on its side: the clock and status centered on the left, the controls in a column on the right.
+    private var landscapeLayout: some View {
+        HStack(spacing: Spacing.xl) {
+            // Centered in the screen's height, and scrolls if the largest text sizes make it taller.
+            ScrollView {
+                status
+                    .frame(maxWidth: .infinity, minHeight: screenSize.height)
+            }
+            .scrollIndicators(.hidden)
+            ScrollView {
+                VStack(spacing: Spacing.xl) {
+                    noiseControls
+                    nightLightControl
+                    tips
+                    buttons
+                }
+                .padding(.vertical, Spacing.xl)
+                .frame(minHeight: screenSize.height)
+            }
+            .scrollIndicators(.hidden)
+            .frame(width: min(420, screenSize.width * 0.4))
+        }
+        .padding(.horizontal, Spacing.xl)
+    }
+
+    /// The time, large and dim, readable across a dark nursery.
+    private func clock(_ date: Date) -> some View {
+        Text(date, format: .dateTime.hour().minute())
+            .font(.system(size: 140, weight: .thin, design: .rounded))
+            .monospacedDigit()
+            .lineLimit(1)
+            .minimumScaleFactor(0.4)
+            .foregroundStyle(.white.opacity(0.7))
+    }
+
     // MARK: Status
 
     private var plan: NightPlan { NightPlan(data: nightPlanData) }
@@ -99,6 +157,9 @@ struct MonitorView: View {
         // Redrawn each minute so VoiceOver reads how long the crying has gone on in words.
         TimelineView(.everyMinute) { timeline in
             VStack(spacing: Spacing.m) {
+                if isLargeScreen {
+                    clock(timeline.date)
+                }
                 Text(cryMonitor.cryStart != nil ? "😭" : (cryMonitor.isListening ? "🎧" : "⏸️"))
                     .font(.system(size: min(emojiSize, 120)))
                     .accessibilityHidden(true)
@@ -152,10 +213,12 @@ struct MonitorView: View {
 
     private func spokenStatus(now: Date) -> String {
         var parts: [String] = []
+        let name = monitor.babyName
         if let cryStart = cryMonitor.cryStart {
-            parts.append("\(monitor.babyName) is crying, for \(Format.spokenDuration(now.timeIntervalSince(cryStart)))")
+            let duration = Format.spokenDuration(now.timeIntervalSince(cryStart))
+            parts.append(String(localized: "\(name) is crying, for \(duration)", comment: "Read by VoiceOver: the baby's name, then how long, like \"3 minutes\""))
         } else {
-            parts.append(cryMonitor.isListening ? "Listening for \(monitor.babyName)" : "Not listening")
+            parts.append(cryMonitor.isListening ? String(localized: "Listening for \(name)", comment: "The baby's name") : String(localized: "Not listening"))
         }
         parts.append(onDutyText(at: now))
         if let action = cryMonitor.lastAction { parts.append(action) }
@@ -164,9 +227,11 @@ struct MonitorView: View {
 
     private func onDutyText(at date: Date) -> String {
         guard let shift = plan.shift(at: date) else {
-            return "No night shift now, so alerts go to every parent."
+            return String(localized: "No night shift now, so alerts go to every parent.")
         }
-        return "\(plan.name(of: shift.parent)) is on duty until \(shift.end.formatted(date: .omitted, time: .shortened))."
+        let name = plan.name(of: shift.parent)
+        let end = shift.end.formatted(date: .omitted, time: .shortened)
+        return String(localized: "\(name) is on duty until \(end).", comment: "A parent's name, then a time")
     }
 
     // MARK: White noise
@@ -240,11 +305,17 @@ struct MonitorView: View {
                 colors: [Palette.nightLight.opacity(0.55), Palette.nightLight.opacity(0.18), Palette.monitorBackground],
                 center: .center,
                 startRadius: 20,
-                endRadius: 600
+                endRadius: glowRadius
             )
         } else {
             Palette.monitorBackground
         }
+    }
+
+    /// 600 points, as on iPhone, or out to the corners of a bigger screen, so on an iPad the warm
+    /// glow fills the whole screen rather than a circle in the middle of it.
+    private var glowRadius: CGFloat {
+        max(600, (screenSize.width * screenSize.width + screenSize.height * screenSize.height).squareRoot() / 2)
     }
 
     // MARK: Tips and buttons

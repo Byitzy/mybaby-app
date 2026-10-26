@@ -5,7 +5,8 @@ import SwiftUI
 ///
 /// - **What the doctor said** is saved on the appointment (`visitNotes`).
 /// - **Measurements** become a `GrowthEntry` dated at the appointment (or update the one already
-///   there), in the app's units. Head circumference is kept on the appointment.
+///   there), in the app's units, head circumference included. It's also still copied to the
+///   appointment, where recaps kept it before, for a partner's phone on an earlier version.
 /// - **Shots** mark upcoming `Vaccine`s as given at the visit, or add new ones.
 /// - **Questions** from visit prep can be checked off as answered, with an optional answer.
 /// - **Book the next visit** opens a new appointment with the same doctor and place.
@@ -39,9 +40,13 @@ struct VisitRecapView: View {
         self.appointment = appointment
     }
 
+    /// Read from `CloudStatus`, which keeps it up to date, rather than asked of the store each time:
+    /// the form checks it several times per render, and renders on every keystroke.
+    @ObservedObject private var cloudStatus = CloudStatus.shared
+
     private var canEdit: Bool {
         guard let baby = appointment.baby else { return false }
-        return PersistenceController.shared.canEdit(baby)
+        return cloudStatus.canEdit(baby)
     }
 
     var body: some View {
@@ -120,13 +125,13 @@ struct VisitRecapView: View {
         Section {
             switch units {
             case .metric:
-                numberField("Weight", text: $weightText, unit: "kg")
+                numberField(String(localized: "Weight"), text: $weightText, unit: String(localized: "kg", comment: "Kilograms"))
             case .imperial:
-                numberField("Weight", text: $poundsText, unit: "lb")
-                numberField("", text: $ouncesText, unit: "oz")
+                numberField(String(localized: "Weight"), text: $poundsText, unit: String(localized: "lb", comment: "Pounds"))
+                numberField("", text: $ouncesText, unit: String(localized: "oz", comment: "Ounces"))
             }
-            numberField("Length", text: $lengthText, unit: units.lengthUnit)
-            numberField("Head", text: $headText, unit: units.lengthUnit)
+            numberField(String(localized: "Length"), text: $lengthText, unit: units.lengthUnit)
+            numberField(String(localized: "Head", comment: "Short for head circumference"), text: $headText, unit: units.lengthUnit)
         } header: {
             Text("Measurements")
         } footer: {
@@ -137,7 +142,7 @@ struct VisitRecapView: View {
                     tint: Palette.danger
                 )
             } else {
-                Text("Weight and length are added to Growth, dated at the visit.")
+                Text("Weight, length and head size are added to Growth, dated at the visit.")
             }
         }
     }
@@ -228,18 +233,26 @@ struct VisitRecapView: View {
         }
     }
 
-    /// Picks the matching upcoming vaccine if there is one, or adds a new shot.
+    /// Picks the matching upcoming vaccine if there is one, or adds a new shot. An upcoming one saved
+    /// under another name for the same vaccine ("DTaP" for "DTaP (diphtheria, tetanus, whooping
+    /// cough)") counts as matching.
     private func addShot(named name: String) {
-        if let index = shots.firstIndex(where: { $0.name == name && !$0.isGiven }) {
+        if let index = shots.firstIndex(where: { sameVaccine($0.name, name) && !$0.isGiven }) {
             shots[index].isGiven = true
             return
         }
         let listed = Set(shots.compactMap(\.vaccineID))
-        if let upcoming = upcomingVaccines.first(where: { $0.name == name && !listed.contains($0.objectID) }) {
+        if let upcoming = upcomingVaccines.first(where: { sameVaccine($0.name, name) && !listed.contains($0.objectID) }) {
             shots.append(ShotChoice(name: upcoming.name, doseLabel: upcoming.doseLabel, vaccineID: upcoming.objectID, isGiven: true))
         } else {
             shots.append(ShotChoice(name: name, isGiven: true))
         }
+    }
+
+    private func sameVaccine(_ saved: String, _ picked: String) -> Bool {
+        if saved == picked { return true }
+        guard let pickedEntry = VaccineGuide.entry(matching: picked) else { return false }
+        return VaccineGuide.entry(matching: saved)?.id == pickedEntry.id
     }
 
     private var upcomingVaccines: [Vaccine] {
@@ -297,7 +310,10 @@ struct VisitRecapView: View {
             }
             if let cm = entry.lengthCm { lengthText = number(units.fromCm(cm), digits: 2) }
         }
-        if let cm = appointment.headCircumferenceCm { headText = number(units.fromCm(cm), digits: 2) }
+        // On the entry since head circumference joined Growth; on the appointment for older recaps.
+        if let cm = appointment.measurementAtVisit?.headCircumferenceCm ?? appointment.headCircumferenceCm {
+            headText = number(units.fromCm(cm), digits: 2)
+        }
         // Upcoming vaccines due by a month after the visit, ready to switch on.
         let soon = appointment.date.addingTimeInterval(31 * 24 * 3600)
         shots = upcomingVaccines
@@ -316,23 +332,30 @@ struct VisitRecapView: View {
             if let answer = answers[question.id] { byText[question.text] = answer.trimmingCharacters(in: .whitespacesAndNewlines) }
         }
         appointment.answers = byText
-        appointment.headCircumferenceCm = parsedHeadCm.number
 
-        // Weight and length: update the entry saved from this recap before, or add one.
+        // Measurements: update the entry saved from this recap before, or add one.
         let weight = parsedWeightKg.number
         let length = parsedLengthCm.number
+        let head = parsedHeadCm.number
+        // Still copied here, where recaps kept it before Growth had head circumference, so a
+        // partner's phone on an earlier version of MyBaby shows the same recap.
+        appointment.headCircumferenceCm = head
         if let entry = appointment.measurementAtVisit {
             entry.weightKg = weight
             entry.lengthCm = length
-            if weight == nil && length == nil { context.delete(entry) }
-        } else if weight != nil || length != nil {
+            entry.headCircumferenceCm = head
+            if weight == nil && length == nil && head == nil { context.delete(entry) }
+        } else if weight != nil || length != nil || head != nil {
             let entry = GrowthEntry(context: context)
             attach(entry, to: baby)
             entry.uuid = UUID()
             entry.date = visitDate
             entry.weightKg = weight
             entry.lengthCm = length
-            entry.notes = appointment.title.isEmpty ? "Measured at the appointment" : "Measured at \(appointment.title)"
+            entry.headCircumferenceCm = head
+            entry.notes = appointment.title.isEmpty
+                ? String(localized: "Measured at the appointment")
+                : String(localized: "Measured at \(appointment.title)", comment: "An appointment's title: Measured at 2-month checkup")
             entry.baby = baby
         }
 
@@ -461,12 +484,13 @@ struct VisitRecapPromptSection: View {
         }
     }
 
-    /// The latest one that has ended, isn't recapped and wasn't dismissed.
+    /// The latest one that has ended, isn't recapped, cancelled or dismissed.
     private var appointment: Appointment? {
         let dismissed = Set(dismissedIDs.split(separator: ",").map(String.init))
         return recent.last { appointment in
             let end = appointment.assumedEnd
             return end <= now && end >= now.addingTimeInterval(-Self.window) && !appointment.hasRecap
+                && !appointment.isCancelled
                 && !dismissed.contains(appointment.uuid?.uuidString ?? "")
         }
     }

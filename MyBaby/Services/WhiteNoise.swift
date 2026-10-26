@@ -10,20 +10,20 @@ enum NoiseColor: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .off: return "Off"
-        case .white: return "White"
-        case .pink: return "Pink"
-        case .brown: return "Brown"
+        case .off: return String(localized: "Off", comment: "White noise: no sound")
+        case .white: return String(localized: "White", comment: "White noise (the sound)")
+        case .pink: return String(localized: "Pink", comment: "Pink noise (the sound)")
+        case .brown: return String(localized: "Brown", comment: "Brown noise (the sound)")
         }
     }
 
     /// What it sounds like, for the picker's footer and VoiceOver.
     var detail: String {
         switch self {
-        case .off: return "No sound."
-        case .white: return "A bright hiss, like a radio between stations."
-        case .pink: return "Softer, like steady rain."
-        case .brown: return "Deep and low, like a distant waterfall."
+        case .off: return String(localized: "No sound.", comment: "White noise: off")
+        case .white: return String(localized: "A bright hiss, like a radio between stations.", comment: "What white noise sounds like")
+        case .pink: return String(localized: "Softer, like steady rain.", comment: "What pink noise sounds like")
+        case .brown: return String(localized: "Deep and low, like a distant waterfall.", comment: "What brown noise sounds like")
         }
     }
 }
@@ -39,10 +39,10 @@ enum NoiseTimer: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .thirtyMinutes: return "30 min"
-        case .oneHour: return "1 hour"
-        case .twoHours: return "2 hours"
-        case .allNight: return "All night"
+        case .thirtyMinutes: return String(localized: "30 min", comment: "White noise timer")
+        case .oneHour: return String(localized: "1 hour", comment: "White noise timer")
+        case .twoHours: return String(localized: "2 hours", comment: "White noise timer")
+        case .allNight: return String(localized: "All night", comment: "White noise timer")
         }
     }
 

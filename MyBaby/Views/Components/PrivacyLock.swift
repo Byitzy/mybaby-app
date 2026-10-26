@@ -2,33 +2,27 @@ import LocalAuthentication
 import SwiftUI
 import UIKit
 
-extension SettingsKey {
-    // In `UserDefaults.standard`:
-    /// Whether the parent care page asks for Face ID, Touch ID or the passcode before it opens. On by default.
-    static let careLockEnabled = "careLockEnabled"
-}
-
 /// Shows `content` only after Face ID, Touch ID, Optic ID or the iPhone's passcode, for a private page
 /// like the parent care page.
 ///
-/// The content isn't built until the page is unlocked, so nothing in it is fetched or drawn before.
-/// The page locks again when the parent leaves it (but not for a screen it opens itself, like
-/// My medicines), when the app goes to the background, and when the app comes back after more than
-/// two minutes away. While the app isn't active, the page is blurred, so the app switcher's picture
-/// doesn't show it.
+/// The page is always locked; there's no setting to turn that off. The content isn't built until
+/// the page is unlocked, so nothing in it is fetched or drawn before. It locks again every time:
+/// when the parent leaves it (but not for a screen it opens itself, like My medicines), and as soon
+/// as the app stops being active (Control Center, the app switcher, another app, the Lock Screen),
+/// so coming back always asks again. It's also a `privateScreen()`: left out of screenshots,
+/// covered while the screen is recorded or mirrored, and blurred in the app switcher.
 ///
 /// It uses `.deviceOwnerAuthentication`: biometrics, with the passcode when they fail or are locked
-/// out. An iPhone without a passcode can't lock anything, so the page then shows with a banner saying so.
+/// out. An iPhone without a passcode can't lock anything, so the page stays closed until one is set.
 struct PrivateContentLock<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @AppStorage private var lockEnabled: Bool
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 56
 
-    private let title: String
-    private let message: String
+    private let title: Text
+    private let message: Text
+    /// Shown by iOS in the Face ID or passcode prompt.
     private let reason: String
-    private let turnOffReason: String
     private let content: () -> Content
 
     /// What this iPhone can unlock with, and whether it has a passcode at all.
@@ -43,38 +37,58 @@ struct PrivateContentLock<Content: View>: View {
     @State private var isOnScreen = false
     /// Try once, by itself, when the page appears or the app comes back from the background.
     @State private var pendingAutoUnlock = true
-    /// When the app stopped being active, for the two-minute relock.
-    @State private var inactiveSince: Date?
+    /// When the last Face ID or passcode sheet closed. The app can report going inactive just after
+    /// it, and that mustn't lock the page that was just unlocked.
+    @State private var authenticationEndedAt: Date?
     @State private var probe = NavigationEntryProbe()
 
-    /// How long the app can be away before the page locks again.
-    static var relockInterval: TimeInterval { 2 * 60 }
-
+    /// A literal title and message are looked up in the String Catalog, like `Text("…")`.
     init(
-        title: String,
-        message: String = "Unlock to see your check-ins, medicines and notes.",
-        reason: String = "Unlock your private care page",
-        turnOffReason: String = "Turn off the lock on your private care page",
-        settingKey: String = SettingsKey.careLockEnabled,
+        title: LocalizedStringKey,
+        message: LocalizedStringKey = "Unlock to see your check-ins, medicines and notes.",
+        reason: String = String(localized: "Unlock your private care page", comment: "Shown by iOS in the Face ID or passcode prompt"),
         @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.init(
+            titleText: Text(title),
+            messageText: Text(message),
+            reason: reason,
+            content: content
+        )
+    }
+
+    /// A title (and message) that's already localized is shown as it is.
+    @_disfavoredOverload
+    init<S: StringProtocol>(
+        title: S,
+        message: String? = nil,
+        reason: String = String(localized: "Unlock your private care page", comment: "Shown by iOS in the Face ID or passcode prompt"),
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.init(
+            titleText: Text(title),
+            messageText: message.map { Text($0) } ?? Text("Unlock to see your check-ins, medicines and notes."),
+            reason: reason,
+            content: content
+        )
+    }
+
+    private init(
+        titleText title: Text,
+        messageText message: Text,
+        reason: String,
+        content: @escaping () -> Content
     ) {
         self.title = title
         self.message = message
         self.reason = reason
-        self.turnOffReason = turnOffReason
         self.content = content
-        _lockEnabled = AppStorage(wrappedValue: true, settingKey)
     }
 
     var body: some View {
         ZStack {
             if mountsContent {
                 content()
-                    .safeAreaInset(edge: .top, spacing: 0) {
-                        if lockEnabled && !security.hasPasscode {
-                            NoPasscodeBanner()
-                        }
-                    }
                     .opacity(showsContent ? 1 : 0)
                     .allowsHitTesting(showsContent)
                     .accessibilityHidden(!showsContent)
@@ -86,15 +100,8 @@ struct PrivateContentLock<Content: View>: View {
         }
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: showsContent)
         // Outside the animation, so it covers the page at once when the app stops being active.
-        .hiddenInAppSwitcher()
+        .privateScreen()
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                if showsContent && security.hasPasscode {
-                    lockMenu
-                }
-            }
-        }
         .background {
             NavigationEntryReader(probe: probe)
                 .accessibilityHidden(true)
@@ -107,7 +114,6 @@ struct PrivateContentLock<Content: View>: View {
         }
         .onDisappear {
             isOnScreen = false
-            guard isProtected else { return }
             switch probe.isCoveredByPushedScreen {
             case .some(true):
                 // One of the page's own screens (like My medicines) is on top: still the private page.
@@ -126,14 +132,15 @@ struct PrivateContentLock<Content: View>: View {
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             handle(.background)
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            handle(.inactive)
+        }
     }
 
     // MARK: State
 
-    /// Locking is on, and this iPhone has a passcode to lock with.
-    private var isProtected: Bool { lockEnabled && security.hasPasscode }
-
-    private var showsContent: Bool { !isProtected || isUnlocked }
+    /// Only after unlocking, and only on an iPhone with a passcode to unlock with.
+    private var showsContent: Bool { isUnlocked && security.hasPasscode }
 
     private var mountsContent: Bool { showsContent || keepsContent }
 
@@ -149,16 +156,13 @@ struct PrivateContentLock<Content: View>: View {
             relock(keepingContent: false)
             pendingAutoUnlock = true
         case .inactive:
-            // The Face ID sheet makes the app inactive too; that time doesn't count as away.
-            if !isAuthenticating && inactiveSince == nil {
-                inactiveSince = .now
-            }
-        case .active:
-            if let inactiveSince, Date.now.timeIntervalSince(inactiveSince) > Self.relockInterval {
+            // The Face ID sheet makes the app inactive too, and that isn't leaving.
+            let justAuthenticated = authenticationEndedAt.map { Date.now.timeIntervalSince($0) < 1.5 } ?? false
+            if !isAuthenticating && !justAuthenticated {
                 relock(keepingContent: false)
                 pendingAutoUnlock = true
             }
-            inactiveSince = nil
+        case .active:
             // A passcode may have been set or removed in Settings meanwhile.
             security = .current()
             autoUnlockIfNeeded()
@@ -172,7 +176,7 @@ struct PrivateContentLock<Content: View>: View {
     private func autoUnlockIfNeeded() {
         guard pendingAutoUnlock, isOnScreen, scenePhase == .active else { return }
         pendingAutoUnlock = false
-        guard isProtected, !isUnlocked, !isAuthenticating else { return }
+        guard security.hasPasscode, !isUnlocked, !isAuthenticating else { return }
         Task { await unlock() }
     }
 
@@ -186,40 +190,107 @@ struct PrivateContentLock<Content: View>: View {
         case .cancelled:
             break
         case .noPasscode:
-            // Nothing to lock with: the content shows, with the banner.
+            // Nothing to unlock with: the page stays closed and says why.
             security.hasPasscode = false
         case .failed:
-            unlockError = "Couldn't unlock. Try again."
+            unlockError = String(localized: "Couldn't unlock. Try again.")
         }
     }
 
-    @MainActor
-    private func turnOffLock() async {
-        switch await authenticate(reason: turnOffReason) {
-        case .success:
-            lockEnabled = false
-        case .noPasscode:
-            security.hasPasscode = false
-        case .cancelled, .failed:
-            break
-        }
-    }
-
-    private enum AuthenticationResult {
-        case success, cancelled, noPasscode, failed
-    }
+    private typealias AuthenticationResult = DeviceAuthentication.Result
 
     /// Face ID, Touch ID or Optic ID, falling back to the passcode (also when biometrics are locked out).
     @MainActor
     private func authenticate(reason: String) async -> AuthenticationResult {
         guard !isAuthenticating else { return .cancelled }
+        isAuthenticating = true
+        defer {
+            isAuthenticating = false
+            authenticationEndedAt = .now
+        }
+        return await DeviceAuthentication.authenticate(reason: reason)
+    }
+
+    // MARK: Views
+
+    private var lockScreen: some View {
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(spacing: Spacing.l) {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: iconSize))
+                        .foregroundStyle(.tint)
+                        .accessibilityHidden(true)
+
+                    VStack(spacing: Spacing.s) {
+                        title
+                            .font(.title2.weight(.semibold))
+                            .accessibilityAddTraits(.isHeader)
+                        if security.hasPasscode {
+                            message
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("This page opens only with Face ID, Touch ID or your passcode. Set a passcode in the Settings app (Face ID & Passcode) to open it.")
+                                .font(.body)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .multilineTextAlignment(.center)
+
+                    if security.hasPasscode {
+                        Button {
+                            Task { await unlock() }
+                        } label: {
+                            Label(security.method.unlockTitle, systemImage: security.method.systemImage)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .disabled(isAuthenticating)
+                    } else {
+                        Button("Check again") {
+                            security = .current()
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.large)
+                    }
+
+                    if let unlockError {
+                        NoticeLabel(unlockError)
+                            .font(.footnote)
+                    }
+                }
+                .padding(Spacing.xl)
+                .frame(maxWidth: 480)
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+        .background(Palette.screenBackground)
+    }
+}
+
+// MARK: - Device
+
+/// Asks for Face ID, Touch ID or Optic ID, falling back to the passcode (also when biometrics are
+/// locked out), with `.deviceOwnerAuthentication`. Used by the private page lock, and before
+/// Delete all MyBaby data.
+enum DeviceAuthentication {
+    enum Result {
+        case success, cancelled
+        /// The iPhone has no passcode, so there's nothing to ask for.
+        case noPasscode
+        case failed
+    }
+
+    @MainActor
+    static func authenticate(reason: String) async -> Result {
         let context = LAContext()
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             return error?.code == LAError.Code.passcodeNotSet.rawValue ? .noPasscode : .failed
         }
-        isAuthenticating = true
-        defer { isAuthenticating = false }
         do {
             let success = try await context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason)
             return success ? .success : .failed
@@ -236,84 +307,7 @@ struct PrivateContentLock<Content: View>: View {
             return .failed
         }
     }
-
-    // MARK: Views
-
-    private var lockScreen: some View {
-        GeometryReader { proxy in
-            ScrollView {
-                VStack(spacing: Spacing.l) {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: iconSize))
-                        .foregroundStyle(.tint)
-                        .accessibilityHidden(true)
-
-                    VStack(spacing: Spacing.s) {
-                        Text(title)
-                            .font(.title2.weight(.semibold))
-                            .accessibilityAddTraits(.isHeader)
-                        Text(message)
-                            .font(.body)
-                            .foregroundStyle(.secondary)
-                    }
-                    .multilineTextAlignment(.center)
-
-                    Button {
-                        Task { await unlock() }
-                    } label: {
-                        Label(security.method.unlockTitle, systemImage: security.method.systemImage)
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .disabled(isAuthenticating)
-
-                    if let unlockError {
-                        NoticeLabel(unlockError)
-                            .font(.footnote)
-                    }
-                }
-                .padding(Spacing.xl)
-                .frame(maxWidth: 480)
-                .frame(maxWidth: .infinity, minHeight: proxy.size.height)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-        }
-        .background(Palette.screenBackground)
-    }
-
-    private var lockMenu: some View {
-        Menu {
-            Toggle(isOn: lockToggle) {
-                Label(security.method.lockTitle, systemImage: security.method.systemImage)
-            }
-        } label: {
-            Label("Page lock", systemImage: lockEnabled ? "lock.fill" : "lock.open")
-        }
-        .accessibilityLabel("Page lock")
-        .accessibilityValue(lockEnabled ? "On" : "Off")
-        .accessibilityHint("Turns asking for \(security.method.name) on or off for this page.")
-    }
-
-    /// Turning the lock off asks for Face ID (or the passcode) first; turning it on doesn't, and
-    /// leaves the page open until it next locks.
-    private var lockToggle: Binding<Bool> {
-        Binding(
-            get: { lockEnabled },
-            set: { turnOn in
-                if turnOn {
-                    lockEnabled = true
-                    isUnlocked = true
-                    keepsContent = true
-                } else {
-                    Task { await turnOffLock() }
-                }
-            }
-        )
-    }
 }
-
-// MARK: - Device
 
 /// What the iPhone unlocks with, for the button and the menu.
 enum UnlockMethod: Equatable {
@@ -329,20 +323,36 @@ enum UnlockMethod: Equatable {
         }
     }
 
+    /// "Face ID", or "passcode" in a sentence. The Apple names stay the same in every language.
     var name: String {
         switch self {
         case .faceID: return "Face ID"
         case .touchID: return "Touch ID"
         case .opticID: return "Optic ID"
-        case .passcode: return "passcode"
+        case .passcode: return String(localized: "passcode", comment: "The iPhone's passcode, in the middle of a sentence")
         }
     }
 
-    /// "Unlock with Face ID", or "Unlock with passcode".
-    var unlockTitle: String { "Unlock with \(name)" }
+    /// "Unlock with Face ID", or "Unlock with passcode". Its own sentence for the passcode, which
+    /// other languages may say differently from an Apple name.
+    var unlockTitle: String {
+        switch self {
+        case .passcode:
+            return String(localized: "Unlock with passcode")
+        case .faceID, .touchID, .opticID:
+            return String(localized: "Unlock with \(name)", comment: "Face ID, Touch ID or Optic ID")
+        }
+    }
 
     /// "Lock with Face ID", or "Lock with passcode".
-    var lockTitle: String { "Lock with \(name)" }
+    var lockTitle: String {
+        switch self {
+        case .passcode:
+            return String(localized: "Lock with passcode")
+        case .faceID, .touchID, .opticID:
+            return String(localized: "Lock with \(name)", comment: "Face ID, Touch ID or Optic ID")
+        }
+    }
 
     var systemImage: String {
         switch self {
@@ -376,60 +386,38 @@ struct DeviceSecurity: Equatable {
 
 // MARK: - Pieces
 
-/// At the top of the page when it can't be locked, so the parent knows it's open.
-private struct NoPasscodeBanner: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: Spacing.xxs) {
-            NoticeLabel("Not locked: this iPhone has no passcode", systemImage: "lock.open.fill")
-                .font(.subheadline.weight(.semibold))
-            Text("Set a passcode on this iPhone to lock this page.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, Spacing.l)
-        .padding(.vertical, Spacing.s)
-        .background(.bar)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-/// A blur with a lock over the whole view.
+/// A blur with a lock over the whole view. While the screen is recorded or mirrored it's opaque
+/// and says why, since a blur could still show shapes.
 struct PrivacyCurtain: View {
+    var isCaptured = false
+
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 44
 
     var body: some View {
         ZStack {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-            Image(systemName: "lock.fill")
-                .font(.system(size: iconSize))
-                .foregroundStyle(.secondary)
+            if isCaptured {
+                Rectangle()
+                    .fill(Palette.screenBackground)
+            } else {
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+            }
+            VStack(spacing: Spacing.m) {
+                Image(systemName: isCaptured ? "eye.slash.fill" : "lock.fill")
+                    .font(.system(size: iconSize))
+                    .foregroundStyle(.secondary)
+                if isCaptured {
+                    Text("Hidden while your screen is recorded or shared")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, Spacing.xl)
+                }
+            }
         }
         .ignoresSafeArea()
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Hidden while MyBaby isn't open")
-    }
-}
-
-private struct AppSwitcherCurtain: ViewModifier {
-    @Environment(\.scenePhase) private var scenePhase
-
-    func body(content: Content) -> some View {
-        content
-            .overlay {
-                if scenePhase != .active {
-                    PrivacyCurtain()
-                }
-            }
-    }
-}
-
-extension View {
-    /// Blurs the view while the app isn't active, so the app switcher's picture of it doesn't show
-    /// what's on it. For private screens, like those the care page pushes.
-    func hiddenInAppSwitcher() -> some View {
-        modifier(AppSwitcherCurtain())
+        .accessibilityLabel(isCaptured ? "Hidden while your screen is recorded or shared" : "Hidden while MyBaby isn't open")
     }
 }
 

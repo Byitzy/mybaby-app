@@ -39,17 +39,35 @@ enum AllergyMatch {
     }
 
     /// "Mavie's list says she's allergic to amoxicillin. Check with your doctor or pharmacist before
-    /// giving it." Uses "she" or "he" only once the baby's sex is set.
+    /// giving it." Uses "she" or "he" only once the baby's sex is set. Each wording is one whole
+    /// sentence, so it can be translated with the right grammar.
     static func medicineWarning(babyName: String, sex: BabySex?, allergyName: String, status: AllergyStatus) -> String {
         let allergen = allergyName.lowercased()
-        let check = "Check with your doctor or pharmacist before giving it."
-        guard let sex else {
-            let suspected = status == .suspected ? " as a suspected allergy" : ""
-            return "\(babyName)'s allergy list includes \(allergen)\(suspected). \(check)"
+        let suspected = status == .suspected
+        switch sex {
+        case nil:
+            return suspected
+                ? String(localized: "\(babyName)'s allergy list includes \(allergen) as a suspected allergy. Check with your doctor or pharmacist before giving it.")
+                : String(localized: "\(babyName)'s allergy list includes \(allergen). Check with your doctor or pharmacist before giving it.")
+        case .female:
+            return suspected
+                ? String(localized: "\(babyName)'s list says she might be allergic to \(allergen). Check with your doctor or pharmacist before giving it.")
+                : String(localized: "\(babyName)'s list says she's allergic to \(allergen). Check with your doctor or pharmacist before giving it.")
+        case .male:
+            return suspected
+                ? String(localized: "\(babyName)'s list says he might be allergic to \(allergen). Check with your doctor or pharmacist before giving it.")
+                : String(localized: "\(babyName)'s list says he's allergic to \(allergen). Check with your doctor or pharmacist before giving it.")
         }
-        let pronoun = sex == .female ? "she" : "he"
-        let allergic = status == .suspected ? "\(pronoun) might be allergic" : "\(pronoun)'s allergic"
-        return "\(babyName)'s list says \(allergic) to \(allergen). \(check)"
+    }
+
+    /// "Mavie's allergy list includes amoxicillin. Log it anyway?" What Siri asks before logging a
+    /// medicine that matches, short enough to be read aloud. "Log it" because Siri only records the
+    /// dose; whether to give it is the parent's call.
+    static func medicineConfirmation(babyName: String, allergyName: String, status: AllergyStatus) -> String {
+        let allergen = allergyName.lowercased()
+        return status == .suspected
+            ? String(localized: "\(babyName)'s allergy list includes \(allergen) as a suspected allergy. Log it anyway?")
+            : String(localized: "\(babyName)'s allergy list includes \(allergen). Log it anyway?")
     }
 
     // MARK: Food
@@ -94,8 +112,10 @@ enum AllergyMatch {
 
     /// "Mavie has a suspected egg allergy." The gentle warning in the solids editor.
     static func foodWarning(babyName: String, allergyName: String, status: AllergyStatus) -> String {
-        let article = status == .suspected ? "a suspected" : "a confirmed"
-        return "\(babyName) has \(article) \(allergyName.lowercased()) allergy."
+        let allergen = allergyName.lowercased()
+        return status == .suspected
+            ? String(localized: "\(babyName) has a suspected \(allergen) allergy.")
+            : String(localized: "\(babyName) has a confirmed \(allergen) allergy.")
     }
 }
 
@@ -159,9 +179,11 @@ struct AllergenIntroduction: Identifiable, Equatable {
 
     /// "Tried 4 times · first Oct 2", or "Not tried yet".
     var triedText: String {
-        guard let firstGiven else { return "Not tried yet" }
-        let times = timesGiven == 1 ? "Tried once" : "Tried \(timesGiven) times"
-        return "\(times) · first \(firstGiven.formatted(.dateTime.month(.abbreviated).day()))"
+        guard let firstGiven else { return String(localized: "Not tried yet", comment: "A food allergen not given to the baby yet") }
+        let first = firstGiven.formatted(.dateTime.month(.abbreviated).day())
+        return timesGiven == 1
+            ? String(localized: "Tried once · first \(first)", comment: "A food allergen given once, and the date")
+            : String(localized: "Tried \(timesGiven) times · first \(first)", comment: "A food allergen given several times, and the date it was first given")
     }
 
     /// "Last given today", "Last given yesterday", "Last given 9 days ago", by calendar day.
@@ -171,9 +193,9 @@ struct AllergenIntroduction: Identifiable, Equatable {
             [.day], from: calendar.startOfDay(for: lastGiven), to: calendar.startOfDay(for: now)
         ).day ?? 0
         switch days {
-        case ..<1: return "Last given today"
-        case 1: return "Last given yesterday"
-        default: return "Last given \(days) days ago"
+        case ..<1: return String(localized: "Last given today", comment: "A food allergen")
+        case 1: return String(localized: "Last given yesterday", comment: "A food allergen")
+        default: return String(localized: "Last given \(days) days ago", comment: "A food allergen; always 2 days or more")
         }
     }
 }
@@ -186,17 +208,24 @@ extension Allergy {
     var reportLine: String {
         var parts = ["\(status.title), \(severity.title.lowercased())", category.title]
         let seen = reactionsSeen.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !seen.isEmpty { parts.append("Reactions: \(seen)") }
+        if !seen.isEmpty { parts.append(String(localized: "Reactions: \(seen)", comment: "The reactions seen with an allergy, as the parent wrote them")) }
         let doctor = diagnosedBy.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !doctor.isEmpty || diagnosedDate != nil {
-            var diagnosed = "Diagnosed"
-            if !doctor.isEmpty { diagnosed += " by \(doctor)" }
-            if let diagnosedDate { diagnosed += " on \(diagnosedDate.formatted(date: .abbreviated, time: .omitted))" }
-            parts.append(diagnosed)
+        let date = diagnosedDate?.formatted(date: .abbreviated, time: .omitted)
+        switch (doctor.isEmpty ? nil : doctor, date) {
+        case let (doctor?, date?):
+            parts.append(String(localized: "Diagnosed by \(doctor) on \(date)", comment: "An allergy: who diagnosed it, and when"))
+        case let (doctor?, nil):
+            parts.append(String(localized: "Diagnosed by \(doctor)", comment: "An allergy: who diagnosed it"))
+        case let (nil, date?):
+            parts.append(String(localized: "Diagnosed on \(date)", comment: "An allergy: when it was diagnosed"))
+        case (nil, nil):
+            break
         }
         if hasAutoInjector {
             let place = autoInjectorLocation.trimmingCharacters(in: .whitespacesAndNewlines)
-            parts.append(place.isEmpty ? "Has an auto-injector" : "Auto-injector (\(place))")
+            parts.append(place.isEmpty
+                ? String(localized: "Has an auto-injector", comment: "An epinephrine auto-injector")
+                : String(localized: "Auto-injector (\(place))", comment: "An epinephrine auto-injector, and where it's kept"))
         }
         return "\(displayName) — \(parts.joined(separator: " · "))"
     }

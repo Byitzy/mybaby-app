@@ -143,10 +143,10 @@ struct Coverage {
         /// For the PDF's "Tracked" column.
         var title: String {
             switch self {
-            case .full: return "Full"
-            case .partial: return "Partial"
-            case .none: return "None"
-            case .inProgress: return "Today"
+            case .full: return String(localized: "Full", comment: "How much of a day was tracked, in the PDF report's Tracked column")
+            case .partial: return String(localized: "Partial", comment: "How much of a day was tracked, in the PDF report's Tracked column")
+            case .none: return String(localized: "None", comment: "How much of a day was tracked, in the PDF report's Tracked column")
+            case .inProgress: return String(localized: "Today", comment: "How much of a day was tracked, in the PDF report's Tracked column: the day isn't over")
             }
         }
     }

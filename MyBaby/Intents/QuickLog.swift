@@ -154,13 +154,14 @@ enum QuickLog {
     /// Medicine button does. It never suggests a dose.
     ///
     /// Returns false without logging while the dose timing the parent entered for it doesn't allow
-    /// another dose yet. The widget's button only shows once it does, so this only catches a widget that
-    /// was out of date; a dose given early can still be logged in the app, which asks first.
+    /// another dose yet, or when it matches a medicine allergy on the baby's list. The widget's button
+    /// only shows when neither is so, so this only catches a widget that was out of date; the dose can
+    /// still be logged in the app, which says why first.
     @discardableResult
     static func logMedicineAgain(_ name: String, for baby: Baby? = nil, at date: Date = .now) throws -> Bool {
         let target = try baby ?? currentBaby()
         let key = MedicineSchedule.key(for: name)
-        guard !key.isEmpty else { return false }
+        guard !key.isEmpty, medicineAllergy(matching: name, for: target) == nil else { return false }
         let doses = ((try? context.fetch(target.entries(Activity.all(.medication)))) ?? [])
             .filter { MedicineSchedule.key(for: $0.medicationName) == key }
         let schedules = (try? context.fetch(target.entries(MedicineSchedule.fetchAll()))) ?? []
@@ -179,6 +180,13 @@ enum QuickLog {
         return true
     }
 
+    /// The confirmed or suspected medicine allergy on `baby`'s list that `name` matches, the same
+    /// match as the app's warning (`AllergyMatch.medicineMatches`), confirmed ones first. Siri asks
+    /// before logging such a medicine, and the widget's button doesn't log it at all.
+    static func medicineAllergy(matching name: String, for baby: Baby) -> Allergy? {
+        baby.medicineAllergies(matching: name).first
+    }
+
     // MARK: Spoken text
 
     /// "2 hours, 10 minutes" for Siri to read out.
@@ -190,10 +198,9 @@ enum QuickLog {
         return formatter.string(from: max(60, seconds)) ?? Format.duration(seconds)
     }
 
-    /// "Emma's last feed" with twins, "The last feed" with one baby.
-    static func babyPrefix(_ baby: Baby, _ thing: String) -> String {
-        let count = (try? context.count(for: Baby.fetchAll())) ?? 1
-        return count > 1 ? "\(baby.displayName)'s \(thing)" : "The \(thing)"
+    /// How many babies there are, so Siri says whose log it is with twins ("Emma's last feed").
+    static var babyCount: Int {
+        (try? context.count(for: Baby.fetchAll())) ?? 1
     }
 }
 

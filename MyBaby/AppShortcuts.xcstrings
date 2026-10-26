@@ -1,0 +1,440 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "${action} cry alerts in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "${action} cry alerts in ${applicationName}",
+              "${action} listening in ${applicationName}",
+              "${applicationName}, ${action} cry alerts",
+              "${applicationName}, ${action} listening",
+              "Listen for crying in ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${action} las alertas de llanto en ${applicationName}",
+              "${action} la escucha en ${applicationName}",
+              "${applicationName}, ${action} las alertas de llanto",
+              "${applicationName}, ${action} la escucha",
+              "Escuchar el llanto en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${action} les alertes de pleurs dans ${applicationName}",
+              "${action} l'écoute dans ${applicationName}",
+              "${applicationName}, ${action} les alertes de pleurs",
+              "${applicationName}, ${action} l'écoute",
+              "Écouter les pleurs dans ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "${applicationName}, the baby's ${change}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "${applicationName}, the baby's ${change}",
+              "${applicationName}, the baby is ${change}",
+              "The baby is ${change} in ${applicationName}",
+              "The baby ${change} in ${applicationName}",
+              "Baby ${change} in ${applicationName}",
+              "Log sleep for ${baby} in ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName}, el bebé está ${change}",
+              "${applicationName}, el bebé ${change}",
+              "El bebé está ${change} en ${applicationName}",
+              "El bebé ${change} en ${applicationName}",
+              "Bebé ${change} en ${applicationName}",
+              "Registrar el sueño de ${baby} en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "${applicationName}, le bébé est ${change}",
+              "${applicationName}, le bébé ${change}",
+              "Le bébé est ${change} dans ${applicationName}",
+              "Le bébé ${change} dans ${applicationName}",
+              "Bébé ${change} dans ${applicationName}",
+              "Noter le sommeil de ${baby} dans ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Add a note in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Add a note in ${applicationName}",
+              "Add a diary note in ${applicationName}",
+              "Write in ${applicationName}'s diary",
+              "Write ${kind} in ${applicationName}",
+              "Add a note for ${baby} in ${applicationName}",
+              "${applicationName}, add a note"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Agregar una nota en ${applicationName}",
+              "Agregar una nota al diario en ${applicationName}",
+              "Escribir en el diario de ${applicationName}",
+              "Escribir ${kind} en ${applicationName}",
+              "Agregar una nota para ${baby} en ${applicationName}",
+              "${applicationName}, agregar una nota"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Ajouter une note dans ${applicationName}",
+              "Ajouter une note au carnet dans ${applicationName}",
+              "Écrire dans le carnet de ${applicationName}",
+              "Écrire ${kind} dans ${applicationName}",
+              "Ajouter une note pour ${baby} dans ${applicationName}",
+              "${applicationName}, ajouter une note"
+            ]
+          }
+        }
+      }
+    },
+    "Ask ${applicationName} ${question}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Ask ${applicationName} ${question}",
+              "Ask ${applicationName} about ${question}",
+              "Check ${question} in ${applicationName}",
+              "When did the baby last eat in ${applicationName}",
+              "When did my baby last eat in ${applicationName}",
+              "When was the last feed in ${applicationName}",
+              "When did ${baby} last eat in ${applicationName}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Preguntar a ${applicationName} ${question}",
+              "Preguntar a ${applicationName} sobre ${question}",
+              "Consultar ${question} en ${applicationName}",
+              "Cuándo comió el bebé por última vez en ${applicationName}",
+              "Cuándo comió mi bebé en ${applicationName}",
+              "Cuándo fue la última toma en ${applicationName}",
+              "Cuándo comió ${baby} por última vez en ${applicationName}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Demander à ${applicationName} ${question}",
+              "Interroger ${applicationName} sur ${question}",
+              "Vérifier ${question} dans ${applicationName}",
+              "Quand est-ce que le bébé a mangé dans ${applicationName}",
+              "Quand est-ce que mon bébé a mangé dans ${applicationName}",
+              "C'était quand, le dernier boire, dans ${applicationName}",
+              "Quand est-ce que ${baby} a mangé dans ${applicationName}"
+            ]
+          }
+        }
+      }
+    },
+    "Log a ${entry} in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log a ${entry} in ${applicationName}",
+              "Add a ${entry} in ${applicationName}",
+              "Log the baby's ${entry} in ${applicationName}",
+              "${applicationName}, log a ${entry}"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Registrar ${entry} en ${applicationName}",
+              "Agregar ${entry} en ${applicationName}",
+              "Registrar ${entry} del bebé en ${applicationName}",
+              "${applicationName}, registrar ${entry}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Noter ${entry} dans ${applicationName}",
+              "Ajouter ${entry} dans ${applicationName}",
+              "Noter ${entry} du bébé dans ${applicationName}",
+              "${applicationName}, noter ${entry}"
+            ]
+          }
+        }
+      }
+    },
+    "Log a ${type} bottle in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log a ${type} bottle in ${applicationName}",
+              "Log a bottle in ${applicationName}",
+              "Log ${type} in ${applicationName}",
+              "Log a bottle for ${baby} in ${applicationName}",
+              "The baby had a bottle in ${applicationName}",
+              "${applicationName}, the baby had a ${type} bottle"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Registrar un biberón de ${type} en ${applicationName}",
+              "Registrar un biberón en ${applicationName}",
+              "Registrar ${type} en ${applicationName}",
+              "Registrar un biberón para ${baby} en ${applicationName}",
+              "El bebé tomó un biberón en ${applicationName}",
+              "${applicationName}, el bebé tomó un biberón de ${type}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Noter un biberon de ${type} dans ${applicationName}",
+              "Noter un biberon dans ${applicationName}",
+              "Biberon de ${type} dans ${applicationName}",
+              "Noter un biberon pour ${baby} dans ${applicationName}",
+              "Le bébé a bu un biberon dans ${applicationName}",
+              "${applicationName}, le bébé a bu un biberon de ${type}"
+            ]
+          }
+        }
+      }
+    },
+    "Log a ${type} diaper in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log a ${type} diaper in ${applicationName}",
+              "Log a diaper in ${applicationName}",
+              "Log a diaper change in ${applicationName}",
+              "Log a diaper for ${baby} in ${applicationName}",
+              "Add a ${type} diaper in ${applicationName}",
+              "${applicationName}, ${type} diaper"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Registrar un pañal ${type} en ${applicationName}",
+              "Registrar un pañal en ${applicationName}",
+              "Registrar un cambio de pañal en ${applicationName}",
+              "Registrar un pañal para ${baby} en ${applicationName}",
+              "Agregar un pañal ${type} en ${applicationName}",
+              "${applicationName}, pañal ${type}"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Noter une couche ${type} dans ${applicationName}",
+              "Noter une couche dans ${applicationName}",
+              "Noter un changement de couche dans ${applicationName}",
+              "Noter une couche pour ${baby} dans ${applicationName}",
+              "Ajouter une couche ${type} dans ${applicationName}",
+              "${applicationName}, couche ${type}"
+            ]
+          }
+        }
+      }
+    },
+    "Log pumping in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Log pumping in ${applicationName}",
+              "Log a pumping session in ${applicationName}",
+              "Log pumping on the ${side} in ${applicationName}",
+              "Log pumping for ${baby} in ${applicationName}",
+              "I just pumped in ${applicationName}",
+              "${applicationName}, log pumping"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Registrar extracción de leche en ${applicationName}",
+              "Registrar una sesión de extracción en ${applicationName}",
+              "Registrar extracción del lado ${side} en ${applicationName}",
+              "Registrar extracción de leche para ${baby} en ${applicationName}",
+              "Acabo de extraerme leche en ${applicationName}",
+              "${applicationName}, registrar extracción de leche"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Noter une expression de lait dans ${applicationName}",
+              "Noter une séance de tire-lait dans ${applicationName}",
+              "Noter une expression à ${side} dans ${applicationName}",
+              "Noter une expression de lait pour ${baby} dans ${applicationName}",
+              "Je viens de tirer mon lait dans ${applicationName}",
+              "${applicationName}, noter une expression de lait"
+            ]
+          }
+        }
+      }
+    },
+    "Start breastfeeding in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Start breastfeeding in ${applicationName}",
+              "Start breastfeeding on the ${side} in ${applicationName}",
+              "Start nursing in ${applicationName}",
+              "Start nursing on the ${side} in ${applicationName}",
+              "Start breastfeeding ${baby} in ${applicationName}",
+              "${applicationName}, start breastfeeding"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Iniciar la lactancia en ${applicationName}",
+              "Iniciar la lactancia del lado ${side} en ${applicationName}",
+              "Empezar a amamantar en ${applicationName}",
+              "Empezar a amamantar del lado ${side} en ${applicationName}",
+              "Iniciar la lactancia de ${baby} en ${applicationName}",
+              "${applicationName}, iniciar la lactancia"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Commencer l'allaitement dans ${applicationName}",
+              "Commencer l'allaitement à ${side} dans ${applicationName}",
+              "Commencer la tétée dans ${applicationName}",
+              "Commencer la tétée à ${side} dans ${applicationName}",
+              "Commencer l'allaitement de ${baby} dans ${applicationName}",
+              "${applicationName}, commencer l'allaitement"
+            ]
+          }
+        }
+      }
+    },
+    "Stop breastfeeding in ${applicationName}" : {
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringSet" : {
+            "state" : "new",
+            "values" : [
+              "Stop breastfeeding in ${applicationName}",
+              "Finish breastfeeding in ${applicationName}",
+              "Stop nursing in ${applicationName}",
+              "Done breastfeeding in ${applicationName}",
+              "Stop the feeding timer in ${applicationName}",
+              "${applicationName}, stop breastfeeding"
+            ]
+          }
+        },
+        "es" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Detener la lactancia en ${applicationName}",
+              "Terminar la lactancia en ${applicationName}",
+              "Dejar de amamantar en ${applicationName}",
+              "Ya terminé de amamantar en ${applicationName}",
+              "Detener el temporizador de lactancia en ${applicationName}",
+              "${applicationName}, detener la lactancia"
+            ]
+          }
+        },
+        "fr" : {
+          "stringSet" : {
+            "state" : "translated",
+            "values" : [
+              "Arrêter l'allaitement dans ${applicationName}",
+              "Terminer l'allaitement dans ${applicationName}",
+              "Arrêter la tétée dans ${applicationName}",
+              "J'ai fini d'allaiter dans ${applicationName}",
+              "Arrêter la minuterie d'allaitement dans ${applicationName}",
+              "${applicationName}, arrêter l'allaitement"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

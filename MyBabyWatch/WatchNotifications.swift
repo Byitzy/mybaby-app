@@ -25,7 +25,11 @@ final class WatchNotifications: NSObject, UNUserNotificationCenterDelegate {
         isStarted = true
         let center = UNUserNotificationCenter.current()
         center.delegate = self
-        let imUp = UNNotificationAction(identifier: WakeUpNotification.imUpAction, title: "I'm up", options: [])
+        let imUp = UNNotificationAction(
+            identifier: WakeUpNotification.imUpAction,
+            title: String(localized: "I'm up", comment: "Button on a night-shift wake-up notification: the parent on duty is awake"),
+            options: []
+        )
         let wakeUp = UNNotificationCategory(
             identifier: WakeUpNotification.category,
             actions: [imUp],

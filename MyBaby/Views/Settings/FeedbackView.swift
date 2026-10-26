@@ -76,7 +76,7 @@ struct FeedbackView: View {
                 }
 
                 Section {
-                    TextField(kind?.placeholder ?? "Tell us what's on your mind.", text: $message, axis: .vertical)
+                    TextField(kind?.placeholder ?? String(localized: "Tell us what's on your mind."), text: $message, axis: .vertical)
                         .lineLimit(5...12)
                         .textInputAutocapitalization(.sentences)
                         .focused($messageFocused)
@@ -127,14 +127,14 @@ struct FeedbackView: View {
                     switch result {
                     case .sent:
                         afterMail = FeedbackAlert(
-                            title: "Thank you",
-                            message: "Your feedback is on its way. It helps make MyBaby better for every family.",
+                            title: String(localized: "Thank you"),
+                            message: String(localized: "Your feedback is on its way. It helps make MyBaby better for every family."),
                             closesScreen: true
                         )
                     case .failed:
                         afterMail = FeedbackAlert(
-                            title: "Couldn't send",
-                            message: error?.localizedDescription ?? "Mail couldn't send the email. Please try again."
+                            title: String(localized: "Couldn't send"),
+                            message: error?.localizedDescription ?? String(localized: "Mail couldn't send the email. Please try again.")
                         )
                     default:
                         // Cancelled, or saved as a draft in Mail: the message stays here too.
@@ -242,10 +242,13 @@ struct FeedbackView: View {
     private func crashReportSection(latest: CrashReports.Report) -> some View {
         let count = crashReports.count
         let date = latest.receivedAt.formatted(date: .abbreviated, time: .omitted)
+        let stopped = count == 1
+            ? String(localized: "MyBaby stopped or froze once recently, the latest on \(date).")
+            : String(localized: "MyBaby stopped or froze \(count) times recently, the latest on \(date).")
         return Section {
             Toggle("Attach the latest crash report (\(count))", isOn: $attachCrashReport)
         } footer: {
-            Text("MyBaby stopped or froze \(count == 1 ? "once" : "\(count) times") recently, the latest on \(date). The report holds technical details about where the app stopped, and nothing from your log. It's attached as a file you can open before sending.")
+            Text("\(stopped) The report holds technical details about where the app stopped, and nothing from your log. It's attached as a file you can open before sending.")
         }
     }
 
@@ -296,14 +299,14 @@ struct FeedbackView: View {
 
     private var sendFooter: String {
         if kind == nil {
-            return "Pick what it's about and write your message to continue."
+            return String(localized: "Pick what it's about and write your message to continue.")
         }
         if canUseMail {
-            return "Mail opens with everything filled in, to \(AppLinks.feedbackEmail). You can change anything there before you tap Send."
+            return String(localized: "Mail opens with everything filled in, to \(AppLinks.feedbackEmail). You can change anything there before you tap Send.", comment: "An email address")
         }
-        var footer = "Mail isn't set up on this iPhone. Open in email app starts the message in another email app, or copy it and send it to \(AppLinks.feedbackEmail) from any email app."
+        var footer = String(localized: "Mail isn't set up on this iPhone. Open in email app starts the message in another email app, or copy it and send it to \(AppLinks.feedbackEmail) from any email app.", comment: "An email address")
         if screenshot != nil || (kind == .problem && attachCrashReport) {
-            footer += " Attachments can't be added this way, so attach the screenshot yourself if you'd like."
+            footer += " " + String(localized: "Attachments can't be added this way, so attach the screenshot yourself if you'd like.")
         }
         return footer
     }
@@ -340,8 +343,8 @@ struct FeedbackView: View {
             openURL(url) { accepted in
                 if !accepted {
                     alert = FeedbackAlert(
-                        title: "No email app found",
-                        message: "Tap Copy message, then send it to \(AppLinks.feedbackEmail) from any email app or website."
+                        title: String(localized: "No email app found"),
+                        message: String(localized: "Tap Copy message, then send it to \(AppLinks.feedbackEmail) from any email app or website.", comment: "An email address")
                     )
                 }
             }
@@ -364,8 +367,8 @@ struct FeedbackView: View {
             screenshot = prepared
         } else {
             alert = FeedbackAlert(
-                title: "Couldn't add the screenshot",
-                message: "It couldn't be read. If it's in iCloud Photos, check that you're online and try again."
+                title: String(localized: "Couldn't add the screenshot"),
+                message: String(localized: "It couldn't be read. If it's in iCloud Photos, check that you're online and try again.")
             )
         }
         isLoadingScreenshot = false

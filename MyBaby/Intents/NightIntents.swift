@@ -25,7 +25,7 @@ enum NightAction: String, CaseIterable, AppEnum {
 struct CryAlertsIntent: ForegroundContinuableIntent {
     static var title: LocalizedStringResource = "Start or Stop Cry Alerts"
     static var description = IntentDescription(
-        "Starts listening for your baby crying, so the parent on duty is buzzed, or stops listening. Starting opens MyBaby, because iPhone only lets the microphone start while the app is on screen. Audio is analyzed on this iPhone and never recorded."
+        "Starts listening for your baby crying, so the parent on duty is buzzed, or stops listening. Starting opens MyBaby, because the microphone can only start while the app is on screen. Audio is analyzed on this device and never recorded."
     )
     static var openAppWhenRun = false
 
@@ -117,7 +117,7 @@ enum NoiseChoice: String, CaseIterable, AppEnum {
 struct WhiteNoiseIntent: ForegroundContinuableIntent {
     static var title: LocalizedStringResource = "Start or Stop White Noise"
     static var description = IntentDescription(
-        "Plays white, pink or brown noise on the nursery monitor, or stops it. Run it on the iPhone or iPad that's the nursery monitor; it plays at the volume set there."
+        "Plays white, pink or brown noise on the nursery monitor, or stops it. Run it on the device that's the nursery monitor; it plays at the volume set there."
     )
     static var openAppWhenRun = false
 
@@ -159,6 +159,13 @@ struct WhiteNoiseIntent: ForegroundContinuableIntent {
         if action == .stop {
             return .result(dialog: "White noise is off.")
         }
-        return .result(dialog: "Playing \(target.title.lowercased()) noise. Keep the monitor quiet, and at least 7 feet from the crib.")
+        switch target {
+        case .pink:
+            return .result(dialog: "Playing pink noise. Keep the monitor quiet, and at least 7 feet from the crib.")
+        case .brown:
+            return .result(dialog: "Playing brown noise. Keep the monitor quiet, and at least 7 feet from the crib.")
+        case .white, .off:
+            return .result(dialog: "Playing white noise. Keep the monitor quiet, and at least 7 feet from the crib.")
+        }
     }
 }

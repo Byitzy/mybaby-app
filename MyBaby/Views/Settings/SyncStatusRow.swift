@@ -54,10 +54,13 @@ struct SyncStatusRow: View {
     private func text(for state: SyncStatus.State, now: Date, spoken: Bool) -> String {
         switch state {
         case .syncing:
-            return "Syncing…"
+            return String(localized: "Syncing…")
         case .upToDate(let lastSynced):
-            guard let lastSynced else { return "Up to date" }
-            return "Up to date\(spoken ? "," : " ·") synced \(Self.relative(lastSynced, now: now))"
+            guard let lastSynced else { return String(localized: "Up to date") }
+            let synced = Self.relative(lastSynced, now: now)
+            return spoken
+                ? String(localized: "Up to date, synced \(synced)", comment: "Read by VoiceOver. \"2 minutes ago\" or \"just now\"")
+                : String(localized: "Up to date · synced \(synced)", comment: "\"2 minutes ago\" or \"just now\"")
         case .waitingForConnection:
             return CloudErrors.waitingForConnection
         case .problem(let message, _):
@@ -83,7 +86,7 @@ struct SyncStatusRow: View {
 
     /// "just now", "2 minutes ago", "3 hours ago".
     private static func relative(_ date: Date, now: Date) -> String {
-        guard now.timeIntervalSince(date) >= 60 else { return "just now" }
+        guard now.timeIntervalSince(date) >= 60 else { return String(localized: "just now", comment: "After \"synced\"") }
         return formatter.localizedString(for: date, relativeTo: now)
     }
 }

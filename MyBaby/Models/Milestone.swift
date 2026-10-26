@@ -39,7 +39,7 @@ final class Milestone: NSManagedObject, Identifiable {
 
     static let defaultEmoji = "⭐️"
 
-    var displayTitle: String { title.isEmpty ? "Milestone" : title }
+    var displayTitle: String { title.isEmpty ? String(localized: "Milestone", comment: "A milestone without a title") : title }
     var displayEmoji: String { emoji.isEmpty ? Self.defaultEmoji : emoji }
 
     /// Which photos there are, without loading any of them. Changes when one is added or removed,
@@ -96,39 +96,40 @@ final class MilestonePhoto: NSManagedObject, Identifiable {
 
 extension Milestone {
     /// Moments to pick from when adding one. In no particular order of age: every baby has their own.
+    /// The picked one is saved as the milestone's title, in the iPhone's language.
     static let suggestions: [EmojiLabel] = [
-        EmojiLabel("😊", "First smile"),
-        EmojiLabel("😂", "First laugh"),
-        EmojiLabel("💪", "Holds head up"),
-        EmojiLabel("🔄", "Rolls over"),
-        EmojiLabel("🪑", "Sits up"),
-        EmojiLabel("🦷", "First tooth"),
-        EmojiLabel("🐾", "Crawls"),
-        EmojiLabel("🗣️", "First word"),
-        EmojiLabel("👣", "First steps"),
-        EmojiLabel("🛁", "First bath"),
-        EmojiLabel("🌳", "First outing"),
-        EmojiLabel("🥄", "First food"),
+        EmojiLabel("😊", String(localized: "First smile", comment: "Suggested milestone")),
+        EmojiLabel("😂", String(localized: "First laugh", comment: "Suggested milestone")),
+        EmojiLabel("💪", String(localized: "Holds head up", comment: "Suggested milestone")),
+        EmojiLabel("🔄", String(localized: "Rolls over", comment: "Suggested milestone")),
+        EmojiLabel("🪑", String(localized: "Sits up", comment: "Suggested milestone")),
+        EmojiLabel("🦷", String(localized: "First tooth", comment: "Suggested milestone")),
+        EmojiLabel("🐾", String(localized: "Crawls", comment: "Suggested milestone")),
+        EmojiLabel("🗣️", String(localized: "First word", comment: "Suggested milestone")),
+        EmojiLabel("👣", String(localized: "First steps", comment: "Suggested milestone")),
+        EmojiLabel("🛁", String(localized: "First bath", comment: "Suggested milestone")),
+        EmojiLabel("🌳", String(localized: "First outing", comment: "Suggested milestone")),
+        EmojiLabel("🥄", String(localized: "First food", comment: "Suggested milestone")),
     ]
 
     /// Emoji to choose from, with what VoiceOver reads for each.
     static let emojiChoices: [EmojiLabel] = [
-        EmojiLabel("⭐️", "Star"),
-        EmojiLabel("😊", "Smile"),
-        EmojiLabel("😂", "Laugh"),
-        EmojiLabel("💪", "Strong"),
-        EmojiLabel("🔄", "Roll"),
-        EmojiLabel("🪑", "Sitting"),
-        EmojiLabel("🦷", "Tooth"),
-        EmojiLabel("🐾", "Crawling"),
-        EmojiLabel("🗣️", "Talking"),
-        EmojiLabel("👣", "Steps"),
-        EmojiLabel("🛁", "Bath"),
-        EmojiLabel("🌳", "Outing"),
-        EmojiLabel("🥄", "Food"),
-        EmojiLabel("🎂", "Birthday"),
-        EmojiLabel("❤️", "Love"),
-        EmojiLabel("🎉", "Celebration"),
+        EmojiLabel("⭐️", String(localized: "Star", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("😊", String(localized: "Smile", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("😂", String(localized: "Laugh", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("💪", String(localized: "Strong", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("🔄", String(localized: "Roll", comment: "What VoiceOver reads for an emoji: rolling over")),
+        EmojiLabel("🪑", String(localized: "Sitting", comment: "What VoiceOver reads for an emoji: sitting up")),
+        EmojiLabel("🦷", String(localized: "Tooth", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("🐾", String(localized: "Crawling", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("🗣️", String(localized: "Talking", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("👣", String(localized: "Steps", comment: "What VoiceOver reads for an emoji: first steps")),
+        EmojiLabel("🛁", String(localized: "Bath", comment: "Kind of log entry")),
+        EmojiLabel("🌳", String(localized: "Outing", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("🥄", String(localized: "Food", comment: "Kind of allergy, or an emoji's label")),
+        EmojiLabel("🎂", String(localized: "emoji.birthday", defaultValue: "Birthday", comment: "What VoiceOver reads for a birthday cake emoji (a party, not a date of birth)")),
+        EmojiLabel("❤️", String(localized: "Love", comment: "What VoiceOver reads for an emoji")),
+        EmojiLabel("🎉", String(localized: "Celebration", comment: "What VoiceOver reads for an emoji")),
     ]
 }
 

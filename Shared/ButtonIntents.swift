@@ -102,6 +102,10 @@ struct SleepButtonIntent: LiveActivityIntent {
 
 /// The widget's Bottle button: logs the same bottle as last time (formula or breast milk, and the
 /// amount), which the button shows.
+///
+/// It has no allergy check, on purpose: a bottle is just "formula" or "breast milk", with no food
+/// name to compare with the allergy list, and MyBaby only ever compares names. It never decides that
+/// a formula is related to a milk allergy (many babies with one drink a formula made for it).
 struct LogBottleButtonIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Log Bottle from Widget"
     static var isDiscoverable = false
@@ -161,7 +165,8 @@ struct StartBreastfeedingButtonIntent: LiveActivityIntent {
 
 /// The widget's Medicine button: logs the medicine given last again, with the dose logged last time,
 /// which the button shows. It never suggests a dose, and isn't offered while the dose timing the
-/// parent entered doesn't allow one yet.
+/// parent entered doesn't allow one yet, or while the medicine matches one on the baby's allergy list
+/// (the widget shows "Check allergy list" instead, which opens the app).
 struct LogMedicineButtonIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Log Medicine from Widget"
     static var isDiscoverable = false
@@ -183,7 +188,15 @@ struct LogMedicineButtonIntent: LiveActivityIntent {
     @MainActor
     func perform() async throws -> some IntentResult {
         #if !WIDGET_EXTENSION
-        try QuickLog.logMedicineAgain(name, for: QuickLog.baby(withID: babyID))
+        let baby = QuickLog.baby(withID: babyID)
+        // Checked again here, not only when the widget was drawn: an allergy may have been added since,
+        // on this phone or the partner's. A match is never logged from a widget; redrawing turns the
+        // button into "Check allergy list".
+        if let baby, QuickLog.medicineAllergy(matching: name, for: baby) != nil {
+            WidgetSnapshotWriter.shared.refreshNow(force: true)
+            return .result()
+        }
+        try QuickLog.logMedicineAgain(name, for: baby)
         #endif
         return .result()
     }
@@ -232,6 +245,23 @@ struct FinishFeedingIntent: LiveActivityIntent {
     func perform() async throws -> some IntentResult {
         #if !WIDGET_EXTENSION
         FeedingTimer.shared.finish(context: PersistenceController.shared.viewContext)
+        #endif
+        return .result()
+    }
+}
+
+/// The listening Live Activity's Stop button: stops cry alerts on this iPhone, like Stop listening in
+/// the app. The app is already running while it listens, so this runs right there.
+struct StopListeningIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Stop Cry Alerts from Live Activity"
+    static var isDiscoverable = false
+
+    init() {}
+
+    @MainActor
+    func perform() async throws -> some IntentResult {
+        #if !WIDGET_EXTENSION
+        CryMonitor.shared.stopFromLiveActivity()
         #endif
         return .result()
     }

@@ -10,10 +10,26 @@ enum BreastSide: String, Codable, Hashable, CaseIterable, Identifiable {
     var other: BreastSide { self == .left ? .right : .left }
 
     /// "Left" or "Right".
-    var title: String { self == .left ? "Left" : "Right" }
+    var title: String {
+        self == .left
+            ? String(localized: "Left", comment: "Breastfeeding side, as a title")
+            : String(localized: "Right", comment: "Breastfeeding side, as a title")
+    }
 
-    /// "L" or "R", for the Dynamic Island.
-    var letter: String { self == .left ? "L" : "R" }
+    /// "L" or "R", for the Dynamic Island and the watch.
+    var letter: String {
+        self == .left
+            ? String(localized: "L", comment: "One-letter short form of Left (breastfeeding side), for the Dynamic Island")
+            : String(localized: "R", comment: "One-letter short form of Right (breastfeeding side), for the Dynamic Island")
+    }
+
+    /// "Left side" or "Right side", for VoiceOver. A whole phrase per side, since languages word it
+    /// differently ("côté gauche").
+    var sideTitle: String {
+        self == .left
+            ? String(localized: "Left side", comment: "Breastfeeding side, for VoiceOver")
+            : String(localized: "Right side", comment: "Breastfeeding side, for VoiceOver")
+    }
 }
 
 /// So Siri can be asked to "start breastfeeding on the left".

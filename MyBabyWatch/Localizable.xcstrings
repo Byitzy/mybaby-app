@@ -1,0 +1,1815 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%@ ago" : {
+      "comment" : "Watch: a time that counts up, e.g. 45 min ago",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hace %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "il y a %@"
+          }
+        }
+      }
+    },
+    "%@ breast milk logged" : {
+      "comment" : "Watch. An amount, e.g. 120 ml",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de leche materna registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de lait maternel noté"
+          }
+        }
+      }
+    },
+    "%@ formula logged" : {
+      "comment" : "Watch. An amount, e.g. 120 ml",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de fórmula registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ de lait maternisé noté"
+          }
+        }
+      }
+    },
+    "%@ is on night duty" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ está de turno de noche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est de garde cette nuit"
+          }
+        }
+      }
+    },
+    "%@ logged" : {
+      "comment" : "Watch. The medicine",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ noté"
+          }
+        }
+      }
+    },
+    "%@, on %@'s allergy list. Log it on the iPhone." : {
+      "comment" : "Watch, VoiceOver. First: the medicine; second: the baby's name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, en la lista de alergias de %2$@. Regístralo en el iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, sur la liste d'allergies de %2$@. Notez-le sur l'iPhone."
+          }
+        }
+      }
+    },
+    "%@'s list includes %@. Log it on the iPhone after checking with your doctor or pharmacist." : {
+      "comment" : "Why a medicine wasn't logged from the Apple Watch: it matches the baby's allergy list. First: baby's name, second: the allergy",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La lista de alergias de %1$@ incluye: %2$@. Regístralo en el iPhone después de consultar con tu médico o farmacéutico."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La liste d'allergies de %1$@ comprend : %2$@. Notez-le sur l'iPhone après en avoir parlé à votre médecin ou à votre pharmacien."
+          }
+        }
+      }
+    },
+    "%lld ml" : {
+      "comment" : "An amount in milliliters",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ml"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ml"
+          }
+        }
+      }
+    },
+    "%lld taps will sync to iPhone" : {
+      "comment" : "Watch: taps waiting to reach the iPhone",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld tap will sync to iPhone"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld taps will sync to iPhone"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld toque se sincronizará con el iPhone"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld toques se sincronizarán con el iPhone"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld toucher sera synchronisé avec l'iPhone"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld touchers seront synchronisés avec l'iPhone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "⏸ Paused on the left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⏸ En pausa: izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⏸ En pause à gauche"
+          }
+        }
+      }
+    },
+    "⏸ Paused on the right" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⏸ En pausa: derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⏸ En pause à droite"
+          }
+        }
+      }
+    },
+    "⭐️ Left is suggested from the last feed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⭐️ Se sugiere el izquierdo según la última toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⭐️ Gauche suggéré d'après le dernier boire"
+          }
+        }
+      }
+    },
+    "⭐️ Right is suggested from the last feed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⭐️ Se sugiere el derecho según la última toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⭐️ Droite suggéré d'après le dernier boire"
+          }
+        }
+      }
+    },
+    "🌙 %@ on duty" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🌙 %@ de turno"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🌙 %@ de garde"
+          }
+        }
+      }
+    },
+    "👶" : {
+      "comment" : "A smiley face.",
+      "isCommentAutoGenerated" : true,
+      "shouldTranslate" : false
+    },
+    "🤱 Feeding on the left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🤱 Lactancia: izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🤱 Allaitement à gauche"
+          }
+        }
+      }
+    },
+    "🤱 Feeding on the right" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🤱 Lactancia: derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🤱 Allaitement à droite"
+          }
+        }
+      }
+    },
+    "Add your baby in MyBaby on your iPhone to start logging here." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Agrega a tu bebé en MyBaby en tu iPhone para empezar a registrar aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajoutez votre bébé dans MyBaby sur votre iPhone pour commencer à noter ici."
+          }
+        }
+      }
+    },
+    "Asleep for" : {
+      "comment" : "Watch: over how long the baby has been asleep",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duerme desde hace"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dort depuis"
+          }
+        }
+      }
+    },
+    "Awake for" : {
+      "comment" : "Watch: over how long the baby has been awake",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Despierto desde hace"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éveillé depuis"
+          }
+        }
+      }
+    },
+    "Baby fell asleep, start a sleep" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El bebé se durmió, iniciar un sueño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bébé s'est endormi, commencer un sommeil"
+          }
+        }
+      }
+    },
+    "Baby woke up, end the sleep" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El bebé se despertó, terminar el sueño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bébé s'est réveillé, terminer le sommeil"
+          }
+        }
+      }
+    },
+    "Both" : {
+      "comment" : "Watch button: log a wet and dirty diaper",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ambos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les deux"
+          }
+        }
+      }
+    },
+    "Bottle" : {
+      "comment" : "Watch button: log a bottle",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biberón"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biberon"
+          }
+        }
+      }
+    },
+    "Bottle (breast milk)" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biberón (leche materna)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biberon (lait maternel)"
+          }
+        }
+      }
+    },
+    "Bottle (formula)" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biberón (fórmula)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biberon (lait maternisé)"
+          }
+        }
+      }
+    },
+    "Breast" : {
+      "comment" : "A breastfeeding, very short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sein"
+          }
+        }
+      }
+    },
+    "Breast milk" : {
+      "comment" : "A bottle of breast milk, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leche materna"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lait maternel"
+          }
+        }
+      }
+    },
+    "Breastfeed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toma de pecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allaitement"
+          }
+        }
+      }
+    },
+    "Breastfeeding" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lactancia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allaitement"
+          }
+        }
+      }
+    },
+    "Breastfeeding saved" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lactancia guardada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allaitement enregistré"
+          }
+        }
+      }
+    },
+    "Dirty" : {
+      "comment" : "Watch button: log a dirty diaper",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sucio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Souillée"
+          }
+        }
+      }
+    },
+    "Dirty diaper logged" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pañal sucio registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couche souillée notée"
+          }
+        }
+      }
+    },
+    "For %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour %@"
+          }
+        }
+      }
+    },
+    "Formula" : {
+      "comment" : "A bottle of formula, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fórmula"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lait maternisé"
+          }
+        }
+      }
+    },
+    "I'm up" : {
+      "comment" : "Button on a night-shift wake-up notification: the parent on duty is awake",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya me levanté"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Je suis debout"
+          }
+        }
+      }
+    },
+    "L" : {
+      "comment" : "One-letter short form of Left (breastfeeding side), for the Dynamic Island",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "G"
+          }
+        }
+      }
+    },
+    "Last diaper · %@" : {
+      "comment" : "Watch. What it was, e.g. Pee",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Último pañal · %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernière couche · %@"
+          }
+        }
+      }
+    },
+    "Last feed · %@" : {
+      "comment" : "Watch. What the feed was, e.g. Formula",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última toma · %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernier boire · %@"
+          }
+        }
+      }
+    },
+    "Last feed · %@ · %@" : {
+      "comment" : "Watch. First: what the feed was, e.g. Formula; second: e.g. 120 ml",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última toma · %1$@ · %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernier boire · %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "Last synced %@ ago" : {
+      "comment" : "Watch: when the iPhone last sent news, counting up, e.g. Last synced 3 min ago",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Última sincronización hace %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dernière synchro il y a %@"
+          }
+        }
+      }
+    },
+    "Left" : {
+      "comment" : "Breastfeeding side, as a title",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gauche"
+          }
+        }
+      }
+    },
+    "Left %lldm" : {
+      "comment" : "Minutes of breastfeeding on the left side, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Izq. %lld min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gauche %lld min"
+          }
+        }
+      }
+    },
+    "Left side" : {
+      "comment" : "Breastfeeding side, for VoiceOver",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lado izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Côté gauche"
+          }
+        }
+      }
+    },
+    "Left side is suggested from the last feed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se sugiere el lado izquierdo según la última toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le côté gauche est suggéré d'après le dernier boire"
+          }
+        }
+      }
+    },
+    "Log %@" : {
+      "comment" : "Watch, VoiceOver. The medicine",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter %@"
+          }
+        }
+      }
+    },
+    "Log %@ of breast milk" : {
+      "comment" : "Watch, VoiceOver. An amount, e.g. 120 ml",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar %@ de leche materna"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter %@ de lait maternel"
+          }
+        }
+      }
+    },
+    "Log %@ of formula" : {
+      "comment" : "Watch, VoiceOver. An amount, e.g. 120 ml",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar %@ de fórmula"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter %@ de lait maternisé"
+          }
+        }
+      }
+    },
+    "Log %@, recorded as %@" : {
+      "comment" : "Watch, VoiceOver. First: the medicine; second: the dose as the parent wrote it",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar %1$@, registrado como %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter %1$@, enregistré comme %2$@"
+          }
+        }
+      }
+    },
+    "Log a bottle" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar un biberón"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter un biberon"
+          }
+        }
+      }
+    },
+    "Log a dirty diaper" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar un pañal sucio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter une couche souillée"
+          }
+        }
+      }
+    },
+    "Log a medicine" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar un medicamento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter un médicament"
+          }
+        }
+      }
+    },
+    "Log a wet and dirty diaper" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar un pañal mojado y sucio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter une couche mouillée et souillée"
+          }
+        }
+      }
+    },
+    "Log a wet diaper" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registrar un pañal mojado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noter une couche mouillée"
+          }
+        }
+      }
+    },
+    "Logs the dose you recorded last time; edit the entry on your iPhone if it was different. Always follow your pediatrician's dosing instructions." : {
+      "comment" : "Medical: dosing. Needs review by a fluent speaker",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra la dosis que anotaste la última vez; edita el registro en tu iPhone si fue diferente. Sigue siempre las indicaciones de dosis de tu pediatra."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Note la dose enregistrée la dernière fois ; modifiez l'entrée sur votre iPhone si elle était différente. Suivez toujours les instructions de dosage de votre pédiatre."
+          }
+        }
+      }
+    },
+    "Medicine" : {
+      "comment" : "Watch button: log a medicine",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medicamento"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Médicament"
+          }
+        }
+      }
+    },
+    "Medicines you log in MyBaby on your iPhone show up here, to log again with a tap." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los medicamentos que registras en MyBaby en tu iPhone aparecen aquí, para registrarlos otra vez con un toque."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les médicaments que vous notez dans MyBaby sur votre iPhone apparaissent ici, pour les noter de nouveau d'un toucher."
+          }
+        }
+      }
+    },
+    "No diaper logged yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay pañales registrados"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune couche notée pour l'instant"
+          }
+        }
+      }
+    },
+    "No feed logged yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Todavía no hay tomas registradas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun boire noté pour l'instant"
+          }
+        }
+      }
+    },
+    "Not logged" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non noté"
+          }
+        }
+      }
+    },
+    "Now on the left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora del lado izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenant à gauche"
+          }
+        }
+      }
+    },
+    "Now on the right" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ahora del lado derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maintenant à droite"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        }
+      }
+    },
+    "On %@'s allergy list" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En la lista de alergias de %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur la liste d'allergies de %@"
+          }
+        }
+      }
+    },
+    "Open MyBaby on your iPhone to load the bottle amounts." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre MyBaby en tu iPhone para cargar las cantidades de biberón."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez MyBaby sur votre iPhone pour charger les quantités de biberon."
+          }
+        }
+      }
+    },
+    "Open MyBaby on your iPhone, with your watch nearby, to connect." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre MyBaby en tu iPhone, con tu reloj cerca, para conectarte."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez MyBaby sur votre iPhone, avec votre montre à proximité, pour vous connecter."
+          }
+        }
+      }
+    },
+    "Pee" : {
+      "comment" : "A wet diaper, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pipí"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pipi"
+          }
+        }
+      }
+    },
+    "Pee + poop" : {
+      "comment" : "A wet and dirty diaper, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pipí + popó"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pipi + caca"
+          }
+        }
+      }
+    },
+    "Poop" : {
+      "comment" : "A dirty diaper, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Popó"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Caca"
+          }
+        }
+      }
+    },
+    "R" : {
+      "comment" : "One-letter short form of Right (breastfeeding side), for the Dynamic Island",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D"
+          }
+        }
+      }
+    },
+    "Records %@" : {
+      "comment" : "The dose as the parent wrote it, e.g. 2.5 ml",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Registra %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistre %@"
+          }
+        }
+      }
+    },
+    "Resume left" : {
+      "comment" : "Watch button: resume breastfeeding on the left side",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre à gauche"
+          }
+        }
+      }
+    },
+    "Resume on the left side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar del lado izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre du côté gauche"
+          }
+        }
+      }
+    },
+    "Resume on the right side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar del lado derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre du côté droit"
+          }
+        }
+      }
+    },
+    "Resume right" : {
+      "comment" : "Watch button: resume breastfeeding on the right side",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre à droite"
+          }
+        }
+      }
+    },
+    "Right" : {
+      "comment" : "Breastfeeding side, as a title",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Droite"
+          }
+        }
+      }
+    },
+    "Right %lldm" : {
+      "comment" : "Minutes of breastfeeding on the right side, short",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der. %lld min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Droite %lld min"
+          }
+        }
+      }
+    },
+    "Right side" : {
+      "comment" : "Breastfeeding side, for VoiceOver",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lado derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Côté droit"
+          }
+        }
+      }
+    },
+    "Right side is suggested from the last feed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se sugiere el lado derecho según la última toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le côté droit est suggéré d'après le dernier boire"
+          }
+        }
+      }
+    },
+    "Saved on iPhone" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardado en el iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistré sur l'iPhone"
+          }
+        }
+      }
+    },
+    "Sending to iPhone…" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enviando al iPhone…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoi à l'iPhone…"
+          }
+        }
+      }
+    },
+    "Side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Côté"
+          }
+        }
+      }
+    },
+    "Sleep" : {
+      "comment" : "Watch button: start a sleep",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sueño"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommeil"
+          }
+        }
+      }
+    },
+    "Sleep ended" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sueño terminado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommeil terminé"
+          }
+        }
+      }
+    },
+    "Sleep started" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sueño iniciado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sommeil commencé"
+          }
+        }
+      }
+    },
+    "Start breastfeeding on the left side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar la lactancia del lado izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commencer l'allaitement du côté gauche"
+          }
+        }
+      }
+    },
+    "Start breastfeeding on the left side, suggested" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar la lactancia del lado izquierdo, sugerido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commencer l'allaitement du côté gauche, suggéré"
+          }
+        }
+      }
+    },
+    "Start breastfeeding on the right side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar la lactancia del lado derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commencer l'allaitement du côté droit"
+          }
+        }
+      }
+    },
+    "Start breastfeeding on the right side, suggested" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar la lactancia del lado derecho, sugerido"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Commencer l'allaitement du côté droit, suggéré"
+          }
+        }
+      }
+    },
+    "Start left" : {
+      "comment" : "Watch button: start breastfeeding on the left side",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer à gauche"
+          }
+        }
+      }
+    },
+    "Start right" : {
+      "comment" : "Watch button: start breastfeeding on the right side",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Démarrer à droite"
+          }
+        }
+      }
+    },
+    "Stop & save" : {
+      "comment" : "Watch button: stop the breastfeeding timer and save the feed",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener y guardar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter et enregistrer"
+          }
+        }
+      }
+    },
+    "Stop the timer and save the feed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Detener el temporizador y guardar la toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter la minuterie et enregistrer le boire"
+          }
+        }
+      }
+    },
+    "Switch to left" : {
+      "comment" : "Watch button: switch breastfeeding to the left side",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar a la izquierda"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer à gauche"
+          }
+        }
+      }
+    },
+    "Switch to right" : {
+      "comment" : "Watch button: switch breastfeeding to the right side",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar a la derecha"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer à droite"
+          }
+        }
+      }
+    },
+    "Switch to the left side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar al lado izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer au côté gauche"
+          }
+        }
+      }
+    },
+    "Switch to the right side" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar al lado derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passer au côté droit"
+          }
+        }
+      }
+    },
+    "Timer resumed" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador reanudado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuterie reprise"
+          }
+        }
+      }
+    },
+    "Timer started, left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador iniciado, izquierdo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuterie démarrée, gauche"
+          }
+        }
+      }
+    },
+    "Timer started, right" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador iniciado, derecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuterie démarrée, droite"
+          }
+        }
+      }
+    },
+    "Undo" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshacer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler"
+          }
+        }
+      }
+    },
+    "Undo: %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshacer: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annuler : %@"
+          }
+        }
+      }
+    },
+    "Undone" : {
+      "comment" : "Watch: a tap was taken back",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deshecho"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Annulé"
+          }
+        }
+      }
+    },
+    "Wet" : {
+      "comment" : "Watch button: log a wet diaper",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mojado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mouillée"
+          }
+        }
+      }
+    },
+    "Wet + dirty logged" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mojado + sucio registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mouillée + souillée notée"
+          }
+        }
+      }
+    },
+    "Wet diaper logged" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pañal mojado registrado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couche mouillée notée"
+          }
+        }
+      }
+    },
+    "Will sync to iPhone" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se sincronizará con el iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sera synchronisé avec l'iPhone"
+          }
+        }
+      }
+    },
+    "Woke up" : {
+      "comment" : "Watch button: end the sleep",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se despertó"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réveil"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}
